@@ -16,7 +16,7 @@
         body { margin: 0; padding: 0; background: var(--bg); color: var(--text-main); transition: background 0.3s; }
         #app { max-width: 500px; margin: 0 auto; height: 100vh; display: flex; flex-direction: column; background: var(--bg); position: relative; }
         
-        header { padding: 15px; background: var(--surface); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); font-weight: bold; font-size: 16px; z-index: 10; }
+        header { padding: 15px; background: var(--surface); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); font-weight: bold; z-index: 10; }
         .theme-btn { background: var(--surface-light); color: var(--text-main); border: 1px solid var(--border); padding: 5px 10px; border-radius: 20px; font-size: 12px; cursor: pointer; }
         
         main { flex: 1; overflow-y: auto; padding-bottom: 90px; }
@@ -25,19 +25,29 @@
         .val-minus { color: var(--error); font-weight: bold; }
         
         /* カレンダー・ダッシュボード */
-        .month-nav { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: var(--surface); border-bottom: 1px solid var(--border); }
+        .month-nav { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: var(--surface); }
         .month-nav button { background: transparent; color: var(--primary); border: none; font-size: 18px; cursor: pointer; padding: 5px 15px; font-weight: bold; }
+        
+        /* 月間サマリー */
+        .month-summary-box { display: flex; justify-content: space-between; background: var(--surface-light); padding: 10px 15px; border-bottom: 1px solid var(--border); border-top: 1px solid var(--border); font-size: 13px; font-weight: bold; }
+        .summary-item { display: flex; flex-direction: column; align-items: center; }
+        .summary-label { font-size: 10px; color: var(--text-sub); margin-bottom: 2px; }
+
         .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--border); border-bottom: 1px solid var(--border); }
         .cal-header { background: var(--surface); text-align: center; padding: 5px 0; font-size: 12px; color: var(--text-sub); }
         .cal-cell { background: var(--bg); min-height: 60px; padding: 4px; display: flex; flex-direction: column; cursor: pointer; position: relative; }
         .cal-cell.selected-day { outline: 2px solid var(--primary); outline-offset: -2px; background: var(--surface-light); z-index: 2; }
-        .cal-cell.today-marker .cal-date { color: #fff; background: var(--primary); border-radius: 50%; width: 18px; height: 18px; text-align: center; line-height: 18px; display: inline-block; }
+        .cal-cell.today-marker .cal-date { color: #fff; background: var(--primary); border-radius: 50%; width: 18px; height: 18px; text-align: center; line-height: 18px; margin: 0 auto 2px auto; display: block; }
         
         .cal-date { font-size: 12px; margin-bottom: 2px; text-align: center; }
         .cal-val { font-size: 9px; text-align: right; font-weight: bold; word-break: break-all; margin-top: auto; }
         
         /* 詳細・リスト */
         .day-detail { padding: 15px; background: var(--surface); margin-top: 10px; border-top: 1px solid var(--border); }
+        
+        /* 日別サマリー（枠を強調） */
+        .day-summary-box { font-size: 13px; margin-bottom: 15px; background: var(--surface-light); padding: 12px; border-radius: 8px; display: flex; flex-direction: column; gap: 8px; border: 2px solid var(--primary); box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
+
         .machine-card { background: var(--surface-light); padding: 12px; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid var(--primary); cursor: pointer; }
         .machine-card:active { opacity: 0.8; }
         .btn-outline { display: block; text-align: center; border: 1px dashed var(--text-sub); color: var(--text-sub); padding: 12px; border-radius: 6px; margin-top: 10px; cursor: pointer; font-weight: bold;}
@@ -80,15 +90,16 @@
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 100; }
         .modal-content { background: var(--surface); padding: 20px; border-radius: 8px; width: 80%; max-width: 320px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
         .modal-btn { padding: 12px; border-radius: 6px; font-weight: bold; text-align: center; cursor: pointer; border: none; font-size: 14px; }
-        
-        /* 1日のサマリー表示用 */
-        .day-summary-box { font-size: 13px; margin-bottom: 15px; background: var(--surface-light); padding: 12px; border-radius: 6px; display: flex; flex-direction: column; gap: 8px; border: 1px solid var(--border); }
     </style>
 </head>
 <body>
     <div id="app">
+        <!-- ヘッダー (時計常時表示) -->
         <header>
-            <span>{{ headerTitle }}</span>
+            <div style="display:flex; flex-direction:column;">
+                <span style="font-size:16px;">{{ headerTitle }}</span>
+                <span style="font-size:11px; color:var(--text-sub); font-weight:normal; margin-top:2px;">{{ currentTime }}</span>
+            </div>
             <button class="theme-btn" @click="toggleTheme">🎨 {{ themes[themeIndex].name }}</button>
         </header>
         
@@ -99,6 +110,24 @@
                     <button @click="changeMonth(-1)">◀</button>
                     <span style="font-weight:bold; font-size: 16px;">{{ currentYear }}年 {{ currentMonth }}月</span>
                     <button @click="changeMonth(1)">▶</button>
+                </div>
+                
+                <!-- 月間サマリー -->
+                <div class="month-summary-box">
+                    <div class="summary-item">
+                        <span class="summary-label">総投資</span>
+                        <span>¥{{ monthlySummary.invest.toLocaleString() }}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">回収金額</span>
+                        <span>¥{{ monthlySummary.recover.toLocaleString() }}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">収支</span>
+                        <span :class="monthlySummary.net >= 0 ? 'val-plus' : 'val-minus'">
+                            {{ monthlySummary.net >= 0 ? '+¥' : '-¥' }}{{ Math.abs(monthlySummary.net).toLocaleString() }}
+                        </span>
+                    </div>
                 </div>
 
                 <div class="calendar">
@@ -119,10 +148,10 @@
                 <div class="day-detail" v-if="selectedDay && !selectedDay.empty">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                         <h3 style="margin:0; font-size:16px;">{{ formatDateDisplay(selectedDay.fullDate) }}</h3>
-                        <button style="padding:5px 10px; border-radius:4px; background:var(--primary); color:#fff; border:none;" @click="currentTab='input_daily'">💰 最終収支入力</button>
+                        <button style="padding:5px 10px; border-radius:4px; background:var(--primary); color:#fff; border:none; font-weight:bold;" @click="currentTab='input_daily'">💰 最終収支入力</button>
                     </div>
                     
-                    <!-- 日別サマリー表示（投資・回収・現金収支・メダル増減） -->
+                    <!-- 日別サマリー表示（外枠強調） -->
                     <div class="day-summary-box">
                         <div style="display:flex; justify-content:space-between; font-weight:bold;">
                             <span>総投資: ¥{{ getDayInvest(selectedDay.fullDate).toLocaleString() }}</span>
@@ -144,9 +173,9 @@
                         <div style="display:flex; justify-content:space-between; font-size:13px; margin-top:3px;">
                             <span>貯メダル増減: <span :class="(m.savedSign * m.savedVal) >= 0 ? 'val-plus' : 'val-minus'">{{ (m.savedSign * m.savedVal) >= 0 ? '+' : '' }}{{ (m.savedSign * m.savedVal).toLocaleString() }} 枚</span></span>
                         </div>
-                        <div style="display:flex; justify-content:space-between; font-size:13px; margin-top:3px; border-bottom:1px dashed var(--border); padding-bottom:5px;">
-                            <span>純差枚数:</span>
-                            <span :class="m.netBalance >= 0 ? 'val-plus' : 'val-minus'">{{ m.netBalance >= 0 ? '+' : '' }}{{ m.netBalance.toLocaleString() }} 枚</span>
+                        <!-- 純差枚数 左寄せ -->
+                        <div style="font-size:13px; margin-top:5px; border-bottom:1px dashed var(--border); padding-bottom:5px; font-weight:bold;">
+                            純差枚数: <span :class="m.netBalance >= 0 ? 'val-plus' : 'val-minus'">{{ m.netBalance >= 0 ? '+' : '' }}{{ m.netBalance.toLocaleString() }} 枚</span>
                         </div>
                         <div v-if="m.memo" style="font-size:12px; color:var(--text-sub); margin-top:8px; white-space: pre-wrap; background: var(--bg); padding: 8px; border-radius: 4px;">📝 {{ m.memo }}</div>
                         <img v-if="m.photo" :src="m.photo" style="max-height: 80px; margin-top: 8px; border-radius: 4px; display: block;">
@@ -264,14 +293,14 @@
             <div v-show="currentTab === 'input_daily'">
                 <div class="form-group">
                     <h3 style="margin-top:0;">{{ selectedDay ? formatDateDisplay(selectedDay.fullDate) : '' }} 最終収支</h3>
-                    <p style="font-size:12px; color:var(--text-sub);">本日の「総投資」「現金回収」「貯メダル増減」を入力して収支を確定させます。</p>
+                    <p style="font-size:12px; color:var(--text-sub);">本日の「総投資」「回収」「貯メダル増減」を入力して収支を確定させます。</p>
                 </div>
                 <div class="form-group">
                     <span class="form-label">💴 本日の現金【総投資】(円)</span>
                     <input type="number" class="form-input" v-model.number="dailyForm.invest" placeholder="0">
                 </div>
                 <div class="form-group">
-                    <span class="form-label">💴 本日の現金【現金回収】(円)</span>
+                    <span class="form-label">💴 本日の現金【回収】(円)</span>
                     <input type="number" class="form-input" v-model.number="dailyForm.recover" placeholder="0">
                 </div>
                 <div class="form-group">
@@ -324,15 +353,22 @@
             setup() {
                 const currentTab = ref('home');
                 
+                // ⌚ リアルタイム時計 (1秒更新)
                 const currentTime = ref('');
                 let timer = null;
                 const updateTime = () => {
                     const now = new Date();
-                    currentTime.value = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+                    const yyyy = now.getFullYear();
+                    const mm = String(now.getMonth()+1).padStart(2,'0');
+                    const dd = String(now.getDate()).padStart(2,'0');
+                    const hh = String(now.getHours()).padStart(2,'0');
+                    const min = String(now.getMinutes()).padStart(2,'0');
+                    const ss = String(now.getSeconds()).padStart(2,'0');
+                    currentTime.value = `${yyyy}/${mm}/${dd} ${hh}:${min}:${ss}`;
                 };
 
                 const headerTitle = computed(() => {
-                    if(currentTab.value === 'home') return currentTime.value;
+                    if(currentTab.value === 'home') return 'ダッシュボード';
                     if(currentTab.value === 'counter') return '小役カウンター';
                     if(currentTab.value === 'input_machine') return isEditing.value ? '遊技履歴編集' : '遊技履歴追加';
                     if(currentTab.value === 'input_daily') return '日別収支確定';
@@ -394,11 +430,24 @@
                     return appData.value[dateStr]?.machines || [];
                 };
                 
-                // 1日サマリー用 Getter
+                // Getter
                 const getDayInvest = (dateStr) => appData.value[dateStr]?.daily?.invest || 0;
                 const getDayRecover = (dateStr) => appData.value[dateStr]?.daily?.recover || 0;
                 const getDayTotal = (dateStr) => appData.value[dateStr]?.daily?.net || 0;
                 const getDayMedalDelta = (dateStr) => appData.value[dateStr]?.daily?.medalDelta || 0;
+
+                // 月間サマリー計算
+                const monthlySummary = computed(() => {
+                    let invest = 0;
+                    let recover = 0;
+                    calDays.value.forEach(day => {
+                        if(!day.empty) {
+                            invest += getDayInvest(day.fullDate);
+                            recover += getDayRecover(day.fullDate);
+                        }
+                    });
+                    return { invest, recover, net: recover - invest };
+                });
 
                 const formatDateDisplay = (dateStr) => {
                     const d = new Date(dateStr);
@@ -418,7 +467,6 @@
 
                 const form = ref({ date: todayStr, machineNumber: 1, name: '', rate: 46, broughtIn: 0, cashInvest: 0, savedSign: -1, savedVal: 0, leftMedals: 0, memo: '', photo: '' });
                 
-                // 持ち込み枚数の自動連動計算
                 const updateBroughtInAndNumber = (dateStr, targetIdx = null) => {
                     const machines = appData.value[dateStr]?.machines || [];
                     if (targetIdx !== null) {
@@ -503,7 +551,6 @@
                     currentTab.value = 'input_machine';
                 };
 
-                // 削除時に後続の台の持ち込み枚数や番号を自動再計算して整合性を保つ
                 const deleteMachine = () => {
                     showActionModal.value = false;
                     if(!confirm("この遊技履歴を削除しますか？ 後続の台のデータも自動再調整されます。")) return;
@@ -550,7 +597,6 @@
                         machines.push({ ...form.value, netBalance: netBalance.value });
                     }
 
-                    // 💡 後続の台（2台目以降）の連動を再計算
                     let prevLeft = 0;
                     machines.forEach((m, idx) => {
                         m.machineNumber = idx + 1;
@@ -656,7 +702,7 @@
                     loadData();
                     generateCalendar();
                     updateTime();
-                    timer = setInterval(updateTime, 60000);
+                    timer = setInterval(updateTime, 1000); // 1秒ごとに時計更新
                     
                     const td = calDays.value.find(day => day.fullDate === todayStr);
                     if(td) selectDay(td);
@@ -667,10 +713,10 @@
                 });
 
                 return {
-                    currentTab, headerTitle, themes, themeIndex, toggleTheme,
+                    currentTab, headerTitle, currentTime, themes, themeIndex, toggleTheme,
                     currentYear, currentMonth, changeMonth,
                     calDays, selectedDay, selectDay, todayStr,
-                    getMachinesForDate, getDayInvest, getDayRecover, getDayTotal, getDayMedalDelta, formatDateDisplay,
+                    getMachinesForDate, getDayInvest, getDayRecover, getDayTotal, getDayMedalDelta, monthlySummary, formatDateDisplay,
                     form, netBalance, prepareMachineInput, saveMachine, handlePhotoUpload,
                     dailyForm, saveDailyTotal,
                     cPage, counterData, activePage, r1Colors, getProb, resetCounter, editPageName, editRoleNames,
