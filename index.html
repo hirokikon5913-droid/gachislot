@@ -16,7 +16,7 @@
         body { margin: 0; padding: 0; background: var(--bg); color: var(--text-main); transition: background 0.3s; }
         #app { max-width: 500px; margin: 0 auto; height: 100vh; display: flex; flex-direction: column; background: var(--bg); position: relative; }
         
-        header { padding: 15px; background: var(--surface); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); font-weight: bold; font-size: 18px; z-index: 10; }
+        header { padding: 15px; background: var(--surface); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); font-weight: bold; font-size: 16px; z-index: 10; }
         .theme-btn { background: var(--surface-light); color: var(--text-main); border: 1px solid var(--border); padding: 5px 10px; border-radius: 20px; font-size: 12px; cursor: pointer; }
         
         main { flex: 1; overflow-y: auto; padding-bottom: 90px; }
@@ -24,24 +24,27 @@
         .val-plus { color: var(--success); font-weight: bold; }
         .val-minus { color: var(--error); font-weight: bold; }
         
-        /* ホーム・カレンダー */
-        .summary-card { background: var(--surface); margin: 10px; padding: 15px; border-radius: 8px; border: 1px solid var(--border); }
-        .summary-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; }
-        .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--border); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+        /* カレンダー・ダッシュボード */
+        .month-nav { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: var(--surface); border-bottom: 1px solid var(--border); }
+        .month-nav button { background: transparent; color: var(--primary); border: none; font-size: 18px; cursor: pointer; padding: 5px 15px; font-weight: bold; }
+        .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--border); border-bottom: 1px solid var(--border); }
         .cal-header { background: var(--surface); text-align: center; padding: 5px 0; font-size: 12px; color: var(--text-sub); }
-        .cal-cell { background: var(--bg); min-height: 60px; padding: 4px; display: flex; flex-direction: column; cursor: pointer; }
-        .cal-cell.today { background: var(--surface-light); border: 1px solid var(--primary); }
-        .cal-date { font-size: 12px; margin-bottom: 4px; }
-        .cal-val { font-size: 10px; text-align: right; font-weight: bold; }
+        .cal-cell { background: var(--bg); min-height: 60px; padding: 4px; display: flex; flex-direction: column; cursor: pointer; position: relative; }
+        /* 選択枠のスタイル */
+        .cal-cell.selected-day { outline: 2px solid var(--primary); outline-offset: -2px; background: var(--surface-light); z-index: 2; }
+        .cal-cell.today-marker .cal-date { color: #fff; background: var(--primary); border-radius: 50%; width: 18px; height: 18px; text-align: center; line-height: 18px; display: inline-block; }
+        
+        .cal-date { font-size: 12px; margin-bottom: 2px; text-align: center; }
+        .cal-val { font-size: 9px; text-align: right; font-weight: bold; word-break: break-all; margin-top: auto; }
         
         /* 詳細・リスト */
         .day-detail { padding: 15px; background: var(--surface); margin-top: 10px; border-top: 1px solid var(--border); }
         .machine-card { background: var(--surface-light); padding: 12px; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid var(--primary); }
-        .btn-outline { display: block; text-align: center; border: 1px dashed var(--text-sub); color: var(--text-sub); padding: 10px; border-radius: 6px; margin-top: 10px; cursor: pointer;}
+        .btn-outline { display: block; text-align: center; border: 1px dashed var(--text-sub); color: var(--text-sub); padding: 12px; border-radius: 6px; margin-top: 10px; cursor: pointer; font-weight: bold;}
         
         /* 入力フォーム */
         .form-group { padding: 15px; border-bottom: 1px solid var(--border); background: var(--surface); }
-        .form-label { font-size: 12px; color: var(--text-sub); margin-bottom: 8px; display: block; }
+        .form-label { font-size: 12px; color: var(--text-sub); margin-bottom: 8px; display: flex; justify-content: space-between; }
         .form-input { width: 100%; background: var(--surface-light); color: var(--text-main); border: 1px solid var(--border); padding: 12px; border-radius: 6px; font-size: 16px; outline: none; }
         .form-input[readonly] { opacity: 0.7; cursor: not-allowed; }
         input[type="date"] { appearance: none; -webkit-appearance: none; }
@@ -50,7 +53,9 @@
         
         /* 小役カウンター */
         .counter-header { display: flex; justify-content: space-between; padding: 10px; background: var(--surface); align-items: center; }
-        .page-select { background: var(--surface-light); color: var(--text-main); border: 1px solid var(--border); padding: 5px 10px; border-radius: 4px; }
+        .page-select { background: var(--surface-light); color: var(--text-main); border: 1px solid var(--border); padding: 5px 10px; border-radius: 4px; font-size: 14px; flex: 1; margin-right: 10px; }
+        .edit-icon { color: var(--primary); cursor: pointer; margin-right: 15px; font-size: 14px; }
+        
         .games-area { text-align: center; padding: 20px 10px; border-bottom: 1px solid var(--border); background: var(--surface); }
         .games-input { background: transparent; border: none; color: var(--text-main); font-size: 32px; font-weight: bold; width: 120px; text-align: center; border-bottom: 2px solid var(--primary); margin-bottom: 15px; outline: none; }
         .games-btn-group { display: flex; justify-content: center; gap: 10px; }
@@ -60,19 +65,16 @@
         .role-row { display: flex; justify-content: space-around; margin-bottom: 25px; }
         .role-item { display: flex; flex-direction: column; align-items: center; width: 60px; }
         .circle-btn { width: 50px; height: 50px; border-radius: 50%; border: 2px solid #555; margin-bottom: 5px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        .square-btn { width: 55px; height: 55px; border-radius: 8px; background: var(--surface-light); border: 2px solid #555; margin-bottom: 5px; cursor: pointer; color: var(--text-main); font-size: 11px; display: flex; align-items: center; justify-content: center; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .square-btn { width: 55px; height: 55px; border-radius: 8px; background: var(--surface-light); border: 2px solid #555; margin-bottom: 5px; cursor: pointer; color: var(--text-main); font-size: 11px; display: flex; align-items: center; justify-content: center; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3); line-height: 1.1; word-break: break-all; padding: 2px; }
         .circle-btn:active, .square-btn:active { transform: scale(0.95); }
-        .role-name { font-size: 11px; color: var(--text-sub); margin-bottom: 2px; }
-        .role-count { font-size: 16px; font-weight: bold; }
+        .role-count { font-size: 16px; font-weight: bold; margin-top: 4px; }
         .role-prob { font-size: 10px; color: var(--secondary); }
 
-        /* ナビゲーション */
-        .nav-bar { position: absolute; bottom: 0; width: 100%; height: 75px; background: var(--surface); display: flex; justify-content: space-around; border-top: 1px solid var(--border); align-items: center; z-index: 20; padding-bottom: 15px; }
-        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 25%; color: var(--text-sub); font-size: 10px; cursor: pointer; }
+        /* ナビゲーション (均等配置) */
+        .nav-bar { position: absolute; bottom: 0; width: 100%; height: 75px; background: var(--surface); display: flex; justify-content: space-between; border-top: 1px solid var(--border); align-items: center; z-index: 20; padding-bottom: 15px; }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-sub); font-size: 10px; cursor: pointer; height: 100%; }
         .nav-item.active { color: var(--primary); font-weight: bold; }
         .nav-icon { font-size: 22px; margin-bottom: 4px; }
-        
-        .fab { position: absolute; bottom: 45px; left: 50%; transform: translateX(-50%); width: 60px; height: 60px; background: var(--primary); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 30px; color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 30; border: 4px solid var(--bg); cursor: pointer; }
     </style>
 </head>
 <body>
@@ -85,12 +87,26 @@
         <main>
             <!-- 🏠 ホーム -->
             <div v-show="currentTab === 'home'">
+                <!-- 月切替ナビゲーション -->
+                <div class="month-nav">
+                    <button @click="changeMonth(-1)">◀</button>
+                    <span style="font-weight:bold; font-size: 16px;">{{ currentYear }}年 {{ currentMonth }}月</span>
+                    <button @click="changeMonth(1)">▶</button>
+                </div>
+
                 <div class="calendar">
                     <div class="cal-header" v-for="d in ['月','火','水','木','金','土','日']">{{d}}</div>
-                    <div class="cal-cell" v-for="(day, i) in calDays" :key="i" :class="{today: day.date===todayDate}" @click="selectDay(day)">
+                    <div class="cal-cell" 
+                         v-for="(day, i) in calDays" :key="i" 
+                         :class="{
+                             'selected-day': selectedDay && !day.empty && selectedDay.fullDate === day.fullDate,
+                             'today-marker': day.fullDate === todayStr
+                         }" 
+                         @click="selectDay(day)">
                         <div class="cal-date" :style="{opacity: day.empty ? 0 : 1}">{{ day.date || 1 }}</div>
-                        <div class="cal-val val-plus" v-if="!day.empty && getDayTotal(day.fullDate) > 0">+{{(getDayTotal(day.fullDate)/1000).toFixed(1)}}k</div>
-                        <div class="cal-val val-minus" v-if="!day.empty && getDayTotal(day.fullDate) < 0">{{(getDayTotal(day.fullDate)/1000).toFixed(1)}}k</div>
+                        <!-- 算用数字全桁表示 -->
+                        <div class="cal-val val-plus" v-if="!day.empty && getDayTotal(day.fullDate) > 0">+{{ getDayTotal(day.fullDate).toLocaleString() }}</div>
+                        <div class="cal-val val-minus" v-if="!day.empty && getDayTotal(day.fullDate) < 0">{{ getDayTotal(day.fullDate).toLocaleString() }}</div>
                     </div>
                 </div>
                 
@@ -101,28 +117,33 @@
                     </div>
                     
                     <div style="font-size:14px; margin-bottom:15px; text-align:right;">
-                        本日現金収支: <span :class="getDayTotal(selectedDay.fullDate) >= 0 ? 'val-plus' : 'val-minus'">{{ getDayTotal(selectedDay.fullDate) >= 0 ? '+' : '' }}{{ getDayTotal(selectedDay.fullDate) }}円</span>
+                        本日現金収支: <span :class="getDayTotal(selectedDay.fullDate) >= 0 ? 'val-plus' : 'val-minus'">{{ getDayTotal(selectedDay.fullDate) >= 0 ? '+' : '' }}{{ getDayTotal(selectedDay.fullDate).toLocaleString() }}円</span>
                     </div>
 
                     <div class="machine-card" v-for="(m, index) in getMachinesForDate(selectedDay.fullDate)" :key="index">
                         <div style="font-weight:bold; font-size:14px; margin-bottom:5px;">{{ m.machineNumber }}台目: {{ m.name || '機種不明' }} (貸出: {{m.rate}}枚)</div>
-                        <div style="display:flex; justify-content:space-between; font-size:13px; margin-top:5px;">
+                        <div style="display:flex; justify-content:space-between; font-size:13px; margin-top:5px; border-bottom:1px dashed var(--border); padding-bottom:5px;">
                             <span>純差枚数:</span>
-                            <span :class="m.netBalance >= 0 ? 'val-plus' : 'val-minus'">{{ m.netBalance >= 0 ? '+' : '' }}{{ m.netBalance }} 枚</span>
+                            <span :class="m.netBalance >= 0 ? 'val-plus' : 'val-minus'">{{ m.netBalance >= 0 ? '+' : '' }}{{ m.netBalance.toLocaleString() }} 枚</span>
                         </div>
+                        <!-- メモ・写真の表示 -->
+                        <div v-if="m.memo" style="font-size:12px; color:var(--text-sub); margin-top:8px; white-space: pre-wrap; background: var(--bg); padding: 8px; border-radius: 4px;">📝 {{ m.memo }}</div>
+                        <img v-if="m.photo" :src="m.photo" style="max-height: 80px; margin-top: 8px; border-radius: 4px; display: block;">
                     </div>
-                    <div class="btn-outline" @click="prepareMachineInput">＋ この日に台（カニ歩き）を追加</div>
+                    
+                    <!-- 追加ボタン変更 -->
+                    <div class="btn-outline" @click="prepareMachineInput">＋ 遊技履歴を追加</div>
                 </div>
             </div>
 
             <!-- 🎲 小役カウンター -->
             <div v-show="currentTab === 'counter'">
                 <div class="counter-header">
+                    <!-- ページ名カスタマイズ -->
                     <select class="page-select" v-model="cPage">
-                        <option :value="0">📄 ページ1 (通常時)</option>
-                        <option :value="1">📄 ページ2 (CZ/高確)</option>
-                        <option :value="2">📄 ページ3 (AT/ボナ)</option>
+                        <option v-for="(p, i) in counterData" :key="i" :value="i">📄 {{ p.pageName || `ページ${i+1}` }}</option>
                     </select>
+                    <span class="edit-icon" @click="editPageName">✏️編集</span>
                     <span style="font-size:12px; color:var(--text-sub); cursor:pointer;" @click="resetCounter">↺ リセット</span>
                 </div>
                 
@@ -141,13 +162,17 @@
                     <div class="role-row">
                         <div class="role-item" v-for="(col, i) in r1Colors" :key="'r1'+i">
                             <button class="circle-btn" :style="{background: col}" @click="activePage.r1[i]++"></button>
-                            <span class="role-name">{{ r1Names[i] }}</span>
+                            <!-- 色名廃止 -->
                             <span class="role-count">{{ activePage.r1[i] }}</span>
                             <span class="role-prob">{{ getProb(activePage.r1[i], activePage.games) }}</span>
                         </div>
                     </div>
                     
-                    <div style="font-size:12px; color:var(--text-sub); margin-bottom:10px;">【2段目：カスタム小役】(タップでカウント)</div>
+                    <!-- 小役名カスタマイズ -->
+                    <div class="form-label" style="margin-bottom:10px;">
+                        <span>【2段目：カスタム小役】(タップでカウント)</span>
+                        <span style="color:var(--primary); cursor:pointer;" @click="editRoleNames">✏️名前変更</span>
+                    </div>
                     <div class="role-row">
                         <div class="role-item" v-for="(name, i) in activePage.r2Names" :key="'r2'+i">
                             <button class="square-btn" @click="activePage.r2[i]++">{{name}}</button>
@@ -158,7 +183,7 @@
                 </div>
             </div>
 
-            <!-- 🎰 台データ入力 (カニ歩き) -->
+            <!-- 🎰 遊技履歴入力 (カニ歩き) -->
             <div v-show="currentTab === 'input_machine'">
                 <div class="form-group">
                     <span class="form-label">📅 日付</span>
@@ -199,6 +224,17 @@
                     <input type="number" class="form-input" v-model.number="form.leftMedals">
                 </div>
                 
+                <!-- メモと写真の追加 -->
+                <div class="form-group">
+                    <span class="form-label">📝 メモ</span>
+                    <textarea class="form-input" v-model="form.memo" rows="3" placeholder="台の挙動や設定推測要素など"></textarea>
+                </div>
+                <div class="form-group">
+                    <span class="form-label">📷 写真添付 (終了画面やグラフなど)</span>
+                    <input type="file" accept="image/*" class="form-input" @change="handlePhotoUpload">
+                    <img v-if="form.photo" :src="form.photo" style="max-height: 100px; margin-top: 10px; border-radius: 6px;">
+                </div>
+
                 <div class="form-group" style="border:none; text-align:center;">
                     <div style="font-size:12px; color:var(--text-sub);">この台単体の純差枚数</div>
                     <div style="font-size:24px; font-weight:bold;" :class="netBalance >= 0 ? 'val-plus' : 'val-minus'">
@@ -231,7 +267,7 @@
             </div>
         </main>
         
-        <!-- ナビゲーション -->
+        <!-- ナビゲーション (均等配置) -->
         <div class="nav-bar">
             <div class="nav-item" :class="{active: currentTab==='home'}" @click="currentTab='home'">
                 <span class="nav-icon">🏠</span><span>ホーム</span>
@@ -239,24 +275,31 @@
             <div class="nav-item" :class="{active: currentTab==='counter'}" @click="currentTab='counter'">
                 <span class="nav-icon">🎲</span><span>小役</span>
             </div>
-            <div style="width: 25%;"></div>
             <div class="nav-item" :class="{active: currentTab==='analysis'}" @click="currentTab='analysis'">
                 <span class="nav-icon">📊</span><span>分析</span>
             </div>
         </div>
-        <div class="fab" @click="prepareMachineInput">＋</div>
     </div>
 
     <script>
-        const { createApp, ref, computed, watch, onMounted } = Vue;
+        const { createApp, ref, computed, watch, onMounted, onUnmounted } = Vue;
 
         createApp({
             setup() {
                 const currentTab = ref('home');
+                
+                // --- ⌚ リアルタイム時刻 ---
+                const currentTime = ref('');
+                let timer = null;
+                const updateTime = () => {
+                    const now = new Date();
+                    currentTime.value = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+                };
+
                 const headerTitle = computed(() => {
-                    if(currentTab.value === 'home') return 'ダッシュボード';
+                    if(currentTab.value === 'home') return currentTime.value; // ダッシュボードを日時に
                     if(currentTab.value === 'counter') return '小役カウンター';
-                    if(currentTab.value === 'input_machine') return '台データ追加';
+                    if(currentTab.value === 'input_machine') return '遊技履歴追加';
                     if(currentTab.value === 'input_daily') return '日別収支確定';
                     if(currentTab.value === 'analysis') return '分析・レポート';
                     return 'Gachi-Slot';
@@ -270,7 +313,7 @@
                 };
                 document.documentElement.setAttribute('data-theme', themes[0].id);
 
-                // --- 💾 データ永続化 (localStorage) ---
+                // --- 💾 データ永続化 ---
                 const appData = ref({});
                 const loadData = () => {
                     const saved = localStorage.getItem('gachi_slot_data');
@@ -280,29 +323,36 @@
                     localStorage.setItem('gachi_slot_data', JSON.stringify(newVal));
                 }, { deep: true });
 
-                // --- カレンダーロジック ---
+                // --- 📅 カレンダーロジック (月切替対応) ---
                 const today = new Date();
                 const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
-                const todayDate = today.getDate();
+                
+                const currentYear = ref(today.getFullYear());
+                const currentMonth = ref(today.getMonth() + 1);
                 const calDays = ref([]);
+                const selectedDay = ref(null);
                 
                 const generateCalendar = () => {
                     calDays.value = [];
-                    const year = today.getFullYear();
-                    const month = today.getMonth() + 1;
-                    const firstDay = new Date(year, month - 1, 1).getDay();
-                    const offset = firstDay === 0 ? 6 : firstDay - 1;
+                    const firstDay = new Date(currentYear.value, currentMonth.value - 1, 1).getDay();
+                    const offset = firstDay === 0 ? 6 : firstDay - 1; // 月曜始まり
                     
                     for(let i=0; i<offset; i++) calDays.value.push({ empty: true });
-                    const lastDate = new Date(year, month, 0).getDate();
+                    const lastDate = new Date(currentYear.value, currentMonth.value, 0).getDate();
                     for(let i=1; i<=lastDate; i++) {
-                        const dStr = `${year}-${String(month).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+                        const dStr = `${currentYear.value}-${String(currentMonth.value).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
                         calDays.value.push({ empty: false, date: i, fullDate: dStr });
                     }
                     while(calDays.value.length < 42) calDays.value.push({ empty: true });
                 };
 
-                const selectedDay = ref(null);
+                const changeMonth = (diff) => {
+                    const newDate = new Date(currentYear.value, currentMonth.value - 1 + diff, 1);
+                    currentYear.value = newDate.getFullYear();
+                    currentMonth.value = newDate.getMonth() + 1;
+                    generateCalendar();
+                };
+
                 const selectDay = (day) => {
                     if(!day.empty) selectedDay.value = day;
                 };
@@ -315,22 +365,19 @@
                 };
                 const formatDateDisplay = (dateStr) => {
                     const d = new Date(dateStr);
-                    return `${d.getMonth()+1}月${d.getDate()}日`;
+                    return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
                 };
 
-                // --- 台データ(カニ歩き) 入力 ---
-                const form = ref({ date: todayStr, machineNumber: 1, name: '', rate: 46, broughtIn: 0, cashInvest: 0, savedSign: -1, savedVal: 0, leftMedals: 0 });
+                // --- 🎰 遊技履歴(カニ歩き) 入力 ---
+                const form = ref({ date: todayStr, machineNumber: 1, name: '', rate: 46, broughtIn: 0, cashInvest: 0, savedSign: -1, savedVal: 0, leftMedals: 0, memo: '', photo: '' });
                 
-                // 日付が変更されたとき、その日の登録台数から「何台目か」と「持ち込み枚数」を自動算出
                 watch(() => form.value.date, (newDate) => {
                     const existingMachines = appData.value[newDate]?.machines || [];
                     const nextNum = existingMachines.length + 1;
                     form.value.machineNumber = nextNum;
-                    
                     if (nextNum === 1) {
                         form.value.broughtIn = 0;
                     } else {
-                        // 直前の台の「残った枚数」を自動引き継ぎ
                         form.value.broughtIn = existingMachines[existingMachines.length - 1].leftMedals || 0;
                     }
                 });
@@ -342,14 +389,20 @@
                     return form.value.leftMedals - totalInvest;
                 });
 
+                const handlePhotoUpload = (e) => {
+                    const file = e.target.files[0];
+                    if(!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (ev) => { form.value.photo = ev.target.result; };
+                    reader.readAsDataURL(file); // Base64化して保存
+                };
+
                 const prepareMachineInput = () => {
                     let targetDate = todayStr;
                     if (selectedDay.value && !selectedDay.value.empty) {
                         targetDate = selectedDay.value.fullDate;
                     }
                     form.value.date = targetDate;
-                    
-                    // 台番号と持ち込み枚数の自動設定
                     const existingMachines = appData.value[targetDate]?.machines || [];
                     const nextNum = existingMachines.length + 1;
                     form.value.machineNumber = nextNum;
@@ -357,29 +410,21 @@
                     form.value.cashInvest = 0;
                     form.value.savedVal = 0;
                     form.value.leftMedals = 0;
+                    form.value.memo = '';
+                    form.value.photo = '';
                     
                     if (nextNum === 1) {
                         form.value.broughtIn = 0;
                     } else {
                         form.value.broughtIn = existingMachines[existingMachines.length - 1].leftMedals || 0;
                     }
-                    
                     currentTab.value = 'input_machine';
                 };
 
                 const saveMachine = () => {
-                    if (!form.value.name.trim()) {
-                        alert("⚠️ 機種名を入力してください。");
-                        return;
-                    }
-                    if (form.value.rate <= 0) {
-                        alert("⚠️ 貸出枚数は1枚以上に設定してください。");
-                        return;
-                    }
-                    if (form.value.cashInvest < 0) {
-                        alert("⚠️ 追加現金投資にマイナスの値は入力をできません。");
-                        return;
-                    }
+                    if (!form.value.name.trim()) { alert("⚠️ 機種名を入力してください。"); return; }
+                    if (form.value.rate <= 0) { alert("⚠️ 貸出枚数は1枚以上に設定してください。"); return; }
+                    if (form.value.cashInvest < 0) { alert("⚠️ 現金投資にマイナスは指定できません。"); return; }
 
                     const d = form.value.date;
                     if (!appData.value[d]) appData.value[d] = { machines: [], daily: { invest:0, recover:0, net:0 } };
@@ -389,13 +434,19 @@
                         netBalance: netBalance.value
                     });
                     
+                    // カレンダーの月を合わせた上で選択状態に戻す
+                    const savedDate = new Date(d);
+                    currentYear.value = savedDate.getFullYear();
+                    currentMonth.value = savedDate.getMonth() + 1;
+                    generateCalendar();
+                    
                     const targetDay = calDays.value.find(day => day.fullDate === d);
                     if(targetDay) selectDay(targetDay);
                     
                     currentTab.value = 'home';
                 };
 
-                // --- 日別トータル入力 ---
+                // --- 💰 日別トータル入力 ---
                 const dailyForm = ref({ invest: 0, recover: 0 });
                 watch(() => currentTab.value, (newTab) => {
                     if(newTab === 'input_daily' && selectedDay.value) {
@@ -407,8 +458,7 @@
 
                 const saveDailyTotal = () => {
                     if (dailyForm.value.invest < 0 || dailyForm.value.recover < 0) {
-                        alert("⚠️ 投資額および回収額にマイナスは指定できません。");
-                        return;
+                        alert("⚠️ 投資額および回収額にマイナスは指定できません。"); return;
                     }
                     const d = selectedDay.value.fullDate;
                     if (!appData.value[d]) appData.value[d] = { machines: [], daily: { invest:0, recover:0, net:0 } };
@@ -418,19 +468,28 @@
                     currentTab.value = 'home';
                 };
 
-                // --- 小役カウンター ---
+                // --- 🎲 小役カウンター ---
                 const cPage = ref(0);
-                const counterData = ref(localStorage.getItem('gachi_counter') ? JSON.parse(localStorage.getItem('gachi_counter')) : [
-                    { games: 0, r1: [0,0,0,0,0], r2Names: ['カスタム1','カスタム2','カスタム3','カスタム4','カスタム5'], r2: [0,0,0,0,0] },
-                    { games: 0, r1: [0,0,0,0,0], r2Names: ['カスタム1','カスタム2','カスタム3','カスタム4','カスタム5'], r2: [0,0,0,0,0] },
-                    { games: 0, r1: [0,0,0,0,0], r2Names: ['カスタム1','カスタム2','カスタム3','カスタム4','カスタム5'], r2: [0,0,0,0,0] }
-                ]);
+                
+                // 初期データ(pageName追加)
+                const defaultCounter = [
+                    { pageName: '通常時', games: 0, r1: [0,0,0,0,0], r2Names: ['チェリー','スイカ','ベル','チャンス目','カスタム5'], r2: [0,0,0,0,0] },
+                    { pageName: 'CZ/高確', games: 0, r1: [0,0,0,0,0], r2Names: ['カスタム1','カスタム2','カスタム3','カスタム4','カスタム5'], r2: [0,0,0,0,0] },
+                    { pageName: 'AT/ボナ', games: 0, r1: [0,0,0,0,0], r2Names: ['カスタム1','カスタム2','カスタム3','カスタム4','カスタム5'], r2: [0,0,0,0,0] }
+                ];
+                
+                const loadedCounter = localStorage.getItem('gachi_counter') ? JSON.parse(localStorage.getItem('gachi_counter')) : defaultCounter;
+                // 古いデータへのpageNameの互換性対応
+                loadedCounter.forEach((p, i) => { if(!p.pageName) p.pageName = defaultCounter[i].pageName; });
+                
+                const counterData = ref(loadedCounter);
                 watch(counterData, (newVal) => { localStorage.setItem('gachi_counter', JSON.stringify(newVal)); }, { deep: true });
 
                 const activePage = computed(() => counterData.value[cPage.value]);
                 const r1Colors = ['#e53935', '#4caf50', '#1e88e5', '#fdd835', '#e0e0e0'];
-                const r1Names = ['赤', '緑', '青', '黄', '白'];
+                
                 const getProb = (count, games) => count === 0 ? '-' : '1/' + (games / count).toFixed(1);
+                
                 const resetCounter = () => {
                     if(confirm("このページをリセットしますか？")) {
                         counterData.value[cPage.value].games = 0;
@@ -438,21 +497,45 @@
                         counterData.value[cPage.value].r2 = [0,0,0,0,0];
                     }
                 };
+                
+                const editPageName = () => {
+                    const newName = prompt('ページ名を入力してください', activePage.value.pageName);
+                    if (newName !== null && newName.trim() !== '') {
+                        activePage.value.pageName = newName.trim();
+                    }
+                };
+                
+                const editRoleNames = () => {
+                    for(let i = 0; i < 5; i++) {
+                        const newName = prompt(`ボタン${i+1}の名前を入力`, activePage.value.r2Names[i]);
+                        if (newName !== null) {
+                            activePage.value.r2Names[i] = newName.trim() || `カスタム${i+1}`;
+                        }
+                    }
+                };
 
                 onMounted(() => {
                     loadData();
                     generateCalendar();
+                    updateTime();
+                    timer = setInterval(updateTime, 60000); // 1分ごとに時計更新
+                    
                     const td = calDays.value.find(day => day.fullDate === todayStr);
                     if(td) selectDay(td);
+                });
+                
+                onUnmounted(() => {
+                    if(timer) clearInterval(timer);
                 });
 
                 return {
                     currentTab, headerTitle, themes, themeIndex, toggleTheme,
-                    calDays, selectedDay, selectDay, todayDate,
+                    currentYear, currentMonth, changeMonth,
+                    calDays, selectedDay, selectDay, todayStr,
                     getMachinesForDate, getDayTotal, formatDateDisplay,
-                    form, netBalance, prepareMachineInput, saveMachine,
+                    form, netBalance, prepareMachineInput, saveMachine, handlePhotoUpload,
                     dailyForm, saveDailyTotal,
-                    cPage, activePage, r1Colors, r1Names, getProb, resetCounter
+                    cPage, counterData, activePage, r1Colors, getProb, resetCounter, editPageName, editRoleNames
                 }
             }
         }).mount('#app');
