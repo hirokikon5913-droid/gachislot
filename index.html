@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gachi-Slot 収支管理</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* 🎨 3種の着せ替えテーマ設定 */
+        :root[data-theme="black"] {
+            --bg: #121212; --surface: #1e1e1e; --surface-light: #2c2c2c;
+            --primary: #bb86fc; --secondary: #03dac6; --error: #cf6679; --success: #4caf50;
+            --text-main: #ffffff; --text-sub: #b3b3b3; --border: #333333;
+        }
+        :root[data-theme="white"] {
+            --bg: #f5f5f5; --surface: #ffffff; --surface-light: #e0e0e0;
+            --primary: #6200ea; --secondary: #03dac6; --error: #b00020; --success: #388e3c;
+            --text-main: #000000; --text-sub: #666666; --border: #cccccc;
+        }
+        :root[data-theme="cyber"] {
+            --bg: #090a0f; --surface: #151a2a; --surface-light: #222a42;
+            --primary: #ff00ff; --secondary: #00ffff; --error: #ff3366; --success: #00ffcc;
+            --text-main: #e0e6ed; --text-sub: #8b9bb4; --border: #ff00ff;
+            text-shadow: 0 0 2px rgba(255,0,255,0.3);
+        }
+
+        /* 共通スタイル */
+        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body { margin: 0; padding: 0; background: var(--bg); color: var(--text-main); transition: background 0.3s; }
+        #app { max-width: 500px; margin: 0 auto; height: 100vh; display: flex; flex-direction: column; background: var(--bg); position: relative; }
+        
+        header { padding: 15px; background: var(--surface); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); font-weight: bold; font-size: 18px; z-index: 10; }
+        .theme-btn { background: var(--surface-light); color: var(--text-main); border: 1px solid var(--border); padding: 5px 10px; border-radius: 20px; font-size: 12px; cursor: pointer; }
+        
+        main { flex: 1; overflow-y: auto; padding-bottom: 90px; }
+        
+        /* ホーム＆カレンダー */
+        .summary-card { background: var(--surface); margin: 10px; padding: 15px; border-radius: 8px; border: 1px solid var(--border); }
+        .summary-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; }
+        .val-plus { color: var(--success); font-weight: bold; }
+        .val-minus { color: var(--error); font-weight: bold; }
+        
+        .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--border); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+        .cal-header { background: var(--surface); text-align: center; padding: 5px 0; font-size: 12px; color: var(--text-sub); }
+        .cal-cell { background: var(--bg); min-height: 60px; padding: 4px; display: flex; flex-direction: column; cursor: pointer; }
+        .cal-cell.today { background: var(--surface-light); border: 1px solid var(--primary); }
+        .cal-date { font-size: 12px; margin-bottom: 4px; }
+        .cal-val { font-size: 10px; text-align: right; font-weight: bold; }
+        
+        /* 稼働詳細 (カニ歩き表示) */
+        .day-detail { padding: 15px; background: var(--surface); margin-top: 10px; border-top: 1px solid var(--border); }
+        .machine-card { background: var(--surface-light); padding: 12px; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid var(--primary); }
+        .btn-outline { display: block; text-align: center; border: 1px dashed var(--text-sub); color: var(--text-sub); padding: 10px; border-radius: 6px; margin-top: 10px; text-decoration: none; cursor: pointer;}
+        
+        /* 入力フォーム群 */
+        .form-group { padding: 15px; border-bottom: 1px solid var(--border); background: var(--surface); }
+        .form-label { font-size: 12px; color: var(--text-sub); margin-bottom: 8px; display: block; }
+        .form-input { width: 100%; background: var(--surface-light); color: var(--text-main); border: 1px solid var(--border); padding: 12px; border-radius: 6px; font-size: 16px; outline: none; }
+        /* iPhoneのネイティブピッカー用 */
+        input[type="date"], input[type="time"] { appearance: none; -webkit-appearance: none; }
+        
+        .calc-result-box { background: rgba(0, 255, 204, 0.1); border: 1px solid var(--success); padding: 15px; border-radius: 8px; margin-top: 15px; text-align: center; }
+        .save-btn { background: var(--primary); color: #fff; font-weight: bold; padding: 15px; text-align: center; border-radius: 8px; margin: 20px 15px; cursor: pointer; font-size: 16px; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+        
+        /* ナビゲーション */
+        .nav-bar { position: absolute; bottom: 0; width: 100%; height: 75px; background: var(--surface); display: flex; justify-content: space-around; border-top: 1px solid var(--border); align-items: center; z-index: 20; padding-bottom: 15px; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 33%; color: var(--text-sub); font-size: 10px; cursor: pointer; }
+        .nav-item.active { color: var(--primary); font-weight: bold; }
+        .nav-icon { font-size: 22px; margin-bottom: 4px; }
+        
+        /* フローティングアクションボタン */
+        .fab { position: absolute; bottom: 45px; left: 50%; transform: translateX(-50%); width: 60px; height: 60px; background: var(--primary); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 30px; color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 30; border: 4px solid var(--bg); cursor: pointer; }
+    </style>
+</head>
+<body>
+    <!-- Vue.js アプリケーション -->
+    <div id="app">
+        <header>
+            <span>{{ headerTitle }}</span>
+            <button class="theme-btn" @click="toggleTheme">🎨 {{ themes[themeIndex].name }}</button>
+        </header>
+        
+        <main>
+            <!-- 🏠 1. ホーム (カレンダー＆日別詳細) -->
+            <div v-show="currentTab === 'home'">
+                <div class="summary-card">
+                    <div class="summary-row">
+                        <span style="font-size:14px; color:var(--text-sub)">2026年 8月 当月収支</span>
+                        <span style="font-size:14px; color:var(--primary)">時給: ¥2,944 (45.0h)</span>
+                    </div>
+                    <div class="summary-row">
+                        <span style="font-size: 24px;" class="val-plus">+ 132,500 円</span>
+                    </div>
+                </div>
+                
+                <div class="calendar">
+                    <div class="cal-header" v-for="d in ['月','火','水','木','金','土','日']">{{d}}</div>
+                    <div class="cal-cell" v-for="(day, i) in calDays" :key="i" :class="{today: day.date===11}" @click="selectDay(day)">
+                        <div class="cal-date" :style="{opacity: day.empty ? 0 : 1}">{{ day.date || 1 }}</div>
+                        <div class="cal-val val-plus" v-if="day.cash > 0">+{{(day.cash/1000).toFixed(1)}}k</div>
+                        <div class="cal-val val-minus" v-if="day.cash < 0">{{(day.cash/1000).toFixed(1)}}k</div>
+                    </div>
+                </div>
+                
+                <div class="day-detail" v-if="selectedDay">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                        <h3 style="margin:0; font-size:16px;">8月{{selectedDay.date}}日の稼働</h3>
+                        <button style="padding:5px 10px; border-radius:4px; background:var(--primary); color:#fff; border:none;" @click="openDailyInput">💰 最終収支入力</button>
+                    </div>
+                    
+                    <div style="font-size:14px; margin-bottom:15px; text-align:right;">
+                        本日現金収支: <span :class="selectedDay.cash >= 0 ? 'val-plus' : 'val-minus'">{{ selectedDay.cash >= 0 ? '+' : '' }}{{ selectedDay.cash }}円</span>
+                    </div>
+
+                    <div class="machine-card" v-for="(m, index) in mockMachines" :key="index">
+                        <div style="font-weight:bold; font-size:14px; margin-bottom:5px;">{{index + 1}}台目: {{ m.name }}</div>
+                        <div style="font-size:12px; color:var(--text-sub); margin-bottom:8px;">🕒 {{m.start}} 〜 {{m.end}} (貸出: {{m.rate}}枚)</div>
+                        <div style="display:flex; justify-content:space-between; font-size:13px;">
+                            <span>純差枚数:</span>
+                            <span :class="m.net >= 0 ? 'val-plus' : 'val-minus'">{{ m.net >= 0 ? '+' : '' }}{{ m.net }} 枚</span>
+                        </div>
+                    </div>
+                    <div class="btn-outline" @click="currentTab='input_machine'">＋ この日に台（カニ歩き）を追加</div>
+                </div>
+            </div>
+
+            <!-- 🎰 2. 台データ入力画面 (究極のカニ歩きロジック) -->
+            <div v-show="currentTab === 'input_machine'">
+                <div class="form-group">
+                    <span class="form-label">📅 日付・時間 (iPhoneのピッカー対応)</span>
+                    <div style="display:flex; gap:10px;">
+                        <input type="date" class="form-input" v-model="form.date">
+                    </div>
+                    <div style="display:flex; gap:10px; margin-top:10px; align-items:center;">
+                        <input type="time" class="form-input" v-model="form.startTime" step="900">
+                        <span style="color:var(--text-sub)">〜</span>
+                        <input type="time" class="form-input" v-model="form.endTime" step="900">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <span class="form-label">🎰 機種名</span>
+                    <input type="text" class="form-input" v-model="form.name" placeholder="例: マイジャグラーV">
+                </div>
+                <div class="form-group">
+                    <span class="form-label">🪙 1000円あたりの貸出枚数</span>
+                    <input type="number" class="form-input" v-model.number="form.rate">
+                </div>
+                <div class="form-group">
+                    <span class="form-label">📥 持ち込み枚数 (前台からの移動分)</span>
+                    <input type="number" class="form-input" v-model.number="form.broughtIn" placeholder="1台目は 0">
+                </div>
+                <div class="form-group">
+                    <span class="form-label">💴 追加現金投資 (円)</span>
+                    <input type="number" class="form-input" v-model.number="form.cashInvest" placeholder="0">
+                </div>
+                <div class="form-group">
+                    <span class="form-label">💳 貯玉・貯メダル増減 (枚)</span>
+                    <div style="display:flex; gap:10px;">
+                        <select class="form-input" style="width:80px;" v-model="form.savedSign">
+                            <option value="1">＋</option>
+                            <option value="-1">－</option>
+                        </select>
+                        <input type="number" class="form-input" v-model.number="form.savedVal" placeholder="0">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <span class="form-label">📤 最終的に残った枚数 (手元にある枚数)</span>
+                    <input type="number" class="form-input" v-model.number="form.leftMedals" placeholder="0">
+                </div>
+                
+                <div class="form-group" style="border:none;">
+                    <div class="calc-result-box">
+                        <div style="font-size:12px; color:var(--text-sub); margin-bottom:5px;">この台単体の純差枚数 (自動計算)</div>
+                        <div style="font-size:24px; font-weight:bold;" :class="netBalance >= 0 ? 'val-plus' : 'val-minus'">
+                            {{ netBalance >= 0 ? '+' : '' }}{{ netBalance }} 枚
+                        </div>
+                    </div>
+                </div>
+                <div class="save-btn" @click="saveMachine">💾 この台を保存する</div>
+            </div>
+
+            <!-- 💰 3. 1日のトータル現金入力画面 -->
+            <div v-show="currentTab === 'input_daily'">
+                <div class="form-group">
+                    <h3 style="margin-top:0;">1日の最終現金収支</h3>
+                    <p style="font-size:12px; color:var(--text-sub);">カニ歩き終了後、本日の「総投資額」と「換金所での最終回収額」をここに入力して収支を確定させます。</p>
+                </div>
+                <div class="form-group">
+                    <span class="form-label">💴 本日の現金【総投資】(円)</span>
+                    <input type="number" class="form-input" placeholder="例: 25000">
+                </div>
+                <div class="form-group">
+                    <span class="form-label">💴 本日の現金【最終回収】(円)</span>
+                    <input type="number" class="form-input" placeholder="例: 48000">
+                </div>
+                <div class="save-btn" @click="currentTab='home'">✅ 日別収支を確定する</div>
+            </div>
+
+            <!-- 📊 4. 分析・グラフ画面 -->
+            <div v-show="currentTab === 'analysis'">
+                <div style="padding: 15px; background:var(--surface); border-bottom:1px solid var(--border); display:flex; justify-content:space-around;">
+                    <span style="color:var(--primary); font-weight:bold; border-bottom:2px solid var(--primary); padding-bottom:5px;">📈 年間収支推移</span>
+                </div>
+                <div style="padding: 15px; height: 350px;">
+                    <canvas id="chartCanvas"></canvas>
+                </div>
+            </div>
+        </main>
+        
+        <!-- 下部ナビゲーション -->
+        <div class="nav-bar">
+            <div class="nav-item" :class="{active: currentTab==='home'}" @click="currentTab='home'">
+                <span class="nav-icon">🏠</span><span>ホーム</span>
+            </div>
+            <div style="width: 33%;"></div> <!-- FAB用の空きスペース -->
+            <div class="nav-item" :class="{active: currentTab==='analysis'}" @click="openAnalysis">
+                <span class="nav-icon">📊</span><span>分析</span>
+            </div>
+        </div>
+        
+        <div class="fab" @click="currentTab='input_machine'">＋</div>
+    </div>
+
+    <script>
+        const { createApp, ref, computed, nextTick } = Vue;
+
+        createApp({
+            setup() {
+                // タブ管理 ('home', 'input_machine', 'input_daily', 'analysis')
+                const currentTab = ref('home');
+                const headerTitle = computed(() => {
+                    if(currentTab.value === 'home') return 'ダッシュボード';
+                    if(currentTab.value === 'input_machine') return '台データ入力 (カニ歩き)';
+                    if(currentTab.value === 'input_daily') return '日別トータル入力';
+                    if(currentTab.value === 'analysis') return '分析・レポート';
+                    return 'Gachi-Slot';
+                });
+
+                // 🎨 テーマ切り替え機能
+                const themes = [{id:'black', name:'Dark'}, {id:'white', name:'Light'}, {id:'cyber', name:'Cyber'}];
+                const themeIndex = ref(0);
+                const toggleTheme = () => {
+                    themeIndex.value = (themeIndex.value + 1) % themes.length;
+                    document.documentElement.setAttribute('data-theme', themes[themeIndex.value].id);
+                };
+                document.documentElement.setAttribute('data-theme', themes[0].id); // 初期化
+
+                // 📅 カレンダー（8月モック）
+                const calDays = ref([]);
+                for(let i=0; i<5; i++) calDays.value.push({ empty: true });
+                for(let i=1; i<=31; i++) {
+                    let cash = 0;
+                    if(i===2) cash = -15000;
+                    if(i===11) cash = 25500;
+                    calDays.value.push({ date: i, cash: cash });
+                }
+                while(calDays.value.length < 42) calDays.value.push({ empty: true });
+                
+                const selectedDay = ref(null);
+                const mockMachines = ref([]);
+                const selectDay = (day) => {
+                    if(day.empty) return;
+                    selectedDay.value = day;
+                    // モックデータ注入
+                    if(day.date === 11) {
+                        mockMachines.value = [
+                            { name: '押忍！番長4', start: '10:00', end: '12:30', rate: 46, net: -500 },
+                            { name: 'マイジャグラーV', start: '13:00', end: '21:00', rate: 46, net: 1850 }
+                        ];
+                    } else {
+                        mockMachines.value = [];
+                    }
+                };
+                selectDay(calDays.value[15]); // 11日を初期選択
+
+                const openDailyInput = () => currentTab.value = 'input_daily';
+
+                // 🎰 究極のカニ歩き・計算ロジック
+                const form = ref({
+                    date: '2026-08-11', startTime: '10:00', endTime: '12:30',
+                    name: '', rate: 46, broughtIn: 0, cashInvest: 0, savedSign: -1, savedVal: 0, leftMedals: 0
+                });
+
+                const netBalance = computed(() => {
+                    // 1. 現金投資を枚数に換算
+                    let cashToMedals = Math.floor((form.value.cashInvest / 1000) * form.value.rate);
+                    // 2. 貯メダル増減 (符号を加味)
+                    let savedDelta = form.value.savedSign * form.value.savedVal;
+                    // 3. 総投資枚数 = 持ち込み + 現金換算 - 貯メダル増減(マイナスなら投資扱い)
+                    let totalInvest = form.value.broughtIn + cashToMedals - savedDelta;
+                    // 4. 純差枚 = 残った枚数 - 総投資枚数
+                    return form.value.leftMedals - totalInvest;
+                });
+
+                const saveMachine = () => {
+                    alert(`保存しました！\n純差枚数: ${netBalance.value}枚\n(※次の台の「持ち込み枚数」に ${form.value.leftMedals}枚 を自動セットします)`);
+                    // カニ歩き用の自動セット処理
+                    form.value.broughtIn = form.value.leftMedals; 
+                    form.value.cashInvest = 0;
+                    form.value.savedVal = 0;
+                    form.value.leftMedals = 0;
+                    form.value.name = '';
+                    currentTab.value = 'home';
+                };
+
+                // 📊 Chart.js グラフ描画
+                let chartInstance = null;
+                const openAnalysis = async () => {
+                    currentTab.value = 'analysis';
+                    await nextTick();
+                    const ctx = document.getElementById('chartCanvas');
+                    if(chartInstance) chartInstance.destroy();
+                    // テーマに応じた色を取得
+                    const isWhite = themes[themeIndex.value].id === 'white';
+                    const lineColor = isWhite ? '#6200ea' : '#bb86fc';
+                    const gridColor = isWhite ? '#e0e0e0' : '#333333';
+                    const textColor = isWhite ? '#666666' : '#b3b3b3';
+
+                    chartInstance = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: ['1月','2月','3月','4月','5月','6月','7月','8月'],
+                            datasets: [{
+                                label: '累計現金収支 (円)',
+                                data: [50000, 30000, 110000, 90000, 150000, 120000, 200000, 332500],
+                                borderColor: lineColor,
+                                backgroundColor: lineColor + '33', // 透過
+                                fill: true, tension: 0.3
+                            }]
+                        },
+                        options: {
+                            responsive: true, maintainAspectRatio: false,
+                            scales: {
+                                y: { grid: { color: gridColor }, ticks: { color: textColor } },
+                                x: { grid: { color: gridColor }, ticks: { color: textColor } }
+                            },
+                            plugins: { legend: { labels: { color: textColor } } }
+                        }
+                    });
+                };
+
+                return {
+                    currentTab, headerTitle, themes, themeIndex, toggleTheme,
+                    calDays, selectedDay, selectDay, mockMachines, openDailyInput,
+                    form, netBalance, saveMachine, openAnalysis
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
