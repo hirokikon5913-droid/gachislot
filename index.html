@@ -30,7 +30,6 @@
         .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--border); border-bottom: 1px solid var(--border); }
         .cal-header { background: var(--surface); text-align: center; padding: 5px 0; font-size: 12px; color: var(--text-sub); }
         .cal-cell { background: var(--bg); min-height: 60px; padding: 4px; display: flex; flex-direction: column; cursor: pointer; position: relative; }
-        /* 選択枠のスタイル */
         .cal-cell.selected-day { outline: 2px solid var(--primary); outline-offset: -2px; background: var(--surface-light); z-index: 2; }
         .cal-cell.today-marker .cal-date { color: #fff; background: var(--primary); border-radius: 50%; width: 18px; height: 18px; text-align: center; line-height: 18px; display: inline-block; }
         
@@ -39,14 +38,15 @@
         
         /* 詳細・リスト */
         .day-detail { padding: 15px; background: var(--surface); margin-top: 10px; border-top: 1px solid var(--border); }
-        .machine-card { background: var(--surface-light); padding: 12px; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid var(--primary); }
+        .machine-card { background: var(--surface-light); padding: 12px; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid var(--primary); cursor: pointer; }
+        .machine-card:active { opacity: 0.8; }
         .btn-outline { display: block; text-align: center; border: 1px dashed var(--text-sub); color: var(--text-sub); padding: 12px; border-radius: 6px; margin-top: 10px; cursor: pointer; font-weight: bold;}
         
         /* 入力フォーム */
         .form-group { padding: 15px; border-bottom: 1px solid var(--border); background: var(--surface); }
         .form-label { font-size: 12px; color: var(--text-sub); margin-bottom: 8px; display: flex; justify-content: space-between; }
         .form-input { width: 100%; background: var(--surface-light); color: var(--text-main); border: 1px solid var(--border); padding: 12px; border-radius: 6px; font-size: 16px; outline: none; }
-        .form-input[readonly] { opacity: 0.7; cursor: not-allowed; }
+        .form-input[readonly] { opacity: 0.7; cursor: not-allowed; background: var(--bg); }
         input[type="date"] { appearance: none; -webkit-appearance: none; }
         .save-btn { background: var(--primary); color: #fff; font-weight: bold; padding: 15px; text-align: center; border-radius: 8px; margin: 20px 15px; cursor: pointer; font-size: 16px; }
         .save-btn:active { opacity: 0.8; }
@@ -70,11 +70,16 @@
         .role-count { font-size: 16px; font-weight: bold; margin-top: 4px; }
         .role-prob { font-size: 10px; color: var(--secondary); }
 
-        /* ナビゲーション (均等配置) */
+        /* ナビゲーション */
         .nav-bar { position: absolute; bottom: 0; width: 100%; height: 75px; background: var(--surface); display: flex; justify-content: space-between; border-top: 1px solid var(--border); align-items: center; z-index: 20; padding-bottom: 15px; }
         .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-sub); font-size: 10px; cursor: pointer; height: 100%; }
         .nav-item.active { color: var(--primary); font-weight: bold; }
         .nav-icon { font-size: 22px; margin-bottom: 4px; }
+
+        /* モーダル */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 100; }
+        .modal-content { background: var(--surface); padding: 20px; border-radius: 8px; width: 80%; max-width: 320px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
+        .modal-btn { padding: 12px; border-radius: 6px; font-weight: bold; text-align: center; cursor: pointer; border: none; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -87,7 +92,6 @@
         <main>
             <!-- 🏠 ホーム -->
             <div v-show="currentTab === 'home'">
-                <!-- 月切替ナビゲーション -->
                 <div class="month-nav">
                     <button @click="changeMonth(-1)">◀</button>
                     <span style="font-weight:bold; font-size: 16px;">{{ currentYear }}年 {{ currentMonth }}月</span>
@@ -104,9 +108,8 @@
                          }" 
                          @click="selectDay(day)">
                         <div class="cal-date" :style="{opacity: day.empty ? 0 : 1}">{{ day.date || 1 }}</div>
-                        <!-- 算用数字全桁表示 -->
-                        <div class="cal-val val-plus" v-if="!day.empty && getDayTotal(day.fullDate) > 0">+{{ getDayTotal(day.fullDate).toLocaleString() }}</div>
-                        <div class="cal-val val-minus" v-if="!day.empty && getDayTotal(day.fullDate) < 0">{{ getDayTotal(day.fullDate).toLocaleString() }}</div>
+                        <div class="cal-val val-plus" v-if="!day.empty && getDayTotal(day.fullDate) > 0">+¥{{ getDayTotal(day.fullDate).toLocaleString() }}</div>
+                        <div class="cal-val val-minus" v-if="!day.empty && getDayTotal(day.fullDate) < 0">-¥{{ Math.abs(getDayTotal(day.fullDate)).toLocaleString() }}</div>
                     </div>
                 </div>
                 
@@ -117,21 +120,24 @@
                     </div>
                     
                     <div style="font-size:14px; margin-bottom:15px; text-align:right;">
-                        本日現金収支: <span :class="getDayTotal(selectedDay.fullDate) >= 0 ? 'val-plus' : 'val-minus'">{{ getDayTotal(selectedDay.fullDate) >= 0 ? '+' : '' }}{{ getDayTotal(selectedDay.fullDate).toLocaleString() }}円</span>
+                        本日現金収支: <span :class="getDayTotal(selectedDay.fullDate) >= 0 ? 'val-plus' : 'val-minus'">{{ getDayTotal(selectedDay.fullDate) >= 0 ? '+¥' : '-¥' }}{{ Math.abs(getDayTotal(selectedDay.fullDate)).toLocaleString() }}</span>
                     </div>
 
-                    <div class="machine-card" v-for="(m, index) in getMachinesForDate(selectedDay.fullDate)" :key="index">
+                    <!-- 履歴カードタップで編集・削除モーダルへ -->
+                    <div class="machine-card" v-for="(m, index) in getMachinesForDate(selectedDay.fullDate)" :key="index" @click="openActionModal(index)">
                         <div style="font-weight:bold; font-size:14px; margin-bottom:5px;">{{ m.machineNumber }}台目: {{ m.name || '機種不明' }} (貸出: {{m.rate}}枚)</div>
-                        <div style="display:flex; justify-content:space-between; font-size:13px; margin-top:5px; border-bottom:1px dashed var(--border); padding-bottom:5px;">
+                        <div style="display:flex; justify-content:space-between; font-size:13px; margin-top:5px;">
+                            <span>現金投資: ¥{{ m.cashInvest.toLocaleString() }}</span>
+                            <span>持ち込み: {{ m.broughtIn }}枚</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; font-size:13px; margin-top:3px; border-bottom:1px dashed var(--border); padding-bottom:5px;">
                             <span>純差枚数:</span>
                             <span :class="m.netBalance >= 0 ? 'val-plus' : 'val-minus'">{{ m.netBalance >= 0 ? '+' : '' }}{{ m.netBalance.toLocaleString() }} 枚</span>
                         </div>
-                        <!-- メモ・写真の表示 -->
                         <div v-if="m.memo" style="font-size:12px; color:var(--text-sub); margin-top:8px; white-space: pre-wrap; background: var(--bg); padding: 8px; border-radius: 4px;">📝 {{ m.memo }}</div>
                         <img v-if="m.photo" :src="m.photo" style="max-height: 80px; margin-top: 8px; border-radius: 4px; display: block;">
                     </div>
                     
-                    <!-- 追加ボタン変更 -->
                     <div class="btn-outline" @click="prepareMachineInput">＋ 遊技履歴を追加</div>
                 </div>
             </div>
@@ -139,7 +145,6 @@
             <!-- 🎲 小役カウンター -->
             <div v-show="currentTab === 'counter'">
                 <div class="counter-header">
-                    <!-- ページ名カスタマイズ -->
                     <select class="page-select" v-model="cPage">
                         <option v-for="(p, i) in counterData" :key="i" :value="i">📄 {{ p.pageName || `ページ${i+1}` }}</option>
                     </select>
@@ -162,13 +167,11 @@
                     <div class="role-row">
                         <div class="role-item" v-for="(col, i) in r1Colors" :key="'r1'+i">
                             <button class="circle-btn" :style="{background: col}" @click="activePage.r1[i]++"></button>
-                            <!-- 色名廃止 -->
                             <span class="role-count">{{ activePage.r1[i] }}</span>
                             <span class="role-prob">{{ getProb(activePage.r1[i], activePage.games) }}</span>
                         </div>
                     </div>
                     
-                    <!-- 小役名カスタマイズ -->
                     <div class="form-label" style="margin-bottom:10px;">
                         <span>【2段目：カスタム小役】(タップでカウント)</span>
                         <span style="color:var(--primary); cursor:pointer;" @click="editRoleNames">✏️名前変更</span>
@@ -183,7 +186,7 @@
                 </div>
             </div>
 
-            <!-- 🎰 遊技履歴入力 (カニ歩き) -->
+            <!-- 🎰 遊技履歴入力 / 編集 -->
             <div v-show="currentTab === 'input_machine'">
                 <div class="form-group">
                     <span class="form-label">📅 日付</span>
@@ -201,9 +204,10 @@
                     <input type="number" class="form-input" v-model.number="form.rate">
                 </div>
                 <div class="form-group">
-                    <span class="form-label">📥 持ち込み枚数 (自動設定)</span>
-                    <input type="number" class="form-input" v-model.number="form.broughtIn" :readonly="form.machineNumber > 1">
-                    <span style="font-size: 11px; color: var(--text-sub); margin-top: 4px; display: block;" v-if="form.machineNumber > 1">※直前の台の残った枚数が自動で引き継がれています</span>
+                    <span class="form-label">📥 持ち込み枚数 (自動反映)</span>
+                    <!-- 入力不可の自動反映のみ -->
+                    <input type="number" class="form-input" v-model.number="form.broughtIn" readonly>
+                    <span style="font-size: 11px; color: var(--text-sub); margin-top: 4px; display: block;">※直前の台の残った枚数が自動で引き継がれています</span>
                 </div>
                 <div class="form-group">
                     <span class="form-label">💴 追加現金投資 (円)</span>
@@ -224,7 +228,6 @@
                     <input type="number" class="form-input" v-model.number="form.leftMedals">
                 </div>
                 
-                <!-- メモと写真の追加 -->
                 <div class="form-group">
                     <span class="form-label">📝 メモ</span>
                     <textarea class="form-input" v-model="form.memo" rows="3" placeholder="台の挙動や設定推測要素など"></textarea>
@@ -232,13 +235,13 @@
                 <div class="form-group">
                     <span class="form-label">📷 写真添付 (終了画面やグラフなど)</span>
                     <input type="file" accept="image/*" class="form-input" @change="handlePhotoUpload">
-                    <img v-if="form.photo" :src="form.photo" style="max-height: 100px; margin-top: 10px; border-radius: 6px;">
+                    <img v-if="form.photo" :src="form.photo" style="max-height: 100px; margin-top: 10px; border-radius: 6px; display: block;">
                 </div>
 
                 <div class="form-group" style="border:none; text-align:center;">
                     <div style="font-size:12px; color:var(--text-sub);">この台単体の純差枚数</div>
                     <div style="font-size:24px; font-weight:bold;" :class="netBalance >= 0 ? 'val-plus' : 'val-minus'">
-                        {{ netBalance >= 0 ? '+' : '' }}{{ netBalance }} 枚
+                        {{ netBalance >= 0 ? '+' : '' }}{{ netBalance.toLocaleString() }} 枚
                     </div>
                 </div>
                 <div class="save-btn" @click="saveMachine">💾 この台を保存する</div>
@@ -267,7 +270,7 @@
             </div>
         </main>
         
-        <!-- ナビゲーション (均等配置) -->
+        <!-- ナビゲーション -->
         <div class="nav-bar">
             <div class="nav-item" :class="{active: currentTab==='home'}" @click="currentTab='home'">
                 <span class="nav-icon">🏠</span><span>ホーム</span>
@@ -279,6 +282,16 @@
                 <span class="nav-icon">📊</span><span>分析</span>
             </div>
         </div>
+
+        <!-- ⚙️ 履歴編集・削除モーダル -->
+        <div class="modal-overlay" v-if="showActionModal" @click.self="showActionModal = false">
+            <div class="modal-content">
+                <h3 style="margin:0 0 10px 0; font-size:16px; text-align:center;">遊技履歴の操作</h3>
+                <button class="modal-btn" style="background:var(--primary); color:#fff;" @click="editMachine">✏️ 編集する</button>
+                <button class="modal-btn" style="background:var(--error); color:#fff;" @click="deleteMachine">🗑️ 削除する</button>
+                <button class="modal-btn" style="background:var(--surface-light); color:var(--text-main);" @click="showActionModal = false">キャンセル</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -288,7 +301,6 @@
             setup() {
                 const currentTab = ref('home');
                 
-                // --- ⌚ リアルタイム時刻 ---
                 const currentTime = ref('');
                 let timer = null;
                 const updateTime = () => {
@@ -297,9 +309,9 @@
                 };
 
                 const headerTitle = computed(() => {
-                    if(currentTab.value === 'home') return currentTime.value; // ダッシュボードを日時に
+                    if(currentTab.value === 'home') return currentTime.value;
                     if(currentTab.value === 'counter') return '小役カウンター';
-                    if(currentTab.value === 'input_machine') return '遊技履歴追加';
+                    if(currentTab.value === 'input_machine') return isEditing.value ? '遊技履歴編集' : '遊技履歴追加';
                     if(currentTab.value === 'input_daily') return '日別収支確定';
                     if(currentTab.value === 'analysis') return '分析・レポート';
                     return 'Gachi-Slot';
@@ -313,7 +325,6 @@
                 };
                 document.documentElement.setAttribute('data-theme', themes[0].id);
 
-                // --- 💾 データ永続化 ---
                 const appData = ref({});
                 const loadData = () => {
                     const saved = localStorage.getItem('gachi_slot_data');
@@ -323,7 +334,6 @@
                     localStorage.setItem('gachi_slot_data', JSON.stringify(newVal));
                 }, { deep: true });
 
-                // --- 📅 カレンダーロジック (月切替対応) ---
                 const today = new Date();
                 const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
                 
@@ -335,7 +345,7 @@
                 const generateCalendar = () => {
                     calDays.value = [];
                     const firstDay = new Date(currentYear.value, currentMonth.value - 1, 1).getDay();
-                    const offset = firstDay === 0 ? 6 : firstDay - 1; // 月曜始まり
+                    const offset = firstDay === 0 ? 6 : firstDay - 1;
                     
                     for(let i=0; i<offset; i++) calDays.value.push({ empty: true });
                     const lastDate = new Date(currentYear.value, currentMonth.value, 0).getDate();
@@ -368,17 +378,45 @@
                     return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
                 };
 
-                // --- 🎰 遊技履歴(カニ歩き) 入力 ---
+                // --- 🎰 遊技履歴 編集・削除制御用 ---
+                const isEditing = ref(false);
+                const editingIndex = ref(null);
+                const showActionModal = ref(false);
+                const activeMachineIndex = ref(null);
+
+                const openActionModal = (index) => {
+                    activeMachineIndex.value = index;
+                    showActionModal.value = true;
+                };
+
                 const form = ref({ date: todayStr, machineNumber: 1, name: '', rate: 46, broughtIn: 0, cashInvest: 0, savedSign: -1, savedVal: 0, leftMedals: 0, memo: '', photo: '' });
                 
-                watch(() => form.value.date, (newDate) => {
-                    const existingMachines = appData.value[newDate]?.machines || [];
-                    const nextNum = existingMachines.length + 1;
-                    form.value.machineNumber = nextNum;
-                    if (nextNum === 1) {
-                        form.value.broughtIn = 0;
+                // 持ち込み枚数の自動連動計算（日付変更時や編集時）
+                const updateBroughtInAndNumber = (dateStr, targetIdx = null) => {
+                    const machines = appData.value[dateStr]?.machines || [];
+                    if (targetIdx !== null) {
+                        // 編集時：指定インデックスまでの連動
+                        form.value.machineNumber = targetIdx + 1;
+                        if (targetIdx === 0) {
+                            form.value.broughtIn = 0;
+                        } else {
+                            form.value.broughtIn = machines[targetIdx - 1].leftMedals || 0;
+                        }
                     } else {
-                        form.value.broughtIn = existingMachines[existingMachines.length - 1].leftMedals || 0;
+                        // 新規追加時
+                        const nextNum = machines.length + 1;
+                        form.value.machineNumber = nextNum;
+                        if (nextNum === 1) {
+                            form.value.broughtIn = 0;
+                        } else {
+                            form.value.broughtIn = machines[machines.length - 1].leftMedals || 0;
+                        }
+                    }
+                };
+
+                watch(() => form.value.date, (newDate) => {
+                    if (!isEditing.value) {
+                        updateBroughtInAndNumber(newDate);
                     }
                 });
 
@@ -394,31 +432,83 @@
                     if(!file) return;
                     const reader = new FileReader();
                     reader.onload = (ev) => { form.value.photo = ev.target.result; };
-                    reader.readAsDataURL(file); // Base64化して保存
+                    reader.readAsDataURL(file);
                 };
 
                 const prepareMachineInput = () => {
+                    isEditing.value = false;
+                    editingIndex.value = null;
                     let targetDate = todayStr;
                     if (selectedDay.value && !selectedDay.value.empty) {
                         targetDate = selectedDay.value.fullDate;
                     }
                     form.value.date = targetDate;
-                    const existingMachines = appData.value[targetDate]?.machines || [];
-                    const nextNum = existingMachines.length + 1;
-                    form.value.machineNumber = nextNum;
                     form.value.name = '';
+                    form.value.rate = 46;
                     form.value.cashInvest = 0;
+                    form.value.savedSign = -1;
                     form.value.savedVal = 0;
                     form.value.leftMedals = 0;
                     form.value.memo = '';
                     form.value.photo = '';
                     
-                    if (nextNum === 1) {
-                        form.value.broughtIn = 0;
-                    } else {
-                        form.value.broughtIn = existingMachines[existingMachines.length - 1].leftMedals || 0;
-                    }
+                    updateBroughtInAndNumber(targetDate);
                     currentTab.value = 'input_machine';
+                };
+
+                const editMachine = () => {
+                    showActionModal.value = false;
+                    isEditing.value = true;
+                    editingIndex.value = activeMachineIndex.value;
+                    const target = appData.value[selectedDay.value.fullDate].machines[editingIndex.value];
+                    
+                    form.value = {
+                        date: selectedDay.value.fullDate,
+                        machineNumber: target.machineNumber,
+                        name: target.name,
+                        rate: target.rate,
+                        broughtIn: target.broughtIn,
+                        cashInvest: target.cashInvest,
+                        savedSign: target.savedSign,
+                        savedVal: target.savedVal,
+                        leftMedals: target.leftMedals,
+                        memo: target.memo || '',
+                        photo: target.photo || ''
+                    };
+                    currentTab.value = 'input_machine';
+                };
+
+                // 削除時に後続の台の持ち込み枚数や番号を自動再計算して整合性を保つ
+                const deleteMachine = () => {
+                    showActionModal.value = false;
+                    if(!confirm("この遊技履歴を削除しますか？ 後続の台のデータも自動再調整されます。")) return;
+                    
+                    const d = selectedDay.value.fullDate;
+                    let machines = appData.value[d].machines;
+                    machines.splice(activeMachineIndex.value, 1);
+                    
+                    // 後続の台を再スキャンして持ち込み枚数と番号を連動・整合性調整
+                    let prevLeft = 0;
+                    machines.forEach((m, idx) => {
+                        m.machineNumber = idx + 1;
+                        if (idx > 0) {
+                            m.broughtIn = prevLeft;
+                            // 再計算
+                            let cashToMedals = Math.floor((m.cashInvest / 1000) * m.rate);
+                            let savedDelta = m.savedSign * m.savedVal;
+                            let totalInvest = m.broughtIn + cashToMedals - savedDelta;
+                            m.netBalance = m.leftMedals - totalInvest;
+                        } else {
+                            m.broughtIn = 0;
+                            let cashToMedals = Math.floor((m.cashInvest / 1000) * m.rate);
+                            let savedDelta = m.savedSign * m.savedVal;
+                            let totalInvest = m.broughtIn + cashToMedals - savedDelta;
+                            m.netBalance = m.leftMedals - totalInvest;
+                        }
+                        prevLeft = m.leftMedals;
+                    });
+                    
+                    appData.value[d].machines = machines;
                 };
 
                 const saveMachine = () => {
@@ -429,12 +519,38 @@
                     const d = form.value.date;
                     if (!appData.value[d]) appData.value[d] = { machines: [], daily: { invest:0, recover:0, net:0 } };
                     
-                    appData.value[d].machines.push({
-                        ...form.value,
-                        netBalance: netBalance.value
+                    let machines = appData.value[d].machines;
+
+                    if (isEditing.value) {
+                        // 編集保存
+                        machines[editingIndex.value] = { ...form.value, netBalance: netBalance.value };
+                    } else {
+                        // 新規保存
+                        machines.push({ ...form.value, netBalance: netBalance.value });
+                    }
+
+                    // 💡 連鎖する後続の台（2台目以降）の「持ち込み枚数」と「番号」をすべて自動再連動・調整
+                    let prevLeft = 0;
+                    machines.forEach((m, idx) => {
+                        m.machineNumber = idx + 1;
+                        if (idx > 0) {
+                            m.broughtIn = prevLeft;
+                            let cashToMedals = Math.floor((m.cashInvest / 1000) * m.rate);
+                            let savedDelta = m.savedSign * m.savedVal;
+                            let totalInvest = m.broughtIn + cashToMedals - savedDelta;
+                            m.netBalance = m.leftMedals - totalInvest;
+                        } else {
+                            m.broughtIn = 0;
+                            let cashToMedals = Math.floor((m.cashInvest / 1000) * m.rate);
+                            let savedDelta = m.savedSign * m.savedVal;
+                            let totalInvest = m.broughtIn + cashToMedals - savedDelta;
+                            m.netBalance = m.leftMedals - totalInvest;
+                        }
+                        prevLeft = m.leftMedals;
                     });
-                    
-                    // カレンダーの月を合わせた上で選択状態に戻す
+
+                    appData.value[d].machines = machines;
+
                     const savedDate = new Date(d);
                     currentYear.value = savedDate.getFullYear();
                     currentMonth.value = savedDate.getMonth() + 1;
@@ -470,8 +586,6 @@
 
                 // --- 🎲 小役カウンター ---
                 const cPage = ref(0);
-                
-                // 初期データ(pageName追加)
                 const defaultCounter = [
                     { pageName: '通常時', games: 0, r1: [0,0,0,0,0], r2Names: ['チェリー','スイカ','ベル','チャンス目','カスタム5'], r2: [0,0,0,0,0] },
                     { pageName: 'CZ/高確', games: 0, r1: [0,0,0,0,0], r2Names: ['カスタム1','カスタム2','カスタム3','カスタム4','カスタム5'], r2: [0,0,0,0,0] },
@@ -479,7 +593,6 @@
                 ];
                 
                 const loadedCounter = localStorage.getItem('gachi_counter') ? JSON.parse(localStorage.getItem('gachi_counter')) : defaultCounter;
-                // 古いデータへのpageNameの互換性対応
                 loadedCounter.forEach((p, i) => { if(!p.pageName) p.pageName = defaultCounter[i].pageName; });
                 
                 const counterData = ref(loadedCounter);
@@ -518,7 +631,7 @@
                     loadData();
                     generateCalendar();
                     updateTime();
-                    timer = setInterval(updateTime, 60000); // 1分ごとに時計更新
+                    timer = setInterval(updateTime, 60000);
                     
                     const td = calDays.value.find(day => day.fullDate === todayStr);
                     if(td) selectDay(td);
@@ -535,7 +648,8 @@
                     getMachinesForDate, getDayTotal, formatDateDisplay,
                     form, netBalance, prepareMachineInput, saveMachine, handlePhotoUpload,
                     dailyForm, saveDailyTotal,
-                    cPage, counterData, activePage, r1Colors, getProb, resetCounter, editPageName, editRoleNames
+                    cPage, counterData, activePage, r1Colors, getProb, resetCounter, editPageName, editRoleNames,
+                    showActionModal, openActionModal, editMachine, deleteMachine
                 }
             }
         }).mount('#app');
