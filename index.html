@@ -80,6 +80,9 @@
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 100; }
         .modal-content { background: var(--surface); padding: 20px; border-radius: 8px; width: 80%; max-width: 320px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
         .modal-btn { padding: 12px; border-radius: 6px; font-weight: bold; text-align: center; cursor: pointer; border: none; font-size: 14px; }
+        
+        /* 1日のサマリー表示用 */
+        .day-summary-box { font-size: 13px; margin-bottom: 15px; background: var(--surface-light); padding: 12px; border-radius: 6px; display: flex; flex-direction: column; gap: 8px; border: 1px solid var(--border); }
     </style>
 </head>
 <body>
@@ -114,21 +117,32 @@
                 </div>
                 
                 <div class="day-detail" v-if="selectedDay && !selectedDay.empty">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                        <h3 style="margin:0; font-size:16px;">{{ formatDateDisplay(selectedDay.fullDate) }} の稼働</h3>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <h3 style="margin:0; font-size:16px;">{{ formatDateDisplay(selectedDay.fullDate) }}</h3>
                         <button style="padding:5px 10px; border-radius:4px; background:var(--primary); color:#fff; border:none;" @click="currentTab='input_daily'">💰 最終収支入力</button>
                     </div>
                     
-                    <div style="font-size:14px; margin-bottom:15px; text-align:right;">
-                        本日現金収支: <span :class="getDayTotal(selectedDay.fullDate) >= 0 ? 'val-plus' : 'val-minus'">{{ getDayTotal(selectedDay.fullDate) >= 0 ? '+¥' : '-¥' }}{{ Math.abs(getDayTotal(selectedDay.fullDate)).toLocaleString() }}</span>
+                    <!-- 日別サマリー表示（投資・回収・現金収支・メダル増減） -->
+                    <div class="day-summary-box">
+                        <div style="display:flex; justify-content:space-between; font-weight:bold;">
+                            <span>総投資: ¥{{ getDayInvest(selectedDay.fullDate).toLocaleString() }}</span>
+                            <span>現金回収: ¥{{ getDayRecover(selectedDay.fullDate).toLocaleString() }}</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; border-top:1px dashed var(--border); padding-top:8px;">
+                            <span>貯メダル増減: <span :class="getDayMedalDelta(selectedDay.fullDate) >= 0 ? 'val-plus' : 'val-minus'">{{ getDayMedalDelta(selectedDay.fullDate) >= 0 ? '+' : '' }}{{ getDayMedalDelta(selectedDay.fullDate).toLocaleString() }} 枚</span></span>
+                            <span>現金収支: <span :class="getDayTotal(selectedDay.fullDate) >= 0 ? 'val-plus' : 'val-minus'">{{ getDayTotal(selectedDay.fullDate) >= 0 ? '+¥' : '-¥' }}{{ Math.abs(getDayTotal(selectedDay.fullDate)).toLocaleString() }}</span></span>
+                        </div>
                     </div>
 
-                    <!-- 履歴カードタップで編集・削除モーダルへ -->
+                    <!-- 遊技履歴カード -->
                     <div class="machine-card" v-for="(m, index) in getMachinesForDate(selectedDay.fullDate)" :key="index" @click="openActionModal(index)">
                         <div style="font-weight:bold; font-size:14px; margin-bottom:5px;">{{ m.machineNumber }}台目: {{ m.name || '機種不明' }} (貸出: {{m.rate}}枚)</div>
                         <div style="display:flex; justify-content:space-between; font-size:13px; margin-top:5px;">
                             <span>現金投資: ¥{{ m.cashInvest.toLocaleString() }}</span>
                             <span>持ち込み: {{ m.broughtIn }}枚</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; font-size:13px; margin-top:3px;">
+                            <span>貯メダル増減: <span :class="(m.savedSign * m.savedVal) >= 0 ? 'val-plus' : 'val-minus'">{{ (m.savedSign * m.savedVal) >= 0 ? '+' : '' }}{{ (m.savedSign * m.savedVal).toLocaleString() }} 枚</span></span>
                         </div>
                         <div style="display:flex; justify-content:space-between; font-size:13px; margin-top:3px; border-bottom:1px dashed var(--border); padding-bottom:5px;">
                             <span>純差枚数:</span>
@@ -205,9 +219,8 @@
                 </div>
                 <div class="form-group">
                     <span class="form-label">📥 持ち込み枚数 (自動反映)</span>
-                    <!-- 入力不可の自動反映のみ -->
                     <input type="number" class="form-input" v-model.number="form.broughtIn" readonly>
-                    <span style="font-size: 11px; color: var(--text-sub); margin-top: 4px; display: block;">※直前の台の残った枚数が自動で引き継がれています</span>
+                    <span style="font-size: 11px; color: var(--text-sub); margin-top: 4px; display: block;" v-if="form.machineNumber > 1">※直前の台の残った枚数が自動で引き継がれています</span>
                 </div>
                 <div class="form-group">
                     <span class="form-label">💴 追加現金投資 (円)</span>
@@ -247,19 +260,29 @@
                 <div class="save-btn" @click="saveMachine">💾 この台を保存する</div>
             </div>
 
-            <!-- 💰 日別現金トータル入力 -->
+            <!-- 💰 日別最終収支入力 -->
             <div v-show="currentTab === 'input_daily'">
                 <div class="form-group">
                     <h3 style="margin-top:0;">{{ selectedDay ? formatDateDisplay(selectedDay.fullDate) : '' }} 最終収支</h3>
-                    <p style="font-size:12px; color:var(--text-sub);">本日の「総投資」と「最終回収」を入力して収支を確定させます。</p>
+                    <p style="font-size:12px; color:var(--text-sub);">本日の「総投資」「現金回収」「貯メダル増減」を入力して収支を確定させます。</p>
                 </div>
                 <div class="form-group">
                     <span class="form-label">💴 本日の現金【総投資】(円)</span>
                     <input type="number" class="form-input" v-model.number="dailyForm.invest" placeholder="0">
                 </div>
                 <div class="form-group">
-                    <span class="form-label">💴 本日の現金【最終回収】(円)</span>
+                    <span class="form-label">💴 本日の現金【現金回収】(円)</span>
                     <input type="number" class="form-input" v-model.number="dailyForm.recover" placeholder="0">
+                </div>
+                <div class="form-group">
+                    <span class="form-label">🪙 本日の貯メダル増減 (枚)</span>
+                    <div style="display:flex; gap:10px;">
+                        <select class="form-input" style="width:80px;" v-model="dailyForm.medalSign">
+                            <option value="1">＋</option>
+                            <option value="-1">－</option>
+                        </select>
+                        <input type="number" class="form-input" v-model.number="dailyForm.medalVal" placeholder="0">
+                    </div>
                 </div>
                 <div class="save-btn" @click="saveDailyTotal">✅ 収支を確定する</div>
             </div>
@@ -370,9 +393,13 @@
                 const getMachinesForDate = (dateStr) => {
                     return appData.value[dateStr]?.machines || [];
                 };
-                const getDayTotal = (dateStr) => {
-                    return appData.value[dateStr]?.daily?.net || 0;
-                };
+                
+                // 1日サマリー用 Getter
+                const getDayInvest = (dateStr) => appData.value[dateStr]?.daily?.invest || 0;
+                const getDayRecover = (dateStr) => appData.value[dateStr]?.daily?.recover || 0;
+                const getDayTotal = (dateStr) => appData.value[dateStr]?.daily?.net || 0;
+                const getDayMedalDelta = (dateStr) => appData.value[dateStr]?.daily?.medalDelta || 0;
+
                 const formatDateDisplay = (dateStr) => {
                     const d = new Date(dateStr);
                     return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
@@ -391,11 +418,10 @@
 
                 const form = ref({ date: todayStr, machineNumber: 1, name: '', rate: 46, broughtIn: 0, cashInvest: 0, savedSign: -1, savedVal: 0, leftMedals: 0, memo: '', photo: '' });
                 
-                // 持ち込み枚数の自動連動計算（日付変更時や編集時）
+                // 持ち込み枚数の自動連動計算
                 const updateBroughtInAndNumber = (dateStr, targetIdx = null) => {
                     const machines = appData.value[dateStr]?.machines || [];
                     if (targetIdx !== null) {
-                        // 編集時：指定インデックスまでの連動
                         form.value.machineNumber = targetIdx + 1;
                         if (targetIdx === 0) {
                             form.value.broughtIn = 0;
@@ -403,7 +429,6 @@
                             form.value.broughtIn = machines[targetIdx - 1].leftMedals || 0;
                         }
                     } else {
-                        // 新規追加時
                         const nextNum = machines.length + 1;
                         form.value.machineNumber = nextNum;
                         if (nextNum === 1) {
@@ -487,13 +512,11 @@
                     let machines = appData.value[d].machines;
                     machines.splice(activeMachineIndex.value, 1);
                     
-                    // 後続の台を再スキャンして持ち込み枚数と番号を連動・整合性調整
                     let prevLeft = 0;
                     machines.forEach((m, idx) => {
                         m.machineNumber = idx + 1;
                         if (idx > 0) {
                             m.broughtIn = prevLeft;
-                            // 再計算
                             let cashToMedals = Math.floor((m.cashInvest / 1000) * m.rate);
                             let savedDelta = m.savedSign * m.savedVal;
                             let totalInvest = m.broughtIn + cashToMedals - savedDelta;
@@ -517,19 +540,17 @@
                     if (form.value.cashInvest < 0) { alert("⚠️ 現金投資にマイナスは指定できません。"); return; }
 
                     const d = form.value.date;
-                    if (!appData.value[d]) appData.value[d] = { machines: [], daily: { invest:0, recover:0, net:0 } };
+                    if (!appData.value[d]) appData.value[d] = { machines: [], daily: { invest:0, recover:0, net:0, medalDelta:0 } };
                     
                     let machines = appData.value[d].machines;
 
                     if (isEditing.value) {
-                        // 編集保存
                         machines[editingIndex.value] = { ...form.value, netBalance: netBalance.value };
                     } else {
-                        // 新規保存
                         machines.push({ ...form.value, netBalance: netBalance.value });
                     }
 
-                    // 💡 連鎖する後続の台（2台目以降）の「持ち込み枚数」と「番号」をすべて自動再連動・調整
+                    // 💡 後続の台（2台目以降）の連動を再計算
                     let prevLeft = 0;
                     machines.forEach((m, idx) => {
                         m.machineNumber = idx + 1;
@@ -563,24 +584,28 @@
                 };
 
                 // --- 💰 日別トータル入力 ---
-                const dailyForm = ref({ invest: 0, recover: 0 });
+                const dailyForm = ref({ invest: 0, recover: 0, medalSign: 1, medalVal: 0 });
                 watch(() => currentTab.value, (newTab) => {
                     if(newTab === 'input_daily' && selectedDay.value) {
                         const d = selectedDay.value.fullDate;
                         dailyForm.value.invest = appData.value[d]?.daily?.invest || 0;
                         dailyForm.value.recover = appData.value[d]?.daily?.recover || 0;
+                        let delta = appData.value[d]?.daily?.medalDelta || 0;
+                        dailyForm.value.medalSign = delta >= 0 ? 1 : -1;
+                        dailyForm.value.medalVal = Math.abs(delta);
                     }
                 });
 
                 const saveDailyTotal = () => {
-                    if (dailyForm.value.invest < 0 || dailyForm.value.recover < 0) {
-                        alert("⚠️ 投資額および回収額にマイナスは指定できません。"); return;
+                    if (dailyForm.value.invest < 0 || dailyForm.value.recover < 0 || dailyForm.value.medalVal < 0) {
+                        alert("⚠️ マイナスの値は指定できません。"); return;
                     }
                     const d = selectedDay.value.fullDate;
-                    if (!appData.value[d]) appData.value[d] = { machines: [], daily: { invest:0, recover:0, net:0 } };
+                    if (!appData.value[d]) appData.value[d] = { machines: [], daily: { invest:0, recover:0, net:0, medalDelta:0 } };
                     appData.value[d].daily.invest = dailyForm.value.invest;
                     appData.value[d].daily.recover = dailyForm.value.recover;
                     appData.value[d].daily.net = dailyForm.value.recover - dailyForm.value.invest;
+                    appData.value[d].daily.medalDelta = dailyForm.value.medalSign * dailyForm.value.medalVal;
                     currentTab.value = 'home';
                 };
 
@@ -645,7 +670,7 @@
                     currentTab, headerTitle, themes, themeIndex, toggleTheme,
                     currentYear, currentMonth, changeMonth,
                     calDays, selectedDay, selectDay, todayStr,
-                    getMachinesForDate, getDayTotal, formatDateDisplay,
+                    getMachinesForDate, getDayInvest, getDayRecover, getDayTotal, getDayMedalDelta, formatDateDisplay,
                     form, netBalance, prepareMachineInput, saveMachine, handlePhotoUpload,
                     dailyForm, saveDailyTotal,
                     cPage, counterData, activePage, r1Colors, getProb, resetCounter, editPageName, editRoleNames,
