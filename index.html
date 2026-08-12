@@ -4,15 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Gachi-Slot 収支管理</title>
-    <!-- Vue 3 -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Firebase SDK (Compat) -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-
     <style>
         /* 🎨 テーマ設定 */
         :root[data-theme="black"] { --bg: #121212; --surface: #1e1e1e; --surface-light: #2c2c2c; --primary: #bb86fc; --secondary: #03dac6; --error: #cf6679; --success: #4caf50; --text-main: #ffffff; --text-sub: #b3b3b3; --border: #333333; }
@@ -93,7 +86,6 @@
         .g-btn { background: var(--surface-light); color: var(--text-main); border: 1px solid var(--border); padding: 10px 15px; border-radius: 8px; font-weight: bold; font-size: 16px; flex: 1; transition: all 0.1s; }
         .g-btn:active { transform: scale(0.9); opacity: 0.7; }
         
-        /* 差引計算モード用入力枠 */
         .diff-input-group { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 15px; }
         .diff-input-box { display: flex; flex-direction: column; align-items: center; }
         .diff-input { background: transparent; border: none; color: var(--text-main); font-size: 28px; font-weight: bold; width: 100px; text-align: center; border-bottom: 2px solid var(--primary); outline: none; }
@@ -187,7 +179,7 @@
                     </div>
                 </div>
 
-                <!-- カレンダーエリア -->
+                <!-- カレンダー -->
                 <div class="calendar-wrapper">
                     <div v-if="isOriginalTheme && originalSettings.bgImage" class="cal-bg-layer" :style="{ backgroundImage: `url(${originalSettings.bgImage})`, opacity: originalSettings.opacity }"></div>
                     <div class="calendar" :class="{ 'original-mode': isOriginalTheme }">
@@ -230,8 +222,8 @@
                         <div class="machine-card" @click="openActionModal(index)">
                             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                                 <div style="font-weight:bold; font-size:14px; margin-bottom:5px;">{{ m.machineNumber }}台目: {{ m.name || '機種不明' }} (貸出: {{m.rate}}枚)</div>
-                                <!-- 💡 変更：カウンターボタンの表示 -->
-                                <button v-if="m.counterSnapshot" @click.stop="openSnapshotModal(m.counterSnapshot)" style="background:var(--primary); color:#fff; border:none; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.2);">🎲 カウンター</button>
+                                <!-- 💡 変更：カウンターボタンの表示 (スナップショットがある場合のみ) -->
+                                <button v-if="getSnapshots(m).length > 0" @click.stop="handleSnapshotClick(getSnapshots(m))" style="background:var(--primary); color:#fff; border:none; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.2); cursor:pointer;">🎲 カウンター</button>
                             </div>
                             <div style="display:flex; justify-content:space-between; font-size:13px; margin-top:5px;">
                                 <span>現金投資: ¥{{ m.cashInvest.toLocaleString() }}</span>
@@ -244,7 +236,8 @@
                                 純差枚数: <span :class="m.netBalance >= 0 ? 'val-plus' : 'val-minus'">{{ m.netBalance >= 0 ? '+' : '' }}{{ m.netBalance.toLocaleString() }} 枚</span>
                             </div>
                             <div v-if="m.memo" style="font-size:12px; color:var(--text-sub); margin-top:8px; white-space: pre-wrap; background: var(--bg); padding: 8px; border-radius: 4px;">📝 {{ m.memo }}</div>
-                            <img v-if="m.photo" :src="m.photo" style="max-height: 80px; margin-top: 8px; border-radius: 4px; display: block;">
+                            <!-- 💡 変更：サムネイル押下で拡大表示 -->
+                            <img v-if="m.photo" :src="m.photo" style="max-height: 80px; margin-top: 8px; border-radius: 4px; display: block; cursor:pointer;" @click.stop="openPhotoViewer(m.photo)">
                         </div>
                     </template>
                     
@@ -447,26 +440,30 @@
                     <span class="form-label">📤 最終的に残った枚数 (手元にある枚数)</span>
                     <input type="number" class="form-input" v-model.number="form.leftMedals">
                 </div>
-                
-                <!-- 💡 変更：小役データの紐付けセクション -->
+
+                <!-- 💡 変更：小役カウンターの複数紐付けセクション -->
                 <div class="form-group">
-                    <span class="form-label">🎲 小役データの紐付け</span>
-                    <div v-if="!form.counterSnapshot">
-                        <div style="display:flex; gap:10px;">
-                            <select class="form-input" v-model="formAttachedPageIndex">
-                                <option v-for="(p, i) in counterData" :key="i" :value="i">{{ p.pageName }}</option>
-                            </select>
-                            <button class="modal-btn" style="background:var(--primary); color:#fff; white-space:nowrap; padding: 12px 15px;" @click="attachCounterData">保存</button>
-                        </div>
-                        <div style="font-size:11px; color:var(--text-sub); margin-top:5px;">※現在の小役カウントを遊技履歴と一緒に記録します</div>
+                    <span class="form-label">🎲 小役データの紐付け (最大3つ)</span>
+                    <div style="display:flex; gap:10px;">
+                        <select class="form-input" v-model="formAttachedPageIndex">
+                            <option value="-1">▼ 登録なし</option>
+                            <option v-for="(p, i) in counterData" :key="i" :value="i">{{ p.pageName }}</option>
+                        </select>
+                        <button class="modal-btn" style="background:var(--primary); color:#fff; white-space:nowrap; padding: 12px 15px;" @click="attachCounterData" :disabled="form.counterSnapshots.length >= 3">追加</button>
                     </div>
-                    <div v-else style="background:var(--surface-light); padding:12px; border-radius:6px; position:relative; border:1px solid var(--primary);">
-                        <div style="font-weight:bold; font-size:14px; color:var(--primary); margin-bottom:4px;">✅ {{ form.counterSnapshot.pageName }} を紐付け済み</div>
-                        <div style="font-size:12px; color:var(--text-sub);">回転数: {{ form.counterSnapshot.games }}G</div>
-                        <button style="position:absolute; top:12px; right:12px; background:var(--bg); border:1px solid var(--border); color:var(--text-main); border-radius:4px; padding:4px 8px; font-size:11px; cursor:pointer;" @click="form.counterSnapshot = null">解除</button>
+                    <div style="font-size:11px; color:var(--text-sub); margin-top:5px;">※現在の小役カウントを遊技履歴と一緒に記録します</div>
+                    
+                    <div v-if="form.counterSnapshots.length > 0" style="margin-top:10px; display:flex; flex-direction:column; gap:5px;">
+                        <div v-for="(snap, idx) in form.counterSnapshots" :key="idx" style="background:var(--surface-light); padding:10px; border-radius:6px; position:relative; border:1px solid var(--primary); display:flex; justify-content:space-between; align-items:center;">
+                            <div>
+                                <div style="font-weight:bold; font-size:13px; color:var(--primary);">✅ {{ snap.pageName }}</div>
+                                <div style="font-size:11px; color:var(--text-sub);">回転数: {{ snap.games }}G</div>
+                            </div>
+                            <button style="background:var(--bg); border:1px solid var(--border); color:var(--text-main); border-radius:4px; padding:4px 8px; font-size:11px; cursor:pointer;" @click="removeCounterData(idx)">解除</button>
+                        </div>
                     </div>
                 </div>
-
+                
                 <div class="form-group">
                     <span class="form-label">📝 メモ</span>
                     <textarea class="form-input" v-model="form.memo" rows="3" placeholder="台の挙動や設定推測要素など"></textarea>
@@ -583,7 +580,7 @@
 
                 <div v-show="mainSettingTab === 'backup'">
                     <div style="background:var(--surface-light); padding:15px; border-radius:8px; border: 1px solid var(--border);">
-                        <div style="font-weight:bold; margin-bottom:10px; text-align:center; font-size:13px;">データ引き継ぎ・手動バックアップ</div>
+                        <div style="font-weight:bold; margin-bottom:10px; text-align:center; font-size:13px;">データ引き継ぎ・手バックアップ</div>
                         <div style="font-size:11px; color:var(--text-sub); margin-bottom:15px; text-align:center; line-height:1.4;">
                             iPhone本体に保存されているデータを<br>丸ごと別の端末に送ったり復元できます。
                         </div>
@@ -654,7 +651,18 @@
             </div>
         </div>
 
-        <!-- 💡 変更：小役データスナップショット(サマリ)表示モーダル -->
+        <!-- 💡 変更：小役データ複数選択ポップアップ -->
+        <div class="modal-overlay" v-if="showSnapshotSelectModal" @click.self="showSnapshotSelectModal = false">
+            <div class="modal-content">
+                <h3 style="margin:0 0 10px 0; font-size:16px; text-align:center;">どのデータを表示しますか？</h3>
+                <button class="modal-btn" v-for="(snap, i) in snapshotListToSelect" :key="i" style="background:var(--surface-light); border:1px solid var(--primary); color:var(--text-main); margin-bottom:8px;" @click="openSnapshotModal(snap); showSnapshotSelectModal = false">
+                    📄 {{ snap.pageName }} ({{ snap.games }}G)
+                </button>
+                <button class="modal-btn" style="background:var(--surface); color:var(--text-sub); border:none; margin-top:5px;" @click="showSnapshotSelectModal = false">キャンセル</button>
+            </div>
+        </div>
+
+        <!-- 小役データサマリポップアップ -->
         <div class="modal-overlay" v-if="showSnapshotModal" @click.self="showSnapshotModal = false">
             <div class="modal-content" style="max-width:340px;">
                 <h3 style="margin:0 0 10px 0; font-size:16px; text-align:center;">🎰 小役データサマリ</h3>
@@ -680,6 +688,14 @@
                 </div>
                 
                 <button class="modal-btn" style="background:var(--surface); border:1px solid var(--border); color:var(--text-main); margin-top:15px;" @click="showSnapshotModal = false">閉じる</button>
+            </div>
+        </div>
+
+        <!-- 💡 変更：写真拡大表示ビューワー -->
+        <div class="modal-overlay" v-if="showPhotoViewer" @click.self="showPhotoViewer = false">
+            <div style="position:relative; width:95%; max-width:500px; text-align:center;">
+                <img :src="photoViewerSrc" style="width:100%; border-radius:8px; border:2px solid var(--border);">
+                <button style="position:absolute; top:-15px; right:-15px; background:var(--error); color:#fff; border:none; border-radius:50%; width:30px; height:30px; font-weight:bold; font-size:16px; cursor:pointer; box-shadow:0 2px 5px rgba(0,0,0,0.5);" @click="showPhotoViewer = false">×</button>
             </div>
         </div>
 
@@ -1056,8 +1072,8 @@
 
                 const openActionModal = (index) => { activeMachineIndex.value = index; showActionModal.value = true; };
 
-                // 💡 変更：form に counterSnapshot を追加
-                const form = ref({ date: todayStr, machineNumber: 1, locationSelect: '', locationNew: '', nameSelect: '', nameNew: '', isSameStore: false, rate: 46, broughtIn: 0, cashInvest: 0, savedSign: -1, savedVal: 0, leftMedals: 0, memo: '', photo: '', counterSnapshot: null });
+                // 💡 変更：form に counterSnapshots 配列を追加
+                const form = ref({ date: todayStr, machineNumber: 1, locationSelect: '', locationNew: '', nameSelect: '', nameNew: '', isSameStore: false, rate: 46, broughtIn: 0, cashInvest: 0, savedSign: -1, savedVal: 0, leftMedals: 0, memo: '', photo: '', counterSnapshots: [] });
                 
                 const onStoreTypeChange = () => {
                     const d = form.value.date;
@@ -1106,6 +1122,13 @@
                     resizeImage(file, 1000, (compressed) => { form.value.photo = compressed; });
                 };
 
+                // 💡 変更：旧データ（1つだけのスナップショット）を配列として読み込むヘルパー関数
+                const getSnapshots = (m) => {
+                    if (m.counterSnapshots && m.counterSnapshots.length > 0) return m.counterSnapshots;
+                    if (m.counterSnapshot) return [m.counterSnapshot];
+                    return [];
+                };
+
                 const prepareMachineInput = () => {
                     isEditing.value = false; editingIndex.value = null;
                     let targetDate = todayStr;
@@ -1115,9 +1138,8 @@
                     form.value.cashInvest = 0; form.value.savedSign = -1; form.value.savedVal = 0; form.value.leftMedals = 0;
                     form.value.memo = ''; form.value.photo = '';
                     
-                    // 💡 リセット時にスナップショットと選択インデックスも初期化
-                    form.value.counterSnapshot = null;
-                    formAttachedPageIndex.value = cPage.value;
+                    form.value.counterSnapshots = [];
+                    formAttachedPageIndex.value = -1; // デフォルトを登録なしに
                     
                     updateBroughtInAndNumber(targetDate);
                     currentTab.value = 'input_machine';
@@ -1138,8 +1160,9 @@
                         rate: target.rate, broughtIn: target.broughtIn, cashInvest: target.cashInvest,
                         savedSign: target.savedSign, savedVal: target.savedVal, leftMedals: target.leftMedals,
                         memo: target.memo || '', photo: target.photo || '',
-                        counterSnapshot: target.counterSnapshot || null // 💡 保存されたスナップショットをロード
+                        counterSnapshots: getSnapshots(target) // 💡 複数データをロード
                     };
+                    formAttachedPageIndex.value = -1;
                     updateBroughtInAndNumber(selectedDay.value.fullDate, editingIndex.value);
                     currentTab.value = 'input_machine';
                 };
@@ -1200,8 +1223,8 @@
                     
                     let machines = appData.value[d].machines;
                     
-                    // 💡 スナップショットごと保存
                     const saveData = { ...form.value, location: finalLocation, name: finalName, netBalance: netBalance.value };
+                    delete saveData.counterSnapshot; // 古い形式のプロパティは消去して整理
 
                     if (isEditing.value) machines[editingIndex.value] = saveData;
                     else machines.push(saveData);
@@ -1329,20 +1352,49 @@
                     showRoleEditModal.value = false;
                 };
 
-                // 💡 変更：小役データの紐付け処理
-                const formAttachedPageIndex = ref(0);
+                // 💡 変更：小役データの複数紐付け処理
+                const formAttachedPageIndex = ref(-1);
                 const attachCounterData = () => {
+                    if (formAttachedPageIndex.value === -1) return;
+                    if (form.value.counterSnapshots.length >= 3) {
+                        alert("小役データは最大3つまでしか紐付けできません。");
+                        return;
+                    }
                     const pageToAttach = counterData.value[formAttachedPageIndex.value];
-                    // ディープコピーしてスナップショットを作成（以降カウンターをいじってもここには影響しない）
-                    form.value.counterSnapshot = JSON.parse(JSON.stringify(pageToAttach));
+                    form.value.counterSnapshots.push(JSON.parse(JSON.stringify(pageToAttach)));
+                    formAttachedPageIndex.value = -1; // 選択後にリセット
                 };
 
-                // 💡 変更：小役データサマリのポップアップ表示処理
+                const removeCounterData = (idx) => {
+                    form.value.counterSnapshots.splice(idx, 1);
+                };
+
+                // 💡 変更：小役データサマリポップアップ表示処理
+                const showSnapshotSelectModal = ref(false);
+                const snapshotListToSelect = ref([]);
                 const showSnapshotModal = ref(false);
                 const snapshotData = ref(null);
+
+                const handleSnapshotClick = (snaps) => {
+                    if (snaps.length === 1) {
+                        openSnapshotModal(snaps[0]);
+                    } else if (snaps.length > 1) {
+                        snapshotListToSelect.value = snaps;
+                        showSnapshotSelectModal.value = true;
+                    }
+                };
+
                 const openSnapshotModal = (data) => {
                     snapshotData.value = data;
                     showSnapshotModal.value = true;
+                };
+
+                // 💡 変更：写真拡大ビューワー
+                const showPhotoViewer = ref(false);
+                const photoViewerSrc = ref('');
+                const openPhotoViewer = (src) => {
+                    photoViewerSrc.value = src;
+                    showPhotoViewer.value = true;
                 };
 
                 onMounted(() => {
@@ -1367,7 +1419,9 @@
                     showActionModal, openActionModal, editMachine, deleteMachine,
                     analysisSubTab, changeMainTab, changeAnalysisTab, storeRanking,
                     storeList, machineList, showSettingsModal, settingTab, renameStore, renameMachine,
-                    formAttachedPageIndex, attachCounterData, showSnapshotModal, snapshotData, openSnapshotModal
+                    formAttachedPageIndex, attachCounterData, removeCounterData, getSnapshots, handleSnapshotClick, 
+                    showSnapshotSelectModal, snapshotListToSelect, showSnapshotModal, snapshotData, openSnapshotModal,
+                    showPhotoViewer, photoViewerSrc, openPhotoViewer
                 }
             }
         }).mount('#app');
