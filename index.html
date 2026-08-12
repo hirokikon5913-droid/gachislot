@@ -129,7 +129,6 @@
         <!-- ヘッダー -->
         <header>
             <div style="display:flex; align-items:center; gap: 12px;">
-                <!-- 💡 ホームタブのみ設定マーク＆ユーザーアイコンを表示 -->
                 <span v-show="currentTab === 'home'" style="cursor:pointer;" @click="showSettingsModal = true">
                     <img v-if="currentUser" :src="currentUser.photoURL || 'https://via.placeholder.com/30'" style="width:30px; height:30px; border-radius:50%; object-fit:cover; border:2px solid var(--primary);">
                     <span v-else style="font-size:24px;">⚙️</span>
@@ -457,7 +456,6 @@
             <div class="modal-content">
                 <h3 style="margin:0 0 15px 0; font-size:16px; text-align:center;">設定 / データ管理</h3>
                 
-                <!-- 💡 変更：Googleログイン＆クラウド同期エリア -->
                 <div style="background:var(--surface-light); padding:15px; border-radius:8px; margin-bottom:15px; text-align:center; border: 1px solid var(--border);">
                     <div v-if="currentUser">
                         <img :src="currentUser.photoURL || 'https://via.placeholder.com/50'" style="width:50px; height:50px; border-radius:50%; margin-bottom:10px; border: 2px solid var(--primary);">
@@ -554,11 +552,17 @@
                 // --- ☁️ Firebase アカウント連携 & 同期 ---
                 const currentUser = ref(null);
                 const syncStatus = ref('ローカルに保存');
-                let isCloudLoading = false; // 無限ループ防止フラグ
+                let isCloudLoading = false; 
 
                 const loginWithGoogle = () => {
                     const provider = new firebase.auth.GoogleAuthProvider();
-                    auth.signInWithRedirect(provider);
+                    // 💡 変更: iOS PWA対策でPopup方式へ変更、エラー時のアラート追加
+                    auth.signInWithPopup(provider).then((result) => {
+                        console.log("ログイン成功", result.user);
+                    }).catch((error) => {
+                        alert("⚠️ ログインエラー: " + error.message);
+                        console.error(error);
+                    });
                 };
 
                 const logout = () => {
@@ -573,7 +577,6 @@
                     syncStatus.value = '☁️ 保存中...';
                     if (saveTimeout) clearTimeout(saveTimeout);
                     
-                    // 1.5秒後に入力が止まったらクラウドへ保存
                     saveTimeout = setTimeout(() => {
                         db.collection('users').doc(currentUser.value.uid).set({
                             appData: appData.value,
@@ -592,11 +595,10 @@
                         currentUser.value = user;
                         syncStatus.value = '☁️ クラウドから読込中...';
                         
-                        // ログイン成功時にクラウドからデータを取得して上書き
                         db.collection('users').doc(user.uid).get().then(doc => {
                             if (doc.exists) {
                                 const d = doc.data();
-                                isCloudLoading = true; // 監視(watch)による上書きループを防ぐ
+                                isCloudLoading = true; 
                                 if(d.appData) appData.value = d.appData;
                                 if(d.storeList) storeList.value = d.storeList;
                                 if(d.machineList) machineList.value = d.machineList;
@@ -605,7 +607,6 @@
                                 setTimeout(() => { isCloudLoading = false; }, 500);
                                 syncStatus.value = '☁️ 同期完了';
                             } else {
-                                // 初回ログインの場合は現在のローカルデータをクラウドに送信
                                 saveToCloud();
                             }
                         }).catch(e => {
@@ -650,7 +651,7 @@
                 };
                 document.documentElement.setAttribute('data-theme', themes[0].id);
 
-                // --- 💾 データ連携と監視 (ローカル＆クラウド) ---
+                // --- 💾 データ連携と監視 ---
                 const appData = ref({});
                 const loadData = () => {
                     const saved = localStorage.getItem('gachi_slot_data');
@@ -658,7 +659,7 @@
                 };
                 watch(appData, (newVal) => {
                     localStorage.setItem('gachi_slot_data', JSON.stringify(newVal));
-                    saveToCloud(); // 変更があればクラウド保存もトリガー
+                    saveToCloud(); 
                 }, { deep: true });
 
                 const defaultStores = ["スペース666", "ゾーン戸畑", "メガフェイス1500宗像", "ワンダーランド福岡東", "アプロ7", "スーパーハリウッド1120", "EVO3", "D'station中間", "テキサス下関", "ピータイム下関", "まるみつ下関", "デルパラ山口"];
@@ -1166,7 +1167,7 @@
                 const editPageName = () => {
                     const newName = prompt(`現在のページ「${activePage.value.pageName}」の新しい名称を入力してください：`, activePage.value.pageName);
                     if (newName !== null && newName.trim() !== '') activePage.value.pageName = newName.trim();
-                    selectedPageIndex.value = cPage.value; // プルダウンの表示更新
+                    selectedPageIndex.value = cPage.value; 
                 };
                 
                 const showRoleEditModal = ref(false);
