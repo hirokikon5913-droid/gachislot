@@ -16,54 +16,56 @@
         body { margin: 0; padding: 0; background: var(--bg); color: var(--text-main); transition: background 0.3s; }
         #app { max-width: 500px; margin: 0 auto; height: 100vh; display: flex; flex-direction: column; background: var(--bg); position: relative; }
         
-        header { padding: 15px; background: var(--surface); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); font-weight: bold; z-index: 10; }
-        .theme-btn { background: var(--surface-light); color: var(--text-main); border: 1px solid var(--border); padding: 5px 10px; border-radius: 20px; font-size: 12px; cursor: pointer; }
-        
-        main { flex: 1; overflow-y: auto; padding-bottom: 90px; }
-        
+        /* 🛠 共通ユーティリティクラス */
+        .flex { display: flex; } .flex-col { display: flex; flex-direction: column; }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+        .flex-center { display: flex; justify-content: center; align-items: center; }
+        .text-center { text-align: center; } .font-bold { font-weight: bold; }
+        .text-sm { font-size: 12px; } .text-sub { color: var(--text-sub); }
+        .mt-2 { margin-top: 10px; } .mb-2 { margin-bottom: 10px; }
+        .gap-2 { gap: 10px; } .p-3 { padding: 15px; }
+        .card { background: var(--surface-light); padding: 15px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 15px; }
+        .card-title { font-weight: bold; margin-bottom: 10px; font-size: 13px; text-align: center; }
         .val-plus { color: var(--success); font-weight: bold; }
         .val-minus { color: var(--error); font-weight: bold; }
+        .warning-box { border-color: var(--error); }
+        .btn-primary { background: var(--primary); color: #fff; }
+        .btn-danger { background: var(--error); color: #fff; }
+        .btn-outline { background: var(--surface); color: var(--text-main); border: 1px solid var(--border); }
+
+        /* ヘッダー周り */
+        header { padding: 15px; background: var(--surface); border-bottom: 1px solid var(--border); font-weight: bold; z-index: 10; }
+        .theme-btn { background: var(--surface-light); color: var(--text-main); border: 1px solid var(--border); padding: 5px 10px; border-radius: 20px; font-size: 12px; cursor: pointer; }
+        main { flex: 1; overflow-y: auto; padding-bottom: 90px; }
         
         /* カレンダー・ダッシュボード */
-        .month-nav { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: var(--surface); }
-        .month-nav button { background: transparent; color: var(--primary); border: none; font-size: 18px; cursor: pointer; padding: 5px 15px; font-weight: bold; }
-        
-        .month-summary-box { display: flex; justify-content: space-between; background: var(--surface-light); padding: 10px 15px; border-bottom: 1px solid var(--border); border-top: 1px solid var(--border); font-size: 13px; font-weight: bold; }
-        .summary-item { display: flex; flex-direction: column; align-items: center; }
-        .summary-label { font-size: 10px; color: var(--text-sub); margin-bottom: 2px; }
-
-        /* カレンダー Originalテーマ用のラッパー設定 */
+        .month-nav { padding: 10px 15px; background: var(--surface); }
+        .month-nav button { background: transparent; border: none; font-size: 18px; cursor: pointer; padding: 5px; font-weight: bold; }
+        .month-summary-box { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; background: var(--surface-light); padding: 10px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); text-align: center; font-size: 11px; font-weight: bold; }
+        .summary-label { font-size: 10px; color: var(--text-sub); margin-bottom: 2px; display: block; }
         .calendar-wrapper { position: relative; border-bottom: 1px solid var(--border); }
         .cal-bg-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; pointer-events: none; z-index: 0; }
-        
         .calendar { position: relative; display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--border); z-index: 1; }
         .cal-header { background: var(--surface); text-align: center; padding: 5px 0; font-size: 12px; color: var(--text-sub); }
-        
         .cal-cell { background: var(--bg); min-height: 60px; padding: 2px; display: flex; flex-direction: column; cursor: pointer; position: relative; }
         .cal-cell.selected-day { outline: 2px solid var(--primary); outline-offset: -2px; background: var(--surface-light); z-index: 2; }
         .cal-cell.today-marker .cal-date { color: #fff; background: var(--primary); border-radius: 50%; width: 18px; height: 18px; text-align: center; line-height: 18px; margin: 0 auto 2px auto; display: block; }
-        
         .cal-date { font-size: 12px; margin-bottom: 2px; text-align: center; }
-        
-        .cal-val { font-size: 8.5px; text-align: right; font-weight: bold; white-space: nowrap; margin-top: auto; letter-spacing: -0.5px; overflow: hidden; text-overflow: clip; }
-        .cal-medal { font-size: 8.5px; text-align: right; font-weight: bold; white-space: nowrap; margin-top: 1px; letter-spacing: -0.5px; overflow: hidden; text-overflow: clip; }
+        .cal-val, .cal-medal { font-size: 8.5px; text-align: right; font-weight: bold; white-space: nowrap; letter-spacing: -0.5px; overflow: hidden; text-overflow: clip; }
+        .cal-val { margin-top: auto; } .cal-medal { margin-top: 1px; }
 
         .original-mode.calendar { background-color: rgba(128,128,128,0.3); }
         .original-mode .cal-header { background: rgba(0, 0, 0, 0.4); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.8); }
         .original-mode .cal-cell { background: rgba(0, 0, 0, 0.2); }
         .original-mode .cal-cell.selected-day { background: rgba(255, 255, 255, 0.1); }
-        .original-mode .cal-date { color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.8); font-weight: bold; }
-        .original-mode .cal-val, .original-mode .cal-medal { text-shadow: 0 1px 2px rgba(0,0,0,0.8); }
+        .original-mode .cal-date, .original-mode .cal-val, .original-mode .cal-medal { color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.8); font-weight: bold; }
         
         /* 詳細・リスト */
         .day-detail { padding: 15px; background: var(--surface); margin-top: 10px; border-top: 1px solid var(--border); }
         .day-summary-box { font-size: 13px; margin-bottom: 15px; background: var(--surface-light); padding: 12px; border-radius: 8px; display: flex; flex-direction: column; gap: 8px; border: 2px solid var(--primary); box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
-
-        .store-divider { background: var(--surface-light); border-left: 4px solid var(--secondary); color: var(--secondary); padding: 8px 12px; margin: 20px 0 10px 0; font-weight: bold; font-size: 14px; display: flex; align-items: center; border-radius: 4px; }
-        
-        .machine-card { background: var(--surface-light); padding: 12px; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid var(--primary); cursor: pointer; position: relative; }
-        .machine-card:active { opacity: 0.8; }
-        .btn-outline { display: block; text-align: center; border: 1px dashed var(--text-sub); color: var(--text-sub); padding: 12px; border-radius: 6px; margin-top: 10px; cursor: pointer; font-weight: bold;}
+        .store-divider { background: var(--surface-light); border-left: 4px solid var(--secondary); color: var(--secondary); padding: 8px 12px; margin: 20px 0 10px 0; font-weight: bold; font-size: 14px; border-radius: 4px; }
+        .machine-card { background: var(--surface-light); padding: 12px; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid var(--primary); cursor: pointer; }
+        .add-history-btn { display: block; text-align: center; border: 1px dashed var(--text-sub); color: var(--text-sub); padding: 12px; border-radius: 6px; margin-top: 10px; cursor: pointer; font-weight: bold;}
         
         /* 入力フォーム */
         .form-group { padding: 15px; border-bottom: 1px solid var(--border); background: var(--surface); }
@@ -72,85 +74,54 @@
         .form-input[readonly] { opacity: 0.7; cursor: not-allowed; background: var(--bg); }
         input[type="date"] { appearance: none; -webkit-appearance: none; }
         .save-btn { background: var(--primary); color: #fff; font-weight: bold; padding: 15px; text-align: center; border-radius: 8px; margin: 20px 15px; cursor: pointer; font-size: 16px; }
-        .save-btn:active { opacity: 0.8; }
-        
         .radio-group { display: flex; gap: 20px; padding: 10px 0; }
-        .radio-label { display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; color: var(--text-main); font-weight: bold; }
+        .radio-label { display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; font-weight: bold; }
         .radio-label input[type="radio"] { transform: scale(1.3); accent-color: var(--primary); }
 
         /* 小役カウンター */
         .counter-header { display: flex; justify-content: space-between; padding: 10px; background: var(--surface); align-items: center; }
-        .page-select { background: var(--surface-light); color: var(--text-main); border: 1px solid var(--border); padding: 5px 10px; border-radius: 4px; font-size: 14px; flex: 1; margin-right: 10px; }
-        .edit-icon { color: var(--primary); cursor: pointer; margin-right: 15px; font-size: 14px; }
-        
         .games-area { text-align: center; padding: 20px 10px; border-bottom: 1px solid var(--border); background: var(--surface); }
         .games-input { background: transparent; border: none; color: var(--text-main); font-size: 32px; font-weight: bold; width: 120px; text-align: center; border-bottom: 2px solid var(--primary); margin-bottom: 15px; outline: none; }
-        .games-btn-group { display: flex; justify-content: center; gap: 10px; }
-        .g-btn { background: var(--surface-light); color: var(--text-main); border: 1px solid var(--border); padding: 10px 15px; border-radius: 8px; font-weight: bold; font-size: 16px; flex: 1; transition: all 0.1s; }
-        .g-btn:active { transform: scale(0.9); opacity: 0.7; }
-        
-        .diff-input-group { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 15px; }
-        .diff-input-box { display: flex; flex-direction: column; align-items: center; }
-        .diff-input { background: transparent; border: none; color: var(--text-main); font-size: 28px; font-weight: bold; width: 100px; text-align: center; border-bottom: 2px solid var(--primary); outline: none; }
-
-        .step-toggle-group { display: flex; justify-content: center; gap: 8px; margin-bottom: 15px; }
-        .step-toggle-btn { background: var(--surface-light); color: var(--text-sub); border: 1px solid var(--border); padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; transition: all 0.2s; }
+        .step-toggle-btn { background: var(--surface-light); color: var(--text-sub); border: 1px solid var(--border); padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; }
         .step-toggle-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
-        
-        .roles-area { padding: 15px; }
         .role-row { display: flex; justify-content: space-around; margin-bottom: 25px; }
-        .role-item { display: flex; flex-direction: column; align-items: center; width: 60px; }
-        .circle-btn { width: 50px; height: 50px; border-radius: 50%; border: 2px solid #555; margin-bottom: 5px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: transform 0.05s ease, filter 0.05s ease, box-shadow 0.05s ease; }
-        .square-btn { width: 55px; height: 55px; border-radius: 8px; background: var(--surface-light); border: 2px solid #555; margin-bottom: 5px; cursor: pointer; color: var(--text-main); font-size: 11px; display: flex; align-items: center; justify-content: center; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3); line-height: 1.1; word-break: break-all; padding: 2px; transition: transform 0.05s ease, filter 0.05s ease, box-shadow 0.05s ease; }
-        .circle-btn:active, .square-btn:active { transform: scale(0.85); filter: brightness(1.5); box-shadow: 0 1px 2px rgba(0,0,0,0.8); }
-        .role-count { font-size: 16px; font-weight: bold; margin-top: 4px; }
-        .role-prob { font-size: 10px; color: var(--secondary); }
-
+        .circle-btn, .square-btn { box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: transform 0.05s ease, filter 0.05s ease; cursor: pointer; border: 2px solid #555; }
+        .circle-btn { width: 50px; height: 50px; border-radius: 50%; margin-bottom: 5px; }
+        .square-btn { width: 55px; height: 55px; border-radius: 8px; background: var(--surface-light); margin-bottom: 5px; color: var(--text-main); font-size: 11px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 2px; }
+        .circle-btn:active, .square-btn:active { transform: scale(0.85); filter: brightness(1.5); }
+        
         /* 分析タブ */
-        .analysis-nav { display: flex; border-bottom: 1px solid var(--border); background: var(--surface); }
         .analysis-tab { flex: 1; text-align: center; padding: 15px 0; font-size: 13px; color: var(--text-sub); cursor: pointer; font-weight: bold; }
         .analysis-tab.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
         .chart-container { padding: 15px; background: var(--surface); margin: 15px; border-radius: 8px; border: 1px solid var(--border); height: 300px; }
-        
-        .store-ranking-list { padding: 15px; }
-        .store-rank-item { display: flex; align-items: center; background: var(--surface-light); padding: 12px; border-radius: 8px; margin-bottom: 10px; border: 1px solid var(--border); }
-        .rank-badge { width: 30px; height: 30px; border-radius: 50%; background: var(--bg); color: var(--text-sub); display: flex; justify-content: center; align-items: center; font-weight: bold; margin-right: 15px; border: 1px solid var(--border); }
-        .rank-badge.rank-1 { background: linear-gradient(135deg, #ffd700, #daa520); color: #000; border: none; }
-        .rank-badge.rank-2 { background: linear-gradient(135deg, #e0e0e0, #9e9e9e); color: #000; border: none; }
-        .rank-badge.rank-3 { background: linear-gradient(135deg, #cd7f32, #8b4513); color: #fff; border: none; }
-        .store-info { flex: 1; }
-        .store-name { font-weight: bold; font-size: 15px; margin-bottom: 4px; }
-        .store-stats { font-size: 11px; color: var(--text-sub); display: flex; gap: 10px; }
-        .store-net { font-size: 16px; font-weight: bold; text-align: right; }
+        .rank-badge { width: 30px; height: 30px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; margin-right: 15px; border: 1px solid var(--border); }
+        .rank-1 { background: linear-gradient(135deg, #ffd700, #daa520); color: #000; border: none; }
+        .rank-2 { background: linear-gradient(135deg, #e0e0e0, #9e9e9e); color: #000; border: none; }
+        .rank-3 { background: linear-gradient(135deg, #cd7f32, #8b4513); color: #fff; border: none; }
 
-        /* ナビゲーション */
-        .nav-bar { position: absolute; bottom: 0; width: 100%; height: 75px; background: var(--surface); display: flex; justify-content: space-between; border-top: 1px solid var(--border); align-items: center; z-index: 20; padding-bottom: 15px; }
-        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-sub); font-size: 10px; cursor: pointer; height: 100%; }
+        /* ナビゲーション・モーダル */
+        .nav-bar { position: absolute; bottom: 0; width: 100%; height: 75px; background: var(--surface); display: flex; border-top: 1px solid var(--border); align-items: center; z-index: 20; padding-bottom: 15px; }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; color: var(--text-sub); font-size: 10px; cursor: pointer; }
         .nav-item.active { color: var(--primary); font-weight: bold; }
-        .nav-icon { font-size: 22px; margin-bottom: 4px; }
-
-        /* モーダル */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 100; }
         .modal-content { background: var(--surface); padding: 20px; border-radius: 8px; width: 90%; max-width: 360px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; max-height: 85vh; overflow-y: auto; }
-        .modal-btn { padding: 12px; border-radius: 6px; font-weight: bold; text-align: center; cursor: pointer; border: none; font-size: 14px; }
-        
-        .settings-tab-nav { display:flex; margin-bottom:15px; border-bottom:2px solid var(--surface-light); }
-        .settings-tab { flex:1; text-align:center; padding:10px 5px; cursor:pointer; font-weight:bold; font-size: 12px; }
-        .settings-tab.active { color:var(--primary); border-bottom:2px solid var(--primary); margin-bottom:-2px; }
-        .settings-tab:not(.active) { color:var(--text-sub); }
+        .modal-title { margin: 0 0 10px 0; font-size: 16px; text-align: center; }
+        .modal-btn { padding: 12px; border-radius: 6px; font-weight: bold; text-align: center; cursor: pointer; border: none; font-size: 14px; width: 100%; }
+        .settings-tab { flex:1; text-align:center; padding:10px 5px; cursor:pointer; font-weight:bold; font-size: 12px; border-bottom: 2px solid var(--surface-light); color: var(--text-sub); }
+        .settings-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
     </style>
 </head>
 <body>
     <div id="app">
         <!-- ヘッダー -->
-        <header>
-            <div style="display:flex; align-items:center; gap: 12px;">
+        <header class="flex-between">
+            <div class="flex items-center gap-2">
                 <span v-show="currentTab === 'home'" style="cursor:pointer;" @click="showSettingsModal = true">
                     <img :src="userProfile.icon || 'https://via.placeholder.com/40'" style="width:40px; height:40px; border-radius:50%; object-fit:cover; border:2px solid var(--primary);">
                 </span>
-                <div style="display:flex; flex-direction:column;">
+                <div class="flex-col">
                     <span style="font-size:16px;">{{ currentTab === 'home' ? userProfile.name : headerTitle }}</span>
-                    <span style="font-size:11px; color:var(--text-sub); font-weight:normal; margin-top:2px;">{{ currentTime }}</span>
+                    <span class="text-sm text-sub font-normal mt-2" style="margin-top:2px;">{{ currentTime }}</span>
                 </div>
             </div>
             <button class="theme-btn" @click="toggleTheme">🎨 {{ themes[themeIndex].name }}</button>
@@ -159,49 +130,54 @@
         <main>
             <!-- 🏠 ホーム -->
             <div v-show="currentTab === 'home'">
-                <div class="month-nav">
-                    <button @click="changeMonth(-1)">◀</button>
-                    <span style="font-weight:bold; font-size: 16px; display: flex; align-items: center; gap: 10px;">
-                        {{ currentYear }}年 {{ currentMonth }}月
-                        <button style="background:transparent; border:none; color:var(--error); font-size:16px; padding:0; cursor:pointer;" @click="showMonthDeleteModal = true">🗑️</button>
-                    </span>
-                    <button @click="changeMonth(1)">▶</button>
+                <div class="month-nav flex-between">
+                    <div style="flex: 1; text-align: left;">
+                        <button style="color:var(--primary);" @click="changeMonth(-1)">◀</button>
+                    </div>
+                    <div style="flex: 2; text-align: center; cursor: pointer; color: var(--primary);" @click="openMonthPicker">
+                        <span style="font-weight:bold; font-size: 16px; text-decoration: underline; text-underline-offset: 4px;">{{ currentYear }}年 {{ currentMonth }}月 🔻</span>
+                    </div>
+                    <div class="flex gap-2" style="flex: 1; justify-content: flex-end; align-items: center;">
+                        <button style="color:var(--primary);" @click="changeMonth(1)">▶</button>
+                        <button style="color:var(--error);" @click="showMonthDeleteModal = true">🗑️</button>
+                    </div>
                 </div>
                 
                 <div class="month-summary-box">
-                    <div class="summary-item">
+                    <div class="flex-col items-center">
                         <span class="summary-label">総投資</span>
                         <span>¥{{ monthlySummary.invest.toLocaleString() }}</span>
                     </div>
-                    <div class="summary-item">
+                    <div class="flex-col items-center">
                         <span class="summary-label">回収金額</span>
                         <span>¥{{ monthlySummary.recover.toLocaleString() }}</span>
                     </div>
-                    <div class="summary-item">
+                    <div class="flex-col items-center">
                         <span class="summary-label">収支</span>
                         <span :class="monthlySummary.net >= 0 ? 'val-plus' : 'val-minus'">
                             {{ monthlySummary.net >= 0 ? '+¥' : '-¥' }}{{ Math.abs(monthlySummary.net).toLocaleString() }}
                         </span>
                     </div>
+                    <div class="flex-col items-center">
+                        <span class="summary-label">貯メダル</span>
+                        <span :class="monthlySummary.medalDelta >= 0 ? 'val-plus' : 'val-minus'">
+                            {{ monthlySummary.medalDelta >= 0 ? '+' : '' }}{{ monthlySummary.medalDelta.toLocaleString() }}枚
+                        </span>
+                    </div>
                 </div>
 
-                <!-- カレンダーエリア -->
+                <!-- カレンダー -->
                 <div class="calendar-wrapper">
                     <div v-if="isOriginalTheme && originalSettings.bgImage" class="cal-bg-layer" :style="{ backgroundImage: `url(${originalSettings.bgImage})`, opacity: originalSettings.opacity }"></div>
                     <div class="calendar" :class="{ 'original-mode': isOriginalTheme }">
                         <div class="cal-header" v-for="d in ['月','火','水','木','金','土','日']">{{d}}</div>
-                        <div class="cal-cell" 
-                             v-for="(day, i) in calDays" :key="i" 
-                             :class="{
-                                 'selected-day': selectedDay && !day.empty && selectedDay.fullDate === day.fullDate,
-                                 'today-marker': day.fullDate === todayStr
-                             }" 
+                        <div class="cal-cell" v-for="(day, i) in calDays" :key="i" 
+                             :class="{'selected-day': selectedDay && !day.empty && selectedDay.fullDate === day.fullDate, 'today-marker': day.fullDate === todayStr}" 
                              @click="selectDay(day)">
                             <div class="cal-date" :style="{opacity: day.empty ? 0 : 1}">{{ day.date || 1 }}</div>
                             <div class="cal-val val-plus" v-if="!day.empty && getDayTotal(day.fullDate) > 0">+¥{{ getDayTotal(day.fullDate).toLocaleString() }}</div>
                             <div class="cal-val val-minus" v-if="!day.empty && getDayTotal(day.fullDate) < 0">-¥{{ Math.abs(getDayTotal(day.fullDate)).toLocaleString() }}</div>
                             <div class="cal-val" v-if="!day.empty && getDayTotal(day.fullDate) === 0 && (getDayInvest(day.fullDate) > 0 || getDayRecover(day.fullDate) > 0)">±¥0</div>
-
                             <template v-if="!day.empty && generalSettings.showMedalOnCalendar && getDayMedalDelta(day.fullDate) !== 0">
                                 <div class="cal-medal val-plus" v-if="getDayMedalDelta(day.fullDate) > 0">+{{ getDayMedalDelta(day.fullDate).toLocaleString() }}枚</div>
                                 <div class="cal-medal val-minus" v-else>{{ getDayMedalDelta(day.fullDate).toLocaleString() }}枚</div>
@@ -211,54 +187,49 @@
                 </div>
                 
                 <div class="day-detail" v-if="selectedDay && !selectedDay.empty">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <div class="flex-between mb-2">
                         <h3 style="margin:0; font-size:16px;">{{ formatDateDisplay(selectedDay.fullDate) }}</h3>
-                        <button style="padding:5px 10px; border-radius:4px; background:var(--primary); color:#fff; border:none; font-weight:bold;" @click="currentTab='input_daily'">💰 最終収支入力</button>
+                        <button class="btn-primary" style="padding:5px 10px; border-radius:4px; border:none; font-weight:bold;" @click="currentTab='input_daily'">💰 最終収支入力</button>
                     </div>
                     
                     <div class="day-summary-box">
-                        <div style="display:flex; justify-content:space-between; font-weight:bold;">
+                        <div class="flex-between font-bold">
                             <span>総投資: ¥{{ getDayInvest(selectedDay.fullDate).toLocaleString() }}</span>
                             <span>現金回収: ¥{{ getDayRecover(selectedDay.fullDate).toLocaleString() }}</span>
                         </div>
-                        <div style="display:flex; justify-content:space-between; border-top:1px dashed var(--border); padding-top:8px;">
+                        <div class="flex-between mt-2" style="border-top:1px dashed var(--border); padding-top:8px;">
                             <span>貯メダル増減: <span :class="getDayMedalDelta(selectedDay.fullDate) >= 0 ? 'val-plus' : 'val-minus'">{{ getDayMedalDelta(selectedDay.fullDate) >= 0 ? '+' : '' }}{{ getDayMedalDelta(selectedDay.fullDate).toLocaleString() }} 枚</span></span>
                             <span>現金収支: <span :class="getDayTotal(selectedDay.fullDate) >= 0 ? 'val-plus' : 'val-minus'">{{ getDayTotal(selectedDay.fullDate) >= 0 ? '+¥' : '-¥' }}{{ Math.abs(getDayTotal(selectedDay.fullDate)).toLocaleString() }}</span></span>
                         </div>
                     </div>
 
                     <template v-for="(m, index) in getMachinesForDate(selectedDay.fullDate)" :key="index">
-                        <div v-if="index === 0 || !m.isSameStore" class="store-divider">
-                            🏪 {{ m.location || '店舗未設定' }}
-                        </div>
+                        <div v-if="index === 0 || !m.isSameStore" class="store-divider">🏪 {{ m.location || '店舗未設定' }}</div>
                         <div class="machine-card" @click="openActionModal(index)">
-                            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                                <div style="font-weight:bold; font-size:14px; margin-bottom:5px;">{{ m.machineNumber }}台目: {{ m.name || '機種不明' }} (貸出: {{m.rate}}枚)</div>
-                                <button v-if="getSnapshots(m).length > 0" @click.stop="handleSnapshotClick(getSnapshots(m))" style="background:var(--primary); color:#fff; border:none; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.2); cursor:pointer;">🎲 カウンター</button>
+                            <div class="flex-between" style="align-items:flex-start;">
+                                <div class="font-bold text-sm mb-2">{{ m.machineNumber }}台目: {{ m.name || '機種不明' }} (貸出: {{m.rate}}枚)</div>
+                                <button v-if="getSnapshots(m).length > 0" class="btn-primary" @click.stop="handleSnapshotClick(getSnapshots(m))" style="border:none; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.2);">🎲 カウンター</button>
                             </div>
-                            <div style="display:flex; justify-content:space-between; font-size:13px; margin-top:5px;">
+                            <div class="flex-between text-sm mt-2">
                                 <span>現金投資: ¥{{ m.cashInvest.toLocaleString() }}</span>
                                 <span>持ち込み: {{ m.broughtIn }}枚</span>
                             </div>
-                            <div style="display:flex; justify-content:space-between; font-size:13px; margin-top:3px;">
+                            <div class="flex-between text-sm mt-2">
                                 <span>貯メダル増減: <span :class="(m.savedSign * m.savedVal) >= 0 ? 'val-plus' : 'val-minus'">{{ (m.savedSign * m.savedVal) >= 0 ? '+' : '' }}{{ (m.savedSign * m.savedVal).toLocaleString() }} 枚</span></span>
                             </div>
-                            <div style="font-size:13px; margin-top:5px; border-bottom:1px dashed var(--border); padding-bottom:5px; font-weight:bold;">
+                            <div class="font-bold text-sm mt-2" style="border-bottom:1px dashed var(--border); padding-bottom:5px;">
                                 純差枚数: <span :class="m.netBalance >= 0 ? 'val-plus' : 'val-minus'">{{ m.netBalance >= 0 ? '+' : '' }}{{ m.netBalance.toLocaleString() }} 枚</span>
                             </div>
-                            <div v-if="m.memo" style="font-size:12px; color:var(--text-sub); margin-top:8px; white-space: pre-wrap; background: var(--bg); padding: 8px; border-radius: 4px;">📝 {{ m.memo }}</div>
-                            <img v-if="m.photo" :src="m.photo" style="max-height: 80px; margin-top: 8px; border-radius: 4px; display: block; cursor:pointer;" @click.stop="openPhotoViewer(m.photo)">
+                            <div v-if="m.memo" class="text-sm text-sub mt-2 p-3" style="white-space: pre-wrap; background: var(--bg); border-radius: 4px;">📝 {{ m.memo }}</div>
+                            <img v-if="m.photo" :src="m.photo" style="max-height: 80px; margin-top: 8px; border-radius: 4px; display: block;" @click.stop="openPhotoViewer(m.photo)">
                         </div>
                     </template>
                     
-                    <div class="btn-outline" @click="prepareMachineInput">＋ 遊技履歴を追加</div>
-
-                    <div v-if="getMachinesForDate(selectedDay.fullDate).length > 0" class="btn-outline" style="border-color:var(--error); color:var(--error); margin-top:15px; background:rgba(207, 102, 121, 0.1);" @click="deleteAllMachinesForDay">
-                        🗑️ この日の遊技履歴を全て削除
-                    </div>
+                    <div class="add-history-btn" @click="prepareMachineInput">＋ 遊技履歴を追加</div>
+                    <div v-if="getMachinesForDate(selectedDay.fullDate).length > 0" class="add-history-btn val-minus" style="border-color:var(--error); background:rgba(207, 102, 121, 0.1);" @click="deleteAllMachinesForDay">🗑️ この日の遊技履歴を全て削除</div>
                 </div>
 
-                <div style="text-align:center; padding: 30px 10px 20px 10px;">
+                <div class="text-center p-3" style="padding-top: 30px;">
                     <button style="background:var(--surface-light); color:var(--primary); border:1px solid var(--border); padding:12px 20px; border-radius:30px; font-size:13px; font-weight:bold; cursor:pointer;" @click="showTransferGuide = true">
                         📱 携帯の機種変更をされる方はコチラ
                     </button>
@@ -268,39 +239,39 @@
             <!-- 🎲 小役カウンター -->
             <div v-show="currentTab === 'counter'">
                 <div class="counter-header">
-                    <select class="page-select" v-model="selectedPageIndex" @change="onPageSelectChange">
+                    <select class="form-input" style="flex:1; margin-right:10px; font-size:14px; padding:5px 10px;" v-model="selectedPageIndex" @change="onPageSelectChange">
                         <option v-for="(p, i) in counterData" :key="i" :value="i">📄 {{ p.pageName }}</option>
                         <option value="NEW" v-if="counterData.length < 10" style="color:var(--primary); font-weight:bold;">➕ 新しいページを作成</option>
                     </select>
-                    <span class="edit-icon" @click="editPageName">✏️編集</span>
-                    <span style="font-size:12px; color:var(--text-sub); cursor:pointer;" @click="resetCounter">↺ リセット</span>
+                    <span style="color:var(--primary); cursor:pointer; font-size:14px; margin-right:15px;" @click="editPageName">✏️編集</span>
+                    <span class="text-sm text-sub" style="cursor:pointer;" @click="resetCounter">↺ リセット</span>
                 </div>
                 
                 <div class="games-area">
-                    <label style="display:inline-flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; margin-bottom:15px; font-size:12px; color:var(--text-sub);">
+                    <label class="flex-center gap-2 mb-2 text-sm text-sub" style="cursor:pointer;">
                         <input type="checkbox" v-model="activePage.isDiffMode" style="transform:scale(1.2); accent-color:var(--primary);">
                         打ち始め / 現在G数から差引計算する
                     </label>
 
                     <template v-if="!activePage.isDiffMode">
-                        <div style="font-size:12px; color:var(--text-sub); margin-bottom:5px;">🎯 回転数 (ゲーム数)</div>
+                        <div class="text-sm text-sub mb-2">🎯 回転数 (ゲーム数)</div>
                         <input type="number" class="games-input" v-model.number="activePage.games">
-                        <div class="games-btn-group">
-                            <button class="g-btn" @click="activePage.games += 100">+100</button>
-                            <button class="g-btn" @click="activePage.games += 10">+10</button>
-                            <button class="g-btn" @click="activePage.games += 1">+1</button>
+                        <div class="flex-center gap-2">
+                            <button class="btn-outline" style="padding:10px; border-radius:8px; font-weight:bold; flex:1;" @click="activePage.games += 100">+100</button>
+                            <button class="btn-outline" style="padding:10px; border-radius:8px; font-weight:bold; flex:1;" @click="activePage.games += 10">+10</button>
+                            <button class="btn-outline" style="padding:10px; border-radius:8px; font-weight:bold; flex:1;" @click="activePage.games += 1">+1</button>
                         </div>
                     </template>
                     <template v-else>
-                        <div class="diff-input-group">
-                            <div class="diff-input-box">
+                        <div class="flex-center gap-3 mb-2">
+                            <div class="flex-col items-center">
                                 <span style="font-size:10px; color:var(--text-sub);">打ち始めG数</span>
-                                <input type="number" class="diff-input" v-model.number="activePage.startGames" @input="calcDiffGames">
+                                <input type="number" style="background:transparent; border:none; color:var(--text-main); font-size:28px; font-weight:bold; width:100px; text-align:center; border-bottom:2px solid var(--primary); outline:none;" v-model.number="activePage.startGames" @input="calcDiffGames">
                             </div>
                             <div style="font-size:20px; color:var(--text-sub); margin-top:10px;">〜</div>
-                            <div class="diff-input-box">
+                            <div class="flex-col items-center">
                                 <span style="font-size:10px; color:var(--text-sub);">現在のG数</span>
-                                <input type="number" class="diff-input" v-model.number="activePage.currentGames" @input="calcDiffGames">
+                                <input type="number" style="background:transparent; border:none; color:var(--text-main); font-size:28px; font-weight:bold; width:100px; text-align:center; border-bottom:2px solid var(--primary); outline:none;" v-model.number="activePage.currentGames" @input="calcDiffGames">
                             </div>
                         </div>
                         <div style="font-size:14px; font-weight:bold; color:var(--primary);">
@@ -309,10 +280,10 @@
                     </template>
                 </div>
                 
-                <div class="roles-area">
-                    <div style="text-align: center; margin-bottom: 10px;">
-                        <span style="font-size: 11px; color: var(--text-sub); margin-bottom: 5px; display: block;">▼ 小役カウント入力単位 ▼</span>
-                        <div class="step-toggle-group">
+                <div class="p-3">
+                    <div class="text-center mb-2">
+                        <span style="font-size: 11px; color: var(--text-sub); display: block; margin-bottom:5px;">▼ 小役カウント入力単位 ▼</span>
+                        <div class="flex-center gap-2">
                             <button class="step-toggle-btn" :class="{active: counterStep === -10}" @click="counterStep = -10">- 10</button>
                             <button class="step-toggle-btn" :class="{active: counterStep === -1}" @click="counterStep = -1">- 1</button>
                             <button class="step-toggle-btn" :class="{active: counterStep === 1}" @click="counterStep = 1">+ 1</button>
@@ -320,31 +291,24 @@
                         </div>
                     </div>
 
-                    <div style="font-size:12px; color:var(--text-sub); margin-bottom:10px;">【1段目：基本小役】</div>
+                    <div class="text-sm text-sub mb-2">【1段目：基本小役】</div>
                     <div class="role-row">
-                        <div class="role-item" v-for="(col, i) in r1Colors" :key="'r1'+i">
-                            <button class="circle-btn" 
-                                    :style="[
-                                        { background: col },
-                                        glowR1[i] ? { boxShadow: '0 0 25px 5px ' + col, transform: 'scale(0.85)', filter: 'brightness(1.5)' } : {}
-                                    ]" 
-                                    @click="updateR1(i)"></button>
-                            <span class="role-count">{{ activePage.r1[i] }}</span>
-                            <span class="role-prob">{{ getProb(activePage.r1[i], activePage.games) }}</span>
+                        <div class="flex-col items-center" style="width:60px;" v-for="(col, i) in r1Colors" :key="'r1'+i">
+                            <button class="circle-btn" :style="[{ background: col }, glowR1[i] ? { boxShadow: '0 0 25px 5px ' + col, transform: 'scale(0.85)', filter: 'brightness(1.5)' } : {}]" @click="updateR1(i)"></button>
+                            <span class="font-bold mt-2" style="font-size:16px;">{{ activePage.r1[i] }}</span>
+                            <span style="font-size:10px; color:var(--secondary);">{{ getProb(activePage.r1[i], activePage.games) }}</span>
                         </div>
                     </div>
                     
-                    <div class="form-label" style="margin-bottom:10px;">
+                    <div class="form-label mb-2">
                         <span>【2段目：カスタム小役】(タップでカウント)</span>
                         <span style="color:var(--primary); cursor:pointer;" @click="openRoleEditModal">✏️名前一括変更</span>
                     </div>
                     <div class="role-row">
-                        <div class="role-item" v-for="(name, i) in activePage.r2Names" :key="'r2'+i">
-                            <button class="square-btn" 
-                                    :style="glowR2[i] ? { boxShadow: '0 0 25px 5px var(--primary)', borderColor: 'var(--primary)', transform: 'scale(0.85)', filter: 'brightness(1.3)' } : {}"
-                                    @click="updateR2(i)">{{name}}</button>
-                            <span class="role-count">{{ activePage.r2[i] }}</span>
-                            <span class="role-prob">{{ getProb(activePage.r2[i], activePage.games) }}</span>
+                        <div class="flex-col items-center" style="width:60px;" v-for="(name, i) in activePage.r2Names" :key="'r2'+i">
+                            <button class="square-btn" :style="glowR2[i] ? { boxShadow: '0 0 25px 5px var(--primary)', borderColor: 'var(--primary)', transform: 'scale(0.85)', filter: 'brightness(1.3)' } : {}" @click="updateR2(i)">{{name}}</button>
+                            <span class="font-bold mt-2" style="font-size:16px;">{{ activePage.r2[i] }}</span>
+                            <span style="font-size:10px; color:var(--secondary);">{{ getProb(activePage.r2[i], activePage.games) }}</span>
                         </div>
                     </div>
                 </div>
@@ -352,14 +316,14 @@
 
             <!-- 📊 分析タブ -->
             <div v-show="currentTab === 'analysis'">
-                <div class="analysis-nav">
+                <div class="flex" style="border-bottom: 1px solid var(--border); background: var(--surface);">
                     <div class="analysis-tab" :class="{active: analysisSubTab === 'month'}" @click="changeAnalysisTab('month')">月間推移</div>
                     <div class="analysis-tab" :class="{active: analysisSubTab === 'year'}" @click="changeAnalysisTab('year')">年間推移</div>
                     <div class="analysis-tab" :class="{active: analysisSubTab === 'store'}" @click="changeAnalysisTab('store')">店舗別成績</div>
                 </div>
 
                 <div v-show="analysisSubTab === 'month' || analysisSubTab === 'year'">
-                    <div style="text-align:center; padding: 15px 0 0 0; font-weight:bold;">
+                    <div class="text-center font-bold" style="padding: 15px 0 0 0;">
                         {{ analysisSubTab === 'month' ? `${currentYear}年${currentMonth}月 収支推移` : `${currentYear}年 月別収支推移` }}
                     </div>
                     <div class="chart-container">
@@ -367,21 +331,19 @@
                     </div>
                 </div>
 
-                <div v-show="analysisSubTab === 'store'" class="store-ranking-list">
-                    <div style="font-size:12px; color:var(--text-sub); margin-bottom:15px; text-align:center;">全期間の店舗別 純差枚数ランキング</div>
-                    <div v-if="storeRanking.length === 0" style="text-align:center; padding: 20px; color:var(--text-sub);">
-                        データがありません。
-                    </div>
-                    <div class="store-rank-item" v-for="(store, index) in storeRanking" :key="index">
+                <div v-show="analysisSubTab === 'store'" class="p-3">
+                    <div class="text-center text-sm text-sub mb-2">全期間の店舗別 純差枚数ランキング</div>
+                    <div v-if="storeRanking.length === 0" class="text-center p-3 text-sub">データがありません。</div>
+                    <div class="flex items-center" style="background:var(--surface-light); padding:12px; border-radius:8px; margin-bottom:10px; border:1px solid var(--border);" v-for="(store, index) in storeRanking" :key="index">
                         <div class="rank-badge" :class="`rank-${index + 1}`">{{ index + 1 }}</div>
-                        <div class="store-info">
-                            <div class="store-name">{{ store.name }}</div>
-                            <div class="store-stats">
+                        <div style="flex:1;">
+                            <div class="font-bold" style="font-size:15px; margin-bottom:4px;">{{ store.name }}</div>
+                            <div class="text-sm text-sub flex gap-2">
                                 <span>稼働: {{ store.count }}台</span>
                                 <span>勝率: {{ store.winRate }}%</span>
                             </div>
                         </div>
-                        <div class="store-net" :class="store.totalNet >= 0 ? 'val-plus' : 'val-minus'">
+                        <div class="font-bold" style="font-size:16px; text-align:right;" :class="store.totalNet >= 0 ? 'val-plus' : 'val-minus'">
                             {{ store.totalNet >= 0 ? '+' : '' }}{{ store.totalNet.toLocaleString() }} 枚
                         </div>
                     </div>
@@ -390,14 +352,9 @@
 
             <!-- 🎰 遊技履歴入力 / 編集 -->
             <div v-show="currentTab === 'input_machine'">
-                <div class="form-group">
-                    <span class="form-label">📅 日付</span>
-                    <input type="date" class="form-input" v-model="form.date">
-                </div>
-                <div class="form-group" style="background: var(--surface-light);">
-                    <span style="font-size: 14px; font-weight: bold; color: var(--primary);">📍 今回の稼働: 【 {{ form.machineNumber }}台目 】</span>
-                </div>
-
+                <div class="form-group"><span class="form-label">📅 日付</span><input type="date" class="form-input" v-model="form.date"></div>
+                <div class="form-group" style="background: var(--surface-light);"><span style="font-size: 14px; font-weight: bold; color: var(--primary);">📍 今回の稼働: 【 {{ form.machineNumber }}台目 】</span></div>
+                
                 <div class="form-group" v-if="form.machineNumber > 1">
                     <span class="form-label">🏢 店舗移動</span>
                     <div class="radio-group">
@@ -426,69 +383,53 @@
                     <input v-if="form.nameSelect === 'NEW'" type="text" class="form-input" v-model="form.nameNew" placeholder="新しい機種名を入力" style="margin-top: 10px; border-color: var(--primary);">
                 </div>
 
-                <div class="form-group">
-                    <span class="form-label">🪙 1000円あたりの貸出枚数</span>
-                    <input type="number" class="form-input" v-model.number="form.rate">
-                </div>
+                <div class="form-group"><span class="form-label">🪙 1000円あたりの貸出枚数</span><input type="number" class="form-input" v-model.number="form.rate"></div>
                 <div class="form-group">
                     <span class="form-label">📥 持ち込み枚数 (自動反映)</span>
                     <input type="number" class="form-input" v-model.number="form.broughtIn" readonly>
-                    <span style="font-size: 11px; color: var(--text-sub); margin-top: 4px; display: block;" v-if="form.machineNumber > 1 && form.isSameStore">※同店舗のため、直前の台の残った枚数が引き継がれています</span>
-                    <span style="font-size: 11px; color: var(--text-sub); margin-top: 4px; display: block;" v-if="form.machineNumber > 1 && !form.isSameStore">※別店舗のため、持ち込み枚数は0枚からスタートします</span>
+                    <span class="text-sm text-sub mt-2" style="display:block;" v-if="form.machineNumber > 1 && form.isSameStore">※同店舗のため、直前の台の残った枚数が引き継がれています</span>
+                    <span class="text-sm text-sub mt-2" style="display:block;" v-if="form.machineNumber > 1 && !form.isSameStore">※別店舗のため、持ち込み枚数は0枚からスタートします</span>
                 </div>
-                <div class="form-group">
-                    <span class="form-label">💴 追加現金投資 (円)</span>
-                    <input type="number" class="form-input" v-model.number="form.cashInvest">
-                </div>
+                <div class="form-group"><span class="form-label">💴 追加現金投資 (円)</span><input type="number" class="form-input" v-model.number="form.cashInvest"></div>
                 <div class="form-group">
                     <span class="form-label">💳 貯玉・貯メダル増減 (枚)</span>
-                    <div style="display:flex; gap:10px;">
-                        <select class="form-input" style="width:80px;" v-model="form.savedSign">
-                            <option value="1">＋</option>
-                            <option value="-1">－</option>
-                        </select>
+                    <div class="flex gap-2">
+                        <select class="form-input" style="width:80px;" v-model="form.savedSign"><option value="1">＋</option><option value="-1">－</option></select>
                         <input type="number" class="form-input" v-model.number="form.savedVal">
                     </div>
                 </div>
-                <div class="form-group">
-                    <span class="form-label">📤 最終的に残った枚数 (手元にある枚数)</span>
-                    <input type="number" class="form-input" v-model.number="form.leftMedals">
-                </div>
+                <div class="form-group"><span class="form-label">📤 最終的に残った枚数 (手元にある枚数)</span><input type="number" class="form-input" v-model.number="form.leftMedals"></div>
 
                 <div class="form-group">
                     <span class="form-label">🎲 小役データの紐付け (最大3つ)</span>
-                    <div style="display:flex; gap:10px;">
+                    <div class="flex gap-2">
                         <select class="form-input" v-model="formAttachedPageIndex">
                             <option value="-1">▼ 登録なし</option>
                             <option v-for="(p, i) in counterData" :key="i" :value="i">{{ p.pageName }}</option>
                         </select>
-                        <button class="modal-btn" style="background:var(--primary); color:#fff; white-space:nowrap; padding: 12px 15px;" @click="attachCounterData" :disabled="form.counterSnapshots.length >= 3">追加</button>
+                        <button class="btn-primary" style="white-space:nowrap; padding: 12px 15px; border:none; border-radius:6px; font-weight:bold;" @click="attachCounterData" :disabled="form.counterSnapshots.length >= 3">追加</button>
                     </div>
-                    <div style="font-size:11px; color:var(--text-sub); margin-top:5px;">※現在の小役カウントを遊技履歴と一緒に記録します</div>
-                    
-                    <div v-if="form.counterSnapshots.length > 0" style="margin-top:10px; display:flex; flex-direction:column; gap:5px;">
-                        <div v-for="(snap, idx) in form.counterSnapshots" :key="idx" style="background:var(--surface-light); padding:10px; border-radius:6px; position:relative; border:1px solid var(--primary); display:flex; justify-content:space-between; align-items:center;">
+                    <div class="text-sm text-sub mt-2">※現在の小役カウントを遊技履歴と一緒に記録します</div>
+                    <div v-if="form.counterSnapshots.length > 0" class="flex-col mt-2 gap-2">
+                        <div v-for="(snap, idx) in form.counterSnapshots" :key="idx" class="flex-between" style="background:var(--surface-light); padding:10px; border-radius:6px; border:1px solid var(--primary);">
                             <div>
-                                <div style="font-weight:bold; font-size:13px; color:var(--primary);">✅ {{ snap.pageName }}</div>
-                                <div style="font-size:11px; color:var(--text-sub);">回転数: {{ snap.games }}G</div>
+                                <div class="font-bold" style="font-size:13px; color:var(--primary);">✅ {{ snap.pageName }}</div>
+                                <div class="text-sm text-sub">回転数: {{ snap.games }}G</div>
                             </div>
-                            <button style="background:var(--bg); border:1px solid var(--border); color:var(--text-main); border-radius:4px; padding:4px 8px; font-size:11px; cursor:pointer;" @click="removeCounterData(idx)">解除</button>
+                            <button class="btn-outline" style="border-radius:4px; padding:4px 8px; font-size:11px; cursor:pointer;" @click="removeCounterData(idx)">解除</button>
                         </div>
                     </div>
                 </div>
                 
-                <div class="form-group">
-                    <span class="form-label">📝 メモ</span>
-                    <textarea class="form-input" v-model="form.memo" rows="3" placeholder="台の挙動や設定推測要素など"></textarea>
-                </div>
+                <div class="form-group"><span class="form-label">📝 メモ</span><textarea class="form-input" v-model="form.memo" rows="3" placeholder="台の挙動や設定推測要素など"></textarea></div>
                 <div class="form-group">
                     <span class="form-label">📷 写真添付 (終了画面やグラフなど)</span>
                     <input type="file" accept="image/*" class="form-input" @change="handlePhotoUpload">
                     <img v-if="form.photo" :src="form.photo" style="max-height: 100px; margin-top: 10px; border-radius: 6px; display: block;">
                 </div>
 
-                <div class="form-group" style="border:none; text-align:center;">
-                    <div style="font-size:12px; color:var(--text-sub);">この台単体の純差枚数</div>
+                <div class="form-group text-center" style="border:none;">
+                    <div class="text-sm text-sub">この台単体の純差枚数</div>
                     <div style="font-size:24px; font-weight:bold;" :class="netBalance >= 0 ? 'val-plus' : 'val-minus'">
                         {{ netBalance >= 0 ? '+' : '' }}{{ netBalance.toLocaleString() }} 枚
                     </div>
@@ -496,324 +437,263 @@
                 <div class="save-btn" @click="saveMachine">💾 この台を保存する</div>
             </div>
 
-            <!-- 💰 日別最終収支入力 (自動/手動切り替え) -->
+            <!-- 💰 日別最終収支入力 -->
             <div v-show="currentTab === 'input_daily'">
                 <div class="form-group">
                     <h3 style="margin-top:0;">{{ selectedDay ? formatDateDisplay(selectedDay.fullDate) : '' }} 最終収支</h3>
-                    <p style="font-size:12px; color:var(--text-sub);">本日の「総投資」「回収」「貯メダル増減」を入力して収支を確定させます。</p>
-                    
-                    <div class="radio-group" style="margin-top:15px; background:var(--surface-light); padding:10px 15px; border-radius:6px; flex-direction: column; gap:10px;">
+                    <p class="text-sm text-sub">本日の「総投資」「回収」「貯メダル増減」を入力して収支を確定させます。</p>
+                    <div class="radio-group flex-col card mt-2 gap-2" style="margin-bottom:0;">
                         <label class="radio-label"><input type="radio" v-model="dailyForm.mode" value="auto"> 履歴に入力した数値から自動計算</label>
                         <label class="radio-label"><input type="radio" v-model="dailyForm.mode" value="manual"> 手動で入力する</label>
                     </div>
                 </div>
 
-                <template v-if="dailyForm.mode === 'auto'">
-                    <div class="form-group">
-                        <span class="form-label">💴 本日の現金【総投資】(円) <span style="color:var(--primary); font-weight:bold;">※自動計算</span></span>
-                        <input type="number" class="form-input" :value="autoDailyCalc.invest" readonly>
-                    </div>
-                </template>
-                <template v-else>
-                    <div class="form-group">
-                        <span class="form-label">💴 本日の現金【総投資】(円)</span>
-                        <input type="number" class="form-input" v-model.number="dailyForm.invest" placeholder="0">
-                    </div>
-                </template>
+                <div class="form-group">
+                    <span class="form-label">💴 本日の現金【総投資】(円) <span :style="dailyForm.mode === 'auto' ? 'color:var(--primary);font-weight:bold;' : ''">{{ dailyForm.mode === 'auto' ? '※自動計算' : '' }}</span></span>
+                    <input type="number" class="form-input" v-if="dailyForm.mode === 'auto'" :value="autoDailyCalc.invest" readonly>
+                    <input type="number" class="form-input" v-else v-model.number="dailyForm.invest" placeholder="0">
+                </div>
 
                 <div class="form-group">
                     <span class="form-label">💴 本日の現金【回収】(円) <span style="color:var(--error); font-weight:bold;">※手動入力</span></span>
                     <input type="number" class="form-input" v-model.number="dailyForm.recover" placeholder="0" style="border: 2px solid var(--error);">
                 </div>
 
-                <template v-if="dailyForm.mode === 'auto'">
-                    <div class="form-group">
-                        <span class="form-label">🪙 本日の貯メダル増減 (枚) <span style="color:var(--primary); font-weight:bold;">※自動計算</span></span>
-                        <div style="display:flex; gap:10px;">
-                            <select class="form-input" style="width:80px;" :value="autoDailyCalc.sign" disabled>
-                                <option :value="1">＋</option>
-                                <option :value="-1">－</option>
-                            </select>
-                            <input type="number" class="form-input" :value="autoDailyCalc.val" readonly>
-                        </div>
+                <div class="form-group">
+                    <span class="form-label">🪙 本日の貯メダル増減 (枚) <span :style="dailyForm.mode === 'auto' ? 'color:var(--primary);font-weight:bold;' : ''">{{ dailyForm.mode === 'auto' ? '※自動計算' : '' }}</span></span>
+                    <div class="flex gap-2" v-if="dailyForm.mode === 'auto'">
+                        <select class="form-input" style="width:80px;" :value="autoDailyCalc.sign" disabled><option :value="1">＋</option><option :value="-1">－</option></select>
+                        <input type="number" class="form-input" :value="autoDailyCalc.val" readonly>
                     </div>
-                </template>
-                <template v-else>
-                    <div class="form-group">
-                        <span class="form-label">🪙 本日の貯メダル増減 (枚)</span>
-                        <div style="display:flex; gap:10px;">
-                            <select class="form-input" style="width:80px;" v-model="dailyForm.medalSign">
-                                <option :value="1">＋</option>
-                                <option :value="-1">－</option>
-                            </select>
-                            <input type="number" class="form-input" v-model.number="dailyForm.medalVal" placeholder="0">
-                        </div>
+                    <div class="flex gap-2" v-else>
+                        <select class="form-input" style="width:80px;" v-model="dailyForm.medalSign"><option :value="1">＋</option><option :value="-1">－</option></select>
+                        <input type="number" class="form-input" v-model.number="dailyForm.medalVal" placeholder="0">
                     </div>
-                </template>
-                
+                </div>
                 <div class="save-btn" @click="saveDailyTotal">✅ 収支を確定する</div>
             </div>
         </main>
         
         <!-- ナビゲーション -->
         <div class="nav-bar">
-            <div class="nav-item" :class="{active: currentTab==='home'}" @click="changeMainTab('home')">
-                <span class="nav-icon">🏠</span><span>ホーム</span>
-            </div>
-            <div class="nav-item" :class="{active: currentTab==='counter'}" @click="changeMainTab('counter')">
-                <span class="nav-icon">🎲</span><span>小役</span>
-            </div>
-            <div class="nav-item" :class="{active: currentTab==='analysis'}" @click="changeMainTab('analysis')">
-                <span class="nav-icon">📊</span><span>分析</span>
-            </div>
+            <div class="nav-item" :class="{active: currentTab==='home'}" @click="changeMainTab('home')"><span style="font-size: 22px; margin-bottom: 4px;">🏠</span><span>ホーム</span></div>
+            <div class="nav-item" :class="{active: currentTab==='counter'}" @click="changeMainTab('counter')"><span style="font-size: 22px; margin-bottom: 4px;">🎲</span><span>小役</span></div>
+            <div class="nav-item" :class="{active: currentTab==='analysis'}" @click="changeMainTab('analysis')"><span style="font-size: 22px; margin-bottom: 4px;">📊</span><span>分析</span></div>
         </div>
 
         <!-- ⚙️ 総合設定・データ管理モーダル -->
         <div class="modal-overlay" v-if="showSettingsModal" @click.self="showSettingsModal = false">
             <div class="modal-content">
-                <h3 style="margin:0 0 10px 0; font-size:16px; text-align:center;">設定 / データ管理</h3>
-                
-                <div class="settings-tab-nav">
-                    <div class="settings-tab" :class="{active: mainSettingTab === 'profile'}" @click="mainSettingTab = 'profile'">👤 プロフィール</div>
+                <h3 class="modal-title">設定 / データ管理</h3>
+                <div class="flex mb-2">
+                    <div class="settings-tab" :class="{active: mainSettingTab === 'profile'}" @click="mainSettingTab = 'profile'">👤 プロファイル</div>
                     <div class="settings-tab" :class="{active: mainSettingTab === 'backup'}" @click="mainSettingTab = 'backup'">💾 引き継ぎ</div>
                     <div class="settings-tab" :class="{active: mainSettingTab === 'edit'}" @click="mainSettingTab = 'edit'">✏️ 名称編集</div>
                 </div>
 
                 <div v-show="mainSettingTab === 'profile'">
-                    <div style="background:var(--surface-light); padding:15px; border-radius:8px; margin-bottom:15px; text-align:center; border: 1px solid var(--border);">
-                        <div style="font-weight:bold; margin-bottom:10px; font-size:13px;">プロフィール設定</div>
-                        <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
+                    <div class="card">
+                        <div class="card-title">プロフィール設定</div>
+                        <div class="flex-center gap-3">
                             <label style="cursor:pointer; position:relative;">
                                 <img :src="userProfile.icon || 'https://via.placeholder.com/50'" style="width:50px; height:50px; border-radius:50%; object-fit:cover; border:2px solid var(--primary);">
                                 <input type="file" accept="image/*" style="display:none;" @change="handleUserIconUpload">
-                                <div style="position:absolute; bottom:-5px; right:-5px; background:var(--surface); border-radius:50%; width:20px; height:20px; display:flex; align-items:center; justify-content:center; font-size:10px; border:1px solid var(--border);">📷</div>
+                                <div class="flex-center" style="position:absolute; bottom:-5px; right:-5px; background:var(--surface); border-radius:50%; width:20px; height:20px; font-size:10px; border:1px solid var(--border);">📷</div>
                             </label>
                             <input type="text" v-model="userProfile.name" class="form-input" style="width:150px; padding:8px; font-size:14px;" placeholder="ユーザー名">
                         </div>
                     </div>
-
-                    <div style="background:var(--surface-light); padding:15px; border-radius:8px; border: 1px solid var(--border); margin-bottom:15px;">
-                        <div style="font-weight:bold; margin-bottom:10px; text-align:center; font-size:13px;">⚙️ カレンダー表示設定</div>
-                        <label style="display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; font-size:13px; color:var(--text-main);">
-                            <input type="checkbox" v-model="generalSettings.showMedalOnCalendar" style="transform:scale(1.2); accent-color:var(--primary);">
-                            貯メダル増減数をカレンダーに表示する
+                    <div class="card">
+                        <div class="card-title">⚙️ カレンダー表示設定</div>
+                        <label class="flex-center gap-2 text-sm" style="cursor:pointer; color:var(--text-main);">
+                            <input type="checkbox" v-model="generalSettings.showMedalOnCalendar" style="transform:scale(1.2); accent-color:var(--primary);"> 貯メダル増減数をカレンダーに表示する
                         </label>
                     </div>
-
-                    <div style="background:var(--surface-light); padding:15px; border-radius:8px; border: 1px solid var(--border);">
-                        <div style="font-weight:bold; margin-bottom:10px; text-align:center; font-size:13px;">🎨 Originalテーマ カスタマイズ</div>
-                        
-                        <div style="font-size:12px; color:var(--text-sub); margin-bottom:5px;">ベーステーマ (カレンダー以外)</div>
-                        <select v-model="originalSettings.baseTheme" class="form-input" style="padding:8px; font-size:14px; margin-bottom:15px;">
-                            <option value="black">Dark (黒ベース)</option>
-                            <option value="white">Light (白ベース)</option>
-                            <option value="cyber">Cyber (ネオンベース)</option>
-                        </select>
-
-                        <div style="font-size:12px; color:var(--text-sub); margin-bottom:5px;">カレンダー背景画像</div>
-                        <label class="modal-btn" style="background:var(--surface); color:var(--text-main); border:1px dashed var(--border); display:block; text-align:center; cursor:pointer; padding:8px; font-size:12px; margin-bottom:15px;">
-                            画像を選択
-                            <input type="file" accept="image/*" style="display:none;" @change="handleOriginalBgUpload">
-                        </label>
-
-                        <div style="font-size:12px; color:var(--text-sub); margin-bottom:5px;">画像の透過率: {{ Math.round(originalSettings.opacity * 100) }}%</div>
+                    <div class="card" style="margin-bottom:0;">
+                        <div class="card-title">🎨 Originalテーマ カスタマイズ</div>
+                        <div class="text-sm text-sub mb-2">ベーステーマ (カレンダー以外)</div>
+                        <select v-model="originalSettings.baseTheme" class="form-input mb-2" style="padding:8px; font-size:14px;"><option value="black">Dark (黒ベース)</option><option value="white">Light (白ベース)</option><option value="cyber">Cyber (ネオンベース)</option></select>
+                        <div class="text-sm text-sub mb-2">カレンダー背景画像</div>
+                        <label class="modal-btn btn-outline mb-2" style="display:block; padding:8px; font-size:12px; border:1px dashed var(--border);">画像を選択<input type="file" accept="image/*" style="display:none;" @change="handleOriginalBgUpload"></label>
+                        <div class="text-sm text-sub mb-2">画像の透過率: {{ Math.round(originalSettings.opacity * 100) }}%</div>
                         <input type="range" v-model.number="originalSettings.opacity" min="0" max="1" step="0.1" style="width:100%; margin-bottom:15px; accent-color:var(--primary);">
-
-                        <div style="font-size:11px; color:var(--text-sub); text-align:center; margin-bottom:5px;">プレビュー</div>
+                        <div class="text-sm text-sub text-center mb-2">プレビュー</div>
                         <div style="width:100%; height:70px; position:relative; background:var(--bg); border:1px solid var(--border); overflow:hidden; border-radius:4px;">
                             <div :style="{ position:'absolute', width:'100%', height:'100%', backgroundImage: `url(${originalSettings.bgImage})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: originalSettings.opacity }"></div>
-                            <div style="position:relative; z-index:1; padding:10px; text-shadow:0 1px 2px rgba(0,0,0,0.8); color:#fff; font-size:12px;">
-                                <div style="font-weight:bold;">10日</div>
-                                <div class="val-plus" style="text-align:right;">+¥10,000</div>
-                            </div>
+                            <div style="position:relative; z-index:1; padding:10px; text-shadow:0 1px 2px rgba(0,0,0,0.8); color:#fff; font-size:12px;"><div class="font-bold">10日</div><div class="val-plus" style="text-align:right;">+¥10,000</div></div>
                         </div>
                     </div>
                 </div>
 
                 <div v-show="mainSettingTab === 'backup'">
-                    <div style="background:var(--surface-light); padding:15px; border-radius:8px; border: 1px solid var(--border); margin-bottom:15px;">
-                        <div style="font-weight:bold; margin-bottom:10px; text-align:center; font-size:13px;">データ引き継ぎ・手動バックアップ</div>
-                        <div style="font-size:11px; color:var(--text-sub); margin-bottom:15px; text-align:center; line-height:1.4;">
-                            iPhone本体に保存されているデータを<br>丸ごと別の端末に送ったり復元できます。
-                        </div>
-                        <button class="modal-btn" style="width:100%; background:var(--primary); color:#fff; margin-bottom:10px; display:flex; justify-content:center; align-items:center; gap:8px;" @click="exportDataShare">
-                            <span style="font-size:16px;">📤</span> データを送る (AirDrop / LINE等)
-                        </button>
-                        <label class="modal-btn" style="width:100%; background:var(--surface); color:var(--text-main); border:1px solid var(--border); display:block; text-align:center; cursor:pointer;">
-                            📥 データを受け取る (復元)
-                            <input type="file" accept=".json" style="display:none;" @change="importData">
-                        </label>
+                    <div class="card">
+                        <div class="card-title">データ引き継ぎ・手動バックアップ</div>
+                        <div class="text-sm text-sub text-center mb-2" style="line-height:1.4;">iPhone本体に保存されているデータを<br>丸ごと別の端末に送ったり復元できます。</div>
+                        <button class="modal-btn btn-primary flex-center gap-2 mb-2" @click="exportDataShare"><span style="font-size:16px;">📤</span> データを送る</button>
+                        <label class="modal-btn btn-outline" style="display:block;">📥 データを受け取る (復元)<input type="file" accept=".json" style="display:none;" @change="importData"></label>
                     </div>
-
-                    <!-- 💡 追加：アプリの更新ボタン -->
-                    <div style="background:var(--surface-light); padding:15px; border-radius:8px; border: 1px solid var(--error); margin-bottom:15px; text-align:center;">
-                        <div style="font-weight:bold; margin-bottom:10px; font-size:13px;">🔄 アプリの更新</div>
-                        <div style="font-size:11px; color:var(--text-sub); margin-bottom:10px;">
-                            新しい機能が追加された場合や、動きがおかしい時に押してください。<br>
-                            ※データは消えません。
-                        </div>
-                        <button class="modal-btn" style="background:var(--surface); border:1px solid var(--border); color:var(--text-main); width:100%;" @click="forceReload">
-                            最新版を読み込む
-                        </button>
+                    <div class="card warning-box" style="margin-bottom:0;">
+                        <div class="card-title">🔄 アプリの更新</div>
+                        <div class="text-sm text-sub text-center mb-2">新しい機能が追加された場合や、動きがおかしい時に押してください。<br>※データは消えません。</div>
+                        <button class="modal-btn btn-outline" @click="forceReload">最新版を読み込む</button>
                     </div>
                 </div>
                 
                 <div v-show="mainSettingTab === 'edit'">
-                    <div style="display:flex; margin-bottom:15px; border-bottom:2px solid var(--surface-light);">
-                        <div style="flex:1; text-align:center; padding:10px; cursor:pointer; font-weight:bold; font-size:12px;" 
-                             :style="settingTab === 'store' ? 'color:var(--primary); border-bottom:2px solid var(--primary); margin-bottom:-2px;' : 'color:var(--text-sub)'" 
-                             @click="settingTab = 'store'">🏪 店舗名</div>
-                        <div style="flex:1; text-align:center; padding:10px; cursor:pointer; font-weight:bold; font-size:12px;" 
-                             :style="settingTab === 'machine' ? 'color:var(--primary); border-bottom:2px solid var(--primary); margin-bottom:-2px;' : 'color:var(--text-sub)'" 
-                             @click="settingTab = 'machine'">🎰 機種名</div>
+                    <div class="flex mb-2" style="border-bottom:2px solid var(--surface-light);">
+                        <div class="settings-tab" style="border-bottom:none;" :style="settingTab === 'store' ? 'color:var(--primary); border-bottom:2px solid var(--primary); margin-bottom:-2px;' : ''" @click="settingTab = 'store'">🏪 店舗名</div>
+                        <div class="settings-tab" style="border-bottom:none;" :style="settingTab === 'machine' ? 'color:var(--primary); border-bottom:2px solid var(--primary); margin-bottom:-2px;' : ''" @click="settingTab = 'machine'">🎰 機種名</div>
                     </div>
-
+                    <!-- 店舗リスト -->
                     <div v-show="settingTab === 'store'" style="max-height:300px; overflow-y:auto; padding-right:5px;">
-                        <div v-for="(store, index) in storeList" :key="'s'+index" style="display:flex; justify-content:space-between; align-items:center; background:var(--bg); padding:10px; border-radius:6px; margin-bottom:8px; border: 1px solid var(--border);">
-                            <span style="font-weight:bold; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-right:10px;">{{ store }}</span>
-                            <!-- 💡 変更：変更と削除の2つのボタンを配置 -->
-                            <div style="display:flex; gap:5px;">
-                                <button class="modal-btn" style="padding:6px 12px; background:var(--primary); color:#fff; font-size:11px;" @click="renameStore(store, index)">変更</button>
-                                <button class="modal-btn" style="padding:6px 12px; background:var(--error); color:#fff; font-size:11px;" @click="deleteStore(store, index)">削除</button>
+                        <div v-for="(store, index) in storeList" :key="'s'+index" class="flex-between card" style="padding:10px; margin-bottom:8px;">
+                            <span class="font-bold text-sm" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-right:10px;">{{ store }}</span>
+                            <div class="flex gap-2">
+                                <button class="modal-btn btn-primary" style="padding:6px 12px; font-size:11px; width:auto;" @click="renameStore(store, index)">変更</button>
+                                <button class="modal-btn btn-danger" style="padding:6px 12px; font-size:11px; width:auto;" @click="deleteStore(store, index)">削除</button>
                             </div>
                         </div>
-                        <div v-if="storeList.length === 0" style="text-align:center; padding:20px; font-size:12px; color:var(--text-sub);">登録店舗なし</div>
+                        <div v-if="storeList.length === 0" class="text-center p-3 text-sm text-sub">登録店舗なし</div>
                     </div>
-
+                    <!-- 機種リスト -->
                     <div v-show="settingTab === 'machine'" style="max-height:300px; overflow-y:auto; padding-right:5px;">
-                        <div v-for="(mac, index) in machineList" :key="'m'+index" style="display:flex; justify-content:space-between; align-items:center; background:var(--bg); padding:10px; border-radius:6px; margin-bottom:8px; border: 1px solid var(--border);">
-                            <span style="font-weight:bold; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-right:10px;">{{ mac }}</span>
-                            <!-- 💡 変更：変更と削除の2つのボタンを配置 -->
-                            <div style="display:flex; gap:5px;">
-                                <button class="modal-btn" style="padding:6px 12px; background:var(--primary); color:#fff; font-size:11px;" @click="renameMachine(mac, index)">変更</button>
-                                <button class="modal-btn" style="padding:6px 12px; background:var(--error); color:#fff; font-size:11px;" @click="deleteMachine(mac, index)">削除</button>
+                        <div v-for="(mac, index) in machineList" :key="'m'+index" class="flex-between card" style="padding:10px; margin-bottom:8px;">
+                            <span class="font-bold text-sm" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-right:10px;">{{ mac }}</span>
+                            <div class="flex gap-2">
+                                <button class="modal-btn btn-primary" style="padding:6px 12px; font-size:11px; width:auto;" @click="renameMachine(mac, index)">変更</button>
+                                <button class="modal-btn btn-danger" style="padding:6px 12px; font-size:11px; width:auto;" @click="deleteMachine(mac, index)">削除</button>
                             </div>
                         </div>
-                        <div v-if="machineList.length === 0" style="text-align:center; padding:20px; font-size:12px; color:var(--text-sub);">登録機種なし</div>
+                        <div v-if="machineList.length === 0" class="text-center p-3 text-sm text-sub">登録機種なし</div>
                     </div>
                 </div>
-
-                <button class="modal-btn" style="background:var(--surface-light); color:var(--text-main); margin-top:10px;" @click="showSettingsModal = false">閉じる</button>
+                <button class="modal-btn btn-outline mt-2" @click="showSettingsModal = false">閉じる</button>
             </div>
         </div>
 
-        <!-- 月間データ削除モーダル -->
+        <!-- 各種モーダル -->
+        <!-- 📅 月選択 -->
+        <div class="modal-overlay" v-if="showMonthPickerModal" @click.self="showMonthPickerModal = false">
+            <div class="modal-content">
+                <h3 class="modal-title">年月を選択</h3>
+                <div class="flex-between mb-2 card" style="padding:10px 20px;">
+                    <button style="background:transparent; border:none; color:var(--primary); font-size:20px; cursor:pointer; font-weight:bold;" @click="pickerYear--">◀</button>
+                    <span style="font-weight:bold; font-size:18px;">{{ pickerYear }} 年</span>
+                    <button style="background:transparent; border:none; color:var(--primary); font-size:20px; cursor:pointer; font-weight:bold;" @click="pickerYear++">▶</button>
+                </div>
+                <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:10px;">
+                    <button v-for="m in 12" :key="m" class="modal-btn btn-outline" style="padding:12px 0;" @click="selectMonth(m)">{{ m }}月</button>
+                </div>
+                <button class="modal-btn btn-outline mt-2" @click="showMonthPickerModal = false">閉じる</button>
+            </div>
+        </div>
+
+        <!-- 月間データ削除 -->
         <div class="modal-overlay" v-if="showMonthDeleteModal" @click.self="showMonthDeleteModal = false">
             <div class="modal-content">
-                <h3 style="margin:0 0 10px 0; font-size:16px; text-align:center; color:var(--error);">月間データの削除</h3>
-                <div style="font-size:11px; color:var(--text-sub); margin-bottom:15px; text-align:center;">{{ currentYear }}年{{ currentMonth }}月のデータを一括削除します。</div>
-                
-                <button class="modal-btn" style="background:var(--surface-light); border:1px solid var(--error); color:var(--error);" @click="deleteMonthData('machines')">🗑️ 月間すべての遊技履歴を削除</button>
-                <button class="modal-btn" style="background:var(--surface-light); border:1px solid var(--error); color:var(--error);" @click="deleteMonthData('daily')">🗑️ 月間すべての収支データを削除</button>
-                <button class="modal-btn" style="background:var(--error); color:#fff;" @click="deleteMonthData('all')">🗑️ 月間すべての遊技履歴・収支データを削除</button>
-                
-                <button class="modal-btn" style="background:var(--surface-light); color:var(--text-main); margin-top:10px;" @click="showMonthDeleteModal = false">キャンセル</button>
+                <h3 class="modal-title val-minus">月間データの削除</h3>
+                <div class="text-sm text-sub text-center mb-2">{{ currentYear }}年{{ currentMonth }}月のデータを一括削除します。</div>
+                <button class="modal-btn btn-outline val-minus warning-box" @click="deleteMonthData('machines')">🗑️ 月間すべての遊技履歴を削除</button>
+                <button class="modal-btn btn-outline val-minus warning-box" @click="deleteMonthData('daily')">🗑️ 月間すべての収支データを削除</button>
+                <button class="modal-btn btn-danger" @click="deleteMonthData('all')">🗑️ 月間すべての遊技履歴・収支データを削除</button>
+                <button class="modal-btn btn-outline mt-2" @click="showMonthDeleteModal = false">キャンセル</button>
             </div>
         </div>
 
-        <!-- ⚙️ 履歴編集・削除モーダル -->
+        <!-- 履歴アクション -->
         <div class="modal-overlay" v-if="showActionModal" @click.self="showActionModal = false">
             <div class="modal-content" style="max-width:300px;">
-                <h3 style="margin:0 0 10px 0; font-size:16px; text-align:center;">遊技履歴の操作</h3>
-                <button class="modal-btn" style="background:var(--primary); color:#fff;" @click="editMachine">✏️ 編集する</button>
-                <button class="modal-btn" style="background:var(--error); color:#fff;" @click="deleteMachineAction">🗑️ この遊技履歴を削除</button>
-                <button class="modal-btn" style="background:var(--surface-light); color:var(--text-main);" @click="showActionModal = false">キャンセル</button>
+                <h3 class="modal-title">遊技履歴の操作</h3>
+                <button class="modal-btn btn-primary" @click="editMachine">✏️ 編集する</button>
+                <button class="modal-btn btn-danger" @click="deleteMachineAction">🗑️ この遊技履歴を削除</button>
+                <button class="modal-btn btn-outline mt-2" @click="showActionModal = false">キャンセル</button>
             </div>
         </div>
 
-        <!-- 小役名前一括変更モーダル -->
+        <!-- 小役一括変更 -->
         <div class="modal-overlay" v-if="showRoleEditModal" @click.self="showRoleEditModal = false">
             <div class="modal-content">
-                <h3 style="margin:0 0 10px 0; font-size:16px; text-align:center;">カスタム小役の名前一括変更</h3>
-                <div style="font-size:11px; color:var(--text-sub); margin-bottom:15px; text-align:center;">現在のページ「{{ activePage.pageName }}」のボタン名を変更します</div>
-                
-                <div v-for="(name, i) in roleEditForm" :key="i" style="margin-bottom:8px; display:flex; align-items:center;">
-                    <span style="font-size:12px; color:var(--text-sub); width:60px; font-weight:bold;">ボタン {{ i + 1 }}</span>
+                <h3 class="modal-title">カスタム小役の名前一括変更</h3>
+                <div class="text-sm text-sub text-center mb-2">現在のページ「{{ activePage.pageName }}」のボタン名を変更します</div>
+                <div v-for="(name, i) in roleEditForm" :key="i" class="flex items-center mb-2">
+                    <span class="text-sm text-sub font-bold" style="width:60px;">ボタン {{ i + 1 }}</span>
                     <input type="text" class="form-input" v-model="roleEditForm[i]" style="padding:8px; font-size:14px; flex:1;" placeholder="小役名を入力">
                 </div>
-                
-                <button class="modal-btn" style="background:var(--primary); color:#fff; margin-top:10px;" @click="saveRoleNames">💾 保存する</button>
-                <button class="modal-btn" style="background:var(--surface-light); color:var(--text-main);" @click="showRoleEditModal = false">キャンセル</button>
+                <button class="modal-btn btn-primary mt-2" @click="saveRoleNames">💾 保存する</button>
+                <button class="modal-btn btn-outline mt-2" @click="showRoleEditModal = false">キャンセル</button>
             </div>
         </div>
 
-        <!-- 小役データ複数選択ポップアップ -->
+        <!-- スナップショット選択 -->
         <div class="modal-overlay" v-if="showSnapshotSelectModal" @click.self="showSnapshotSelectModal = false">
             <div class="modal-content">
-                <h3 style="margin:0 0 10px 0; font-size:16px; text-align:center;">どのデータを表示しますか？</h3>
-                <button class="modal-btn" v-for="(snap, i) in snapshotListToSelect" :key="i" style="background:var(--surface-light); border:1px solid var(--primary); color:var(--text-main); margin-bottom:8px;" @click="openSnapshotModal(snap); showSnapshotSelectModal = false">
+                <h3 class="modal-title">どのデータを表示しますか？</h3>
+                <button class="modal-btn btn-outline" v-for="(snap, i) in snapshotListToSelect" :key="i" style="border-color:var(--primary); margin-bottom:8px;" @click="openSnapshotModal(snap); showSnapshotSelectModal = false">
                     📄 {{ snap.pageName }} ({{ snap.games }}G)
                 </button>
-                <button class="modal-btn" style="background:var(--surface); color:var(--text-sub); border:none; margin-top:5px;" @click="showSnapshotSelectModal = false">キャンセル</button>
+                <button class="modal-btn btn-outline mt-2" style="border:none;" @click="showSnapshotSelectModal = false">キャンセル</button>
             </div>
         </div>
 
-        <!-- 小役データサマリポップアップ -->
+        <!-- スナップショット表示 -->
         <div class="modal-overlay" v-if="showSnapshotModal" @click.self="showSnapshotModal = false">
             <div class="modal-content" style="max-width:340px;">
-                <h3 style="margin:0 0 10px 0; font-size:16px; text-align:center;">🎰 小役データサマリ</h3>
-                <div style="font-weight:bold; text-align:center; color:var(--primary); margin-bottom:10px;">{{ snapshotData.pageName }}</div>
-                <div style="text-align:center; font-size:18px; font-weight:bold; margin-bottom:15px;">🎯 回転数: {{ snapshotData.games }} G</div>
-                
-                <div style="font-size:12px; color:var(--text-sub); margin-bottom:5px;">【基本小役】</div>
-                <div style="display:flex; justify-content:space-around; margin-bottom:15px; background:var(--surface-light); padding:10px; border-radius:8px;">
-                    <div v-for="(count, i) in snapshotData.r1" :key="'sr1'+i" style="text-align:center;">
+                <h3 class="modal-title">🎰 小役データサマリ</h3>
+                <div class="font-bold text-center mb-2" style="color:var(--primary);">{{ snapshotData.pageName }}</div>
+                <div class="font-bold text-center mb-2" style="font-size:18px;">🎯 回転数: {{ snapshotData.games }} G</div>
+                <div class="text-sm text-sub mb-2">【基本小役】</div>
+                <div class="flex justify-around mb-2 card" style="padding:10px;">
+                    <div v-for="(count, i) in snapshotData.r1" :key="'sr1'+i" class="text-center">
                         <div :style="{width:'16px', height:'16px', borderRadius:'50%', background: r1Colors[i], margin:'0 auto 4px auto'}"></div>
-                        <div style="font-weight:bold; font-size:14px;">{{ count }}</div>
+                        <div class="font-bold" style="font-size:14px;">{{ count }}</div>
                         <div style="font-size:10px; color:var(--text-sub);">{{ getProb(count, snapshotData.games) }}</div>
                     </div>
                 </div>
-                
-                <div style="font-size:12px; color:var(--text-sub); margin-bottom:5px;">【カスタム小役】</div>
-                <div style="display:flex; justify-content:space-around; background:var(--surface-light); padding:10px; border-radius:8px;">
-                    <div v-for="(name, i) in snapshotData.r2Names" :key="'sr2'+i" style="text-align:center; width:45px;">
+                <div class="text-sm text-sub mb-2">【カスタム小役】</div>
+                <div class="flex justify-around card" style="padding:10px;">
+                    <div v-for="(name, i) in snapshotData.r2Names" :key="'sr2'+i" class="text-center" style="width:45px;">
                         <div style="font-size:9px; color:var(--text-sub); margin-bottom:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ name }}</div>
-                        <div style="font-weight:bold; font-size:14px;">{{ snapshotData.r2[i] }}</div>
+                        <div class="font-bold" style="font-size:14px;">{{ snapshotData.r2[i] }}</div>
                         <div style="font-size:10px; color:var(--text-sub);">{{ getProb(snapshotData.r2[i], snapshotData.games) }}</div>
                     </div>
                 </div>
-                
-                <button class="modal-btn" style="background:var(--surface); border:1px solid var(--border); color:var(--text-main); margin-top:15px;" @click="showSnapshotModal = false">閉じる</button>
+                <button class="modal-btn btn-outline mt-2" @click="showSnapshotModal = false">閉じる</button>
             </div>
         </div>
 
-        <!-- 写真拡大表示ビューワー -->
+        <!-- 写真ビューワー -->
         <div class="modal-overlay" v-if="showPhotoViewer" @click.self="showPhotoViewer = false">
             <div style="position:relative; width:95%; max-width:500px; text-align:center;">
                 <img :src="photoViewerSrc" style="width:100%; border-radius:8px; border:2px solid var(--border);">
-                <button style="position:absolute; top:-15px; right:-15px; background:var(--error); color:#fff; border:none; border-radius:50%; width:30px; height:30px; font-weight:bold; font-size:16px; cursor:pointer; box-shadow:0 2px 5px rgba(0,0,0,0.5);" @click="showPhotoViewer = false">×</button>
+                <button class="btn-danger" style="position:absolute; top:-15px; right:-15px; border:none; border-radius:50%; width:30px; height:30px; font-weight:bold; font-size:16px; cursor:pointer; box-shadow:0 2px 5px rgba(0,0,0,0.5);" @click="showPhotoViewer = false">×</button>
             </div>
         </div>
 
-        <!-- 📱 機種変更・引き継ぎガイドモーダル -->
+        <!-- 機種変更ガイド -->
         <div class="modal-overlay" v-if="showTransferGuide" @click.self="showTransferGuide = false">
             <div class="modal-content">
-                <h3 style="margin:0 0 15px 0; font-size:16px; text-align:center; color:var(--primary);">📱 機種変更・データ引き継ぎ手順</h3>
-                <div style="font-size:13px; line-height:1.6; color:var(--text-main); overflow-y:auto; max-height:60vh;">
+                <h3 class="modal-title" style="color:var(--primary);">📱 機種変更・データ引き継ぎ手順</h3>
+                <div style="font-size:13px; line-height:1.6; overflow-y:auto; max-height:60vh;">
                     <p>このアプリは個人情報を一切収集しないため、データはすべてお使いのスマホ本体にのみ保存されています。</p>
-                    
-                    <div style="background:var(--surface-light); padding:10px; border-radius:6px; margin-top:10px; border:1px solid var(--primary);">
-                        <p style="font-weight:bold; margin:0 0 5px 0; color:var(--primary);">【STEP 1: 古いスマホでの操作】</p>
+                    <div class="card" style="border-color:var(--primary); padding:10px;">
+                        <p class="font-bold" style="margin:0 0 5px 0; color:var(--primary);">【STEP 1: 古いスマホでの操作】</p>
                         <ol style="padding-left:20px; margin:0;">
                             <li>左上のアイコン（設定）を開き、<b>「💾 引き継ぎ」</b>タブへ。</li>
                             <li><b>「📤 データを送る」</b>を押します。</li>
                             <li>メニューから<b>「AirDrop」</b>や<b>「LINE (Keepメモ等)」</b>を選び、新しいスマホにデータを送ります。</li>
                         </ol>
                     </div>
-
-                    <div style="background:var(--surface-light); padding:10px; border-radius:6px; margin-top:10px; border:1px solid var(--secondary);">
-                        <p style="font-weight:bold; margin:0 0 5px 0; color:var(--secondary);">【STEP 2: 新しいスマホでの操作】</p>
+                    <div class="card" style="border-color:var(--secondary); padding:10px;">
+                        <p class="font-bold" style="margin:0 0 5px 0; color:var(--secondary);">【STEP 2: 新しいスマホでの操作】</p>
                         <ol style="padding-left:20px; margin:0;">
-                            <li>AirDropで受け取った場合は「ファイル」アプリに保存されます。<br>
-                            ※LINE等の場合は、受け取ったデータを<b>「ファイルに保存」</b>してください。</li>
+                            <li>AirDropで受け取った場合は「ファイル」アプリに保存されます。<br>※LINE等の場合は、受け取ったデータを<b>「ファイルに保存」</b>してください。</li>
                             <li>このアプリを開き、同じく「💾 引き継ぎ」タブから<b>「📥 データを受け取る」</b>を押します。</li>
                             <li>保存したファイルを選択すれば完了です！</li>
                         </ol>
                     </div>
-                    
-                    <p style="color:var(--error); font-size:12px; margin-top:15px; font-weight:bold; text-align:center;">※復元を実行すると、現在のデータは上書きされます。</p>
+                    <p class="text-sm font-bold text-center val-minus mt-2">※復元を実行すると、現在のデータは上書きされます。</p>
                 </div>
-                <button class="modal-btn" style="background:var(--surface-light); color:var(--text-main); margin-top:10px;" @click="showTransferGuide = false">閉じる</button>
+                <button class="modal-btn btn-outline mt-2" @click="showTransferGuide = false">閉じる</button>
             </div>
         </div>
 
@@ -821,11 +701,16 @@
 
     <script>
         const { createApp, ref, computed, watch, onMounted, onUnmounted, nextTick } = Vue;
-
         createApp({
             setup() {
+                // ==========================================
+                // ⚙️ 初期設定・ユーティリティ・データ管理
+                // ==========================================
                 const currentTab = ref('home');
+                const today = new Date();
+                const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
                 
+                // 画像圧縮
                 const resizeImage = (file, maxSize, callback) => {
                     const reader = new FileReader();
                     reader.onload = (e) => {
@@ -838,8 +723,7 @@
                                 else { w = Math.round((w * maxSize) / h); h = maxSize; }
                             }
                             canvas.width = w; canvas.height = h;
-                            const ctx = canvas.getContext('2d');
-                            ctx.drawImage(img, 0, 0, w, h);
+                            const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, w, h);
                             callback(canvas.toDataURL('image/jpeg', 0.8));
                         };
                         img.src = e.target.result;
@@ -847,820 +731,347 @@
                     reader.readAsDataURL(file);
                 };
 
-                const userProfile = ref(localStorage.getItem('gachi_user_profile') ? JSON.parse(localStorage.getItem('gachi_user_profile')) : { name: 'ガチ勢', icon: '' });
-                watch(userProfile, (newVal) => { localStorage.setItem('gachi_user_profile', JSON.stringify(newVal)); }, { deep: true });
+                // localStorege 読み書き用のヘルパー
+                const getStore = (key, defaultVal) => localStorage.getItem(key) ? JSON.parse(localStorage.getItem(key)) : defaultVal;
+                const setStore = (key, val) => localStorage.setItem(key, JSON.stringify(val));
 
-                const handleUserIconUpload = (e) => {
-                    const file = e.target.files[0];
-                    if(!file) return;
-                    resizeImage(file, 200, (compressedDataUrl) => { userProfile.value.icon = compressedDataUrl; });
-                };
+                const userProfile = ref(getStore('gachi_user_profile', { name: 'ガチ勢', icon: '' }));
+                watch(userProfile, v => setStore('gachi_user_profile', v), { deep: true });
+                const handleUserIconUpload = (e) => { const f = e.target.files[0]; if(f) resizeImage(f, 200, (img) => userProfile.value.icon = img); };
 
-                const defaultGeneral = { showMedalOnCalendar: true };
-                const generalSettings = ref(localStorage.getItem('gachi_general_settings') ? JSON.parse(localStorage.getItem('gachi_general_settings')) : defaultGeneral);
-                watch(generalSettings, (newVal) => { localStorage.setItem('gachi_general_settings', JSON.stringify(newVal)); }, { deep: true });
+                const generalSettings = ref(getStore('gachi_general_settings', { showMedalOnCalendar: true }));
+                watch(generalSettings, v => setStore('gachi_general_settings', v), { deep: true });
 
-                const defaultOriginal = { bgImage: '', opacity: 0.5, baseTheme: 'black' };
-                const originalSettings = ref(localStorage.getItem('gachi_original_theme') ? JSON.parse(localStorage.getItem('gachi_original_theme')) : defaultOriginal);
-                watch(originalSettings, (newVal) => { localStorage.setItem('gachi_original_theme', JSON.stringify(newVal)); }, { deep: true });
-
-                const handleOriginalBgUpload = (e) => {
-                    const file = e.target.files[0];
-                    if(!file) return;
-                    resizeImage(file, 800, (compressedDataUrl) => { originalSettings.value.bgImage = compressedDataUrl; });
-                };
+                const originalSettings = ref(getStore('gachi_original_theme', { bgImage: '', opacity: 0.5, baseTheme: 'black' }));
+                watch(originalSettings, v => setStore('gachi_original_theme', v), { deep: true });
+                const handleOriginalBgUpload = (e) => { const f = e.target.files[0]; if(f) resizeImage(f, 800, (img) => originalSettings.value.bgImage = img); };
 
                 const themes = [{id:'black', name:'Dark'}, {id:'white', name:'Light'}, {id:'cyber', name:'Cyber'}, {id:'original', name:'Original'}];
                 const themeIndex = ref(parseInt(localStorage.getItem('gachi_theme_index')) || 0);
-                
                 const isOriginalTheme = computed(() => themes[themeIndex.value].id === 'original');
+                const applyThemeCSS = () => { document.documentElement.setAttribute('data-theme', isOriginalTheme.value ? originalSettings.value.baseTheme : themes[themeIndex.value].id); localStorage.setItem('gachi_theme_index', themeIndex.value); };
+                watch(() => originalSettings.value.baseTheme, () => { if (isOriginalTheme.value) applyThemeCSS(); });
+                const toggleTheme = () => { themeIndex.value = (themeIndex.value + 1) % themes.length; applyThemeCSS(); if(currentTab.value === 'analysis' && analysisSubTab.value !== 'store') renderChart(); };
 
-                const applyThemeCSS = () => {
-                    const activeTheme = themes[themeIndex.value].id;
-                    if(activeTheme === 'original') {
-                        document.documentElement.setAttribute('data-theme', originalSettings.value.baseTheme);
-                    } else {
-                        document.documentElement.setAttribute('data-theme', activeTheme);
-                    }
-                    localStorage.setItem('gachi_theme_index', themeIndex.value);
-                };
-                
-                watch(() => originalSettings.value.baseTheme, () => {
-                    if (isOriginalTheme.value) applyThemeCSS();
-                });
-
-                const toggleTheme = () => {
-                    themeIndex.value = (themeIndex.value + 1) % themes.length;
-                    applyThemeCSS();
-                    if(currentTab.value === 'analysis' && analysisSubTab.value !== 'store') renderChart();
-                };
-
-                const currentTime = ref('');
-                let timer = null;
+                const currentTime = ref(''); let timer = null;
                 const updateTime = () => {
-                    const now = new Date();
-                    const yyyy = now.getFullYear();
-                    const mm = String(now.getMonth()+1).padStart(2,'0');
-                    const dd = String(now.getDate()).padStart(2,'0');
-                    const hh = String(now.getHours()).padStart(2,'0');
-                    const min = String(now.getMinutes()).padStart(2,'0');
-                    const ss = String(now.getSeconds()).padStart(2,'0');
-                    currentTime.value = `${yyyy}/${mm}/${dd} ${hh}:${min}:${ss}`;
+                    const n = new Date();
+                    currentTime.value = `${n.getFullYear()}/${String(n.getMonth()+1).padStart(2,'0')}/${String(n.getDate()).padStart(2,'0')} ${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}:${String(n.getSeconds()).padStart(2,'0')}`;
                 };
 
                 const headerTitle = computed(() => {
-                    if(currentTab.value === 'home') return `${userProfile.value.name} の稼働記録`;
-                    if(currentTab.value === 'counter') return '小役カウンター';
-                    if(currentTab.value === 'input_machine') return isEditing.value ? '遊技履歴編集' : '遊技履歴追加';
-                    if(currentTab.value === 'input_daily') return '日別収支確定';
-                    if(currentTab.value === 'analysis') return '分析・レポート';
-                    return 'Gachi-Slot';
+                    const titles = { 'home': `${userProfile.value.name} の稼働記録`, 'counter': '小役カウンター', 'input_machine': isEditing.value ? '遊技履歴編集' : '遊技履歴追加', 'input_daily': '日別収支確定', 'analysis': '分析・レポート' };
+                    return titles[currentTab.value] || 'Gachi-Slot';
                 });
 
                 const appData = ref({});
-                const loadData = () => {
-                    const saved = localStorage.getItem('gachi_slot_data');
-                    if (saved) appData.value = JSON.parse(saved);
-                };
-                watch(appData, (newVal) => { localStorage.setItem('gachi_slot_data', JSON.stringify(newVal)); }, { deep: true });
+                const loadData = () => { const saved = localStorage.getItem('gachi_slot_data'); if (saved) appData.value = JSON.parse(saved); };
+                watch(appData, v => localStorage.setItem('gachi_slot_data', JSON.stringify(v)), { deep: true });
 
-                // 💡 店舗名の初期値に「店舗名設定無し」を追加
                 const defaultStores = ["店舗名設定無し", "スペース666", "ゾーン戸畑", "メガフェイス1500宗像", "ワンダーランド福岡東", "アプロ7", "スーパーハリウッド1120", "EVO3", "D'station中間", "テキサス下関", "ピータイム下関", "まるみつ下関", "デルパラ山口"];
-                const storeList = ref(localStorage.getItem('gachi_store_list') ? JSON.parse(localStorage.getItem('gachi_store_list')) : defaultStores);
-                watch(storeList, (newVal) => { localStorage.setItem('gachi_store_list', JSON.stringify(newVal)); }, { deep: true });
+                const storeList = ref(getStore('gachi_store_list', defaultStores));
+                watch(storeList, v => setStore('gachi_store_list', v), { deep: true });
 
-                // 💡 機種名の初期値をトップ20＋「機種名設定無し」に変更
-                const defaultMachines = [
-                    "機種名設定無し",
-                    "スマスロ北斗の拳",
-                    "マイジャグラーV",
-                    "アイムジャグラーEX",
-                    "ゴーゴージャグラー3",
-                    "押忍！番長4",
-                    "Lヴァルヴレイヴ",
-                    "Lからくりサーカス",
-                    "スマスロモンキーターンV",
-                    "スマスロ ゴッドイーター",
-                    "甲鉄城のカバネリ",
-                    "沖ドキ！GOLD",
-                    "L戦国乙女4",
-                    "スマスロ防振り",
-                    "スマスロ真・北斗無双",
-                    "スマスロToLOVEる",
-                    "スマスロシンフォギア",
-                    "スマスロ星矢",
-                    "L南国育ち",
-                    "ファンキージャグラー2",
-                    "スマスロバジリスク絆2天膳"
-                ];
-                const machineList = ref(localStorage.getItem('gachi_machine_list') ? JSON.parse(localStorage.getItem('gachi_machine_list')) : defaultMachines);
-                watch(machineList, (newVal) => { localStorage.setItem('gachi_machine_list', JSON.stringify(newVal)); }, { deep: true });
+                const defaultMachines = ["機種名設定無し", "スマスロ北斗の拳", "マイジャグラーV", "アイムジャグラーEX", "ゴーゴージャグラー3", "押忍！番長4", "Lヴァルヴレイヴ", "Lからくりサーカス", "スマスロモンキーターンV", "スマスロ ゴッドイーター", "甲鉄城のカバネリ", "沖ドキ！GOLD", "L戦国乙女4", "スマスロ防振り", "スマスロ真・北斗無双", "スマスロToLOVEる", "スマスロシンフォギア", "スマスロ星矢", "L南国育ち", "ファンキージャグラー2", "スマスロバジリスク絆2天膳"];
+                const machineList = ref(getStore('gachi_machine_list', defaultMachines));
+                watch(machineList, v => setStore('gachi_machine_list', v), { deep: true });
 
                 const exportDataShare = async () => {
-                    const exportObj = {
-                        appData: appData.value,
-                        storeList: storeList.value,
-                        machineList: machineList.value,
-                        counterData: counterData.value,
-                        userProfile: userProfile.value,
-                        originalSettings: originalSettings.value,
-                        generalSettings: generalSettings.value,
-                        exportDate: new Date().toISOString()
-                    };
-                    const dataStr = JSON.stringify(exportObj);
-                    const blob = new Blob([dataStr], { type: 'application/json' });
-                    const fileName = `gachislot_backup_${todayStr}.json`;
-                    const file = new File([blob], fileName, { type: 'application/json' });
-
-                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                        try {
-                            await navigator.share({ files: [file], title: 'Gachi-Slot 引き継ぎデータ' });
-                        } catch (error) { fallbackDownload(blob, fileName); }
-                    } else {
-                        fallbackDownload(blob, fileName);
-                    }
+                    const blob = new Blob([JSON.stringify({ appData: appData.value, storeList: storeList.value, machineList: machineList.value, counterData: counterData.value, userProfile: userProfile.value, originalSettings: originalSettings.value, generalSettings: generalSettings.value, exportDate: new Date().toISOString() })], { type: 'application/json' });
+                    const file = new File([blob], `gachislot_backup_${todayStr}.json`, { type: 'application/json' });
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file], title: 'Gachi-Slot バックアップ' }); } catch (e) { fallbackDownload(blob, file.name); } } 
+                    else { fallbackDownload(blob, file.name); }
                 };
-
-                const fallbackDownload = (blob, fileName) => {
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url; a.download = fileName;
-                    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-                };
-
+                const fallbackDownload = (blob, fileName) => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = fileName; document.body.appendChild(a); a.click(); document.body.removeChild(a); };
                 const importData = (e) => {
-                    const file = e.target.files[0];
-                    if(!file) return;
+                    const f = e.target.files[0]; if(!f) return;
                     if(!confirm("現在のデータはすべて上書きされます。よろしいですか？")) { e.target.value = ''; return; }
                     const reader = new FileReader();
                     reader.onload = (ev) => {
                         try {
                             const imported = JSON.parse(ev.target.result);
-                            if(imported.appData) appData.value = imported.appData;
-                            if(imported.storeList) storeList.value = imported.storeList;
-                            if(imported.machineList) machineList.value = imported.machineList;
-                            if(imported.counterData) counterData.value = imported.counterData;
-                            if(imported.userProfile) userProfile.value = imported.userProfile;
-                            if(imported.originalSettings) originalSettings.value = imported.originalSettings;
-                            if(imported.generalSettings) generalSettings.value = imported.generalSettings;
-                            
-                            alert("✅ データの復元が完了しました！");
-                            showSettingsModal.value = false;
-                            generateCalendar();
-                            const td = calDays.value.find(day => day.fullDate === todayStr);
-                            if(td) selectDay(td);
-                        } catch(error) {
-                            alert("⚠️ 読み込みに失敗しました。");
-                        }
-                    };
-                    reader.readAsText(file);
+                            if(imported.appData) appData.value = imported.appData; if(imported.storeList) storeList.value = imported.storeList; if(imported.machineList) machineList.value = imported.machineList;
+                            if(imported.counterData) counterData.value = imported.counterData; if(imported.userProfile) userProfile.value = imported.userProfile; if(imported.originalSettings) originalSettings.value = imported.originalSettings; if(imported.generalSettings) generalSettings.value = imported.generalSettings;
+                            alert("✅ 復元が完了しました！"); showSettingsModal.value = false; generateCalendar(); const td = calDays.value.find(day => day.fullDate === todayStr); if(td) selectDay(td);
+                        } catch(error) { alert("⚠️ 読み込みに失敗しました。"); }
+                    }; reader.readAsText(f);
                 };
+                const forceReload = () => { if(confirm("最新版のプログラムを読み込みます。よろしいですか？\n（収支データはそのまま残ります）")) window.location.href = window.location.href.split('?')[0] + '?t=' + new Date().getTime(); };
 
-                // 💡 強制リロード関数（キャッシュクリア）
-                const forceReload = () => {
-                    if(confirm("最新版のプログラムを読み込みます。よろしいですか？\n（収支データはそのまま残ります）")) {
-                        const currentUrl = window.location.href.split('?')[0];
-                        window.location.href = currentUrl + '?t=' + new Date().getTime();
-                    }
-                };
+                // ==========================================
+                // 📅 カレンダー・ホーム画面処理
+                // ==========================================
+                const currentYear = ref(today.getFullYear()); const currentMonth = ref(today.getMonth() + 1);
+                const calDays = ref([]); const selectedDay = ref(null);
+                const showMonthPickerModal = ref(false); const pickerYear = ref(today.getFullYear());
 
-                const today = new Date();
-                const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
-                const currentYear = ref(today.getFullYear());
-                const currentMonth = ref(today.getMonth() + 1);
-                const calDays = ref([]);
-                const selectedDay = ref(null);
-                
                 const generateCalendar = () => {
                     calDays.value = [];
                     const firstDay = new Date(currentYear.value, currentMonth.value - 1, 1).getDay();
-                    const offset = firstDay === 0 ? 6 : firstDay - 1;
-                    for(let i=0; i<offset; i++) calDays.value.push({ empty: true });
+                    for(let i=0; i<(firstDay === 0 ? 6 : firstDay - 1); i++) calDays.value.push({ empty: true });
                     const lastDate = new Date(currentYear.value, currentMonth.value, 0).getDate();
-                    for(let i=1; i<=lastDate; i++) {
-                        const dStr = `${currentYear.value}-${String(currentMonth.value).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
-                        calDays.value.push({ empty: false, date: i, fullDate: dStr });
-                    }
+                    for(let i=1; i<=lastDate; i++) calDays.value.push({ empty: false, date: i, fullDate: `${currentYear.value}-${String(currentMonth.value).padStart(2,'0')}-${String(i).padStart(2,'0')}` });
                     while(calDays.value.length < 42) calDays.value.push({ empty: true });
                 };
 
                 const changeMonth = (diff) => {
                     const newDate = new Date(currentYear.value, currentMonth.value - 1 + diff, 1);
-                    currentYear.value = newDate.getFullYear();
-                    currentMonth.value = newDate.getMonth() + 1;
-                    generateCalendar();
-                    if(currentTab.value === 'analysis' && analysisSubTab.value !== 'store') renderChart();
+                    currentYear.value = newDate.getFullYear(); currentMonth.value = newDate.getMonth() + 1;
+                    generateCalendar(); if(currentTab.value === 'analysis' && analysisSubTab.value !== 'store') renderChart();
                 };
-
+                const openMonthPicker = () => { pickerYear.value = currentYear.value; showMonthPickerModal.value = true; };
+                const selectMonth = (m) => { currentYear.value = pickerYear.value; currentMonth.value = m; showMonthPickerModal.value = false; generateCalendar(); if(currentTab.value === 'analysis' && analysisSubTab.value !== 'store') renderChart(); };
                 const selectDay = (day) => { if(!day.empty) selectedDay.value = day; };
 
-                const getMachinesForDate = (dateStr) => { return appData.value[dateStr]?.machines || []; };
-                const getDayInvest = (dateStr) => appData.value[dateStr]?.daily?.invest || 0;
-                const getDayRecover = (dateStr) => appData.value[dateStr]?.daily?.recover || 0;
-                const getDayTotal = (dateStr) => appData.value[dateStr]?.daily?.net || 0;
-                const getDayMedalDelta = (dateStr) => appData.value[dateStr]?.daily?.medalDelta || 0;
+                const getMachinesForDate = (d) => appData.value[d]?.machines || [];
+                const getDayInvest = (d) => appData.value[d]?.daily?.invest || 0;
+                const getDayRecover = (d) => appData.value[d]?.daily?.recover || 0;
+                const getDayTotal = (d) => appData.value[d]?.daily?.net || 0;
+                const getDayMedalDelta = (d) => appData.value[d]?.daily?.medalDelta || 0;
 
                 const monthlySummary = computed(() => {
-                    let invest = 0; let recover = 0;
-                    calDays.value.forEach(day => {
-                        if(!day.empty) { invest += getDayInvest(day.fullDate); recover += getDayRecover(day.fullDate); }
-                    });
-                    return { invest, recover, net: recover - invest };
+                    let invest = 0, recover = 0, medalDelta = 0;
+                    calDays.value.forEach(day => { if(!day.empty) { invest += getDayInvest(day.fullDate); recover += getDayRecover(day.fullDate); medalDelta += getDayMedalDelta(day.fullDate); } });
+                    return { invest, recover, net: recover - invest, medalDelta };
                 });
+                const formatDateDisplay = (d) => { const dt = new Date(d); return `${dt.getFullYear()}年${dt.getMonth()+1}月${dt.getDate()}日`; };
 
-                const formatDateDisplay = (dateStr) => {
-                    const d = new Date(dateStr);
-                    return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
-                };
-
-                const analysisSubTab = ref('month');
-                let chartInstance = null;
-                const changeMainTab = (tabName) => {
-                    currentTab.value = tabName;
-                    if(tabName === 'analysis') changeAnalysisTab('month');
-                };
-
-                const changeAnalysisTab = async (subTab) => {
-                    analysisSubTab.value = subTab;
-                    if (subTab === 'month' || subTab === 'year') {
-                        await nextTick(); renderChart();
-                    }
-                };
-
-                const renderChart = () => {
-                    const ctx = document.getElementById('analysisChart');
-                    if(!ctx) return;
-                    if(chartInstance) chartInstance.destroy();
-
-                    const isWhite = (themes[themeIndex.value].id === 'white') || (isOriginalTheme.value && originalSettings.value.baseTheme === 'white');
-                    const lineColor = isWhite ? '#6200ea' : '#bb86fc';
-                    const gridColor = isWhite ? '#e0e0e0' : '#333333';
-                    const textColor = isWhite ? '#666666' : '#b3b3b3';
-
-                    let labels = []; let dataPoints = []; let cumulativeNet = 0;
-
-                    if (analysisSubTab.value === 'month') {
-                        const lastDate = new Date(currentYear.value, currentMonth.value, 0).getDate();
-                        for (let i = 1; i <= lastDate; i++) {
-                            labels.push(`${i}日`);
-                            const dStr = `${currentYear.value}-${String(currentMonth.value).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
-                            cumulativeNet += getDayTotal(dStr); dataPoints.push(cumulativeNet);
-                        }
-                    } else if (analysisSubTab.value === 'year') {
-                        for (let m = 1; m <= 12; m++) {
-                            labels.push(`${m}月`);
-                            let monthNet = 0;
-                            const lastD = new Date(currentYear.value, m, 0).getDate();
-                            for(let d = 1; d <= lastD; d++) {
-                                const dStr = `${currentYear.value}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-                                monthNet += getDayTotal(dStr);
-                            }
-                            cumulativeNet += monthNet; dataPoints.push(cumulativeNet);
-                        }
-                    }
-
-                    chartInstance = new Chart(ctx, {
-                        type: 'line',
-                        data: {
-                            labels: labels,
-                            datasets: [{ label: '累計現金収支 (円)', data: dataPoints, borderColor: lineColor, backgroundColor: lineColor + '33', fill: true, tension: 0.2, pointRadius: 2 }]
-                        },
-                        options: {
-                            responsive: true, maintainAspectRatio: false,
-                            scales: { y: { grid: { color: gridColor }, ticks: { color: textColor } }, x: { grid: { color: gridColor }, ticks: { color: textColor, maxTicksLimit: 10 } } },
-                            plugins: { legend: { labels: { color: textColor } } }
-                        }
-                    });
-                };
-
-                const storeRanking = computed(() => {
-                    const storeMap = {};
-                    Object.values(appData.value).forEach(dayData => {
-                        if(dayData.machines) {
-                            dayData.machines.forEach(m => {
-                                const sName = m.location && m.location.trim() !== '' ? m.location.trim() : '店舗未設定';
-                                if(!storeMap[sName]) storeMap[sName] = { name: sName, count: 0, winCount: 0, totalNet: 0 };
-                                storeMap[sName].count++; storeMap[sName].totalNet += m.netBalance;
-                                if(m.netBalance > 0) storeMap[sName].winCount++;
-                            });
-                        }
-                    });
-                    const list = Object.values(storeMap);
-                    list.forEach(s => { s.winRate = s.count > 0 ? Math.round((s.winCount / s.count) * 100) : 0; });
-                    return list.sort((a, b) => b.totalNet - a.totalNet);
-                });
-
-                const showSettingsModal = ref(false);
-                const showTransferGuide = ref(false);
-                const mainSettingTab = ref('profile'); 
-                const settingTab = ref('store'); 
-
-                const renameStore = (oldName, index) => {
-                    const newName = prompt(`「${oldName}」の新しい店舗名を入力してください：`, oldName);
-                    if (newName && newName.trim() !== '' && newName.trim() !== oldName) {
-                        const trimmedNewName = newName.trim();
-                        storeList.value[index] = trimmedNewName;
-                        let updateCount = 0;
-                        Object.keys(appData.value).forEach(dateStr => {
-                            if (appData.value[dateStr].machines) {
-                                appData.value[dateStr].machines.forEach(m => {
-                                    if (m.location === oldName) { m.location = trimmedNewName; updateCount++; }
-                                });
-                            }
-                        });
-                        alert(`店舗名を変更しました。\n（過去の履歴 ${updateCount}件 も一括更新されました）`);
-                    }
-                };
-
-                // 💡 店舗名の削除処理
-                const deleteStore = (oldName, index) => {
-                    if (!confirm(`「${oldName}」を削除しますか？\n\nこの店舗を登録している履歴の店舗は全て「店舗名設定無し」に設定されてしまいます。名称を変える際は【変更】ボタンを選んでください。`)) {
-                        return;
-                    }
-                    if (!confirm(`【最終確認】\n本当に「${oldName}」を削除してもよろしいですか？`)) {
-                        return;
-                    }
-
-                    storeList.value.splice(index, 1);
-                    let updateCount = 0;
-                    Object.keys(appData.value).forEach(dateStr => {
-                        if (appData.value[dateStr].machines) {
-                            appData.value[dateStr].machines.forEach(m => {
-                                if (m.location === oldName) {
-                                    m.location = '店舗名設定無し';
-                                    updateCount++;
-                                }
-                            });
-                        }
-                    });
-
-                    if (!storeList.value.includes('店舗名設定無し')) {
-                        storeList.value.unshift('店舗名設定無し');
-                    }
-                    alert(`削除が完了しました。\n（過去の履歴 ${updateCount}件 が「店舗名設定無し」に変更されました）`);
-                };
-
-                const renameMachine = (oldName, index) => {
-                    const newName = prompt(`「${oldName}」の新しい機種名を入力してください：`, oldName);
-                    if (newName && newName.trim() !== '' && newName.trim() !== oldName) {
-                        const trimmedNewName = newName.trim();
-                        machineList.value[index] = trimmedNewName;
-                        let updateCount = 0;
-                        Object.keys(appData.value).forEach(dateStr => {
-                            if (appData.value[dateStr].machines) {
-                                appData.value[dateStr].machines.forEach(m => {
-                                    if (m.name === oldName) { m.name = trimmedNewName; updateCount++; }
-                                });
-                            }
-                        });
-                        alert(`機種名を変更しました。\n（過去の履歴 ${updateCount}件 も一括更新されました）`);
-                    }
-                };
-
-                // 💡 機種名の削除処理
-                const deleteMachine = (oldName, index) => {
-                    if (!confirm(`「${oldName}」を削除しますか？\n\nこの機種を登録している履歴の機種は全て「機種名設定無し」に設定されてしまいます。名称を変える際は【変更】ボタンを選んでください。`)) {
-                        return;
-                    }
-                    if (!confirm(`【最終確認】\n本当に「${oldName}」を削除してもよろしいですか？`)) {
-                        return;
-                    }
-
-                    machineList.value.splice(index, 1);
-                    let updateCount = 0;
-                    Object.keys(appData.value).forEach(dateStr => {
-                        if (appData.value[dateStr].machines) {
-                            appData.value[dateStr].machines.forEach(m => {
-                                if (m.name === oldName) {
-                                    m.name = '機種名設定無し';
-                                    updateCount++;
-                                }
-                            });
-                        }
-                    });
-
-                    if (!machineList.value.includes('機種名設定無し')) {
-                        machineList.value.unshift('機種名設定無し');
-                    }
-                    alert(`削除が完了しました。\n（過去の履歴 ${updateCount}件 が「機種名設定無し」に変更されました）`);
-                };
-
-                const isEditing = ref(false);
-                const editingIndex = ref(null);
-                const showActionModal = ref(false);
-                const activeMachineIndex = ref(null);
-
+                // ==========================================
+                // 🎰 遊技履歴・日別入力関連
+                // ==========================================
+                const isEditing = ref(false); const editingIndex = ref(null); const showActionModal = ref(false); const activeMachineIndex = ref(null);
                 const openActionModal = (index) => { activeMachineIndex.value = index; showActionModal.value = true; };
-
-                const showMonthDeleteModal = ref(false);
-
-                const deleteAllMachinesForDay = () => {
-                    if(!confirm(`本当に ${formatDateDisplay(selectedDay.value.fullDate)} の遊技履歴を全て削除しますか？\n※収支データは残ります。`)) return;
-                    if(!confirm(`【最終確認】\nこの操作は取り消せません。\n本当に全て削除してよろしいですか？`)) return;
-                    
-                    const d = selectedDay.value.fullDate;
-                    if(appData.value[d]) {
-                        appData.value[d].machines = [];
-                    }
-                };
-
-                const deleteMonthData = (type) => {
-                    let msg1 = "";
-                    if (type === 'machines') msg1 = `${currentYear.value}年${currentMonth.value}月の「すべての遊技履歴」を削除しますか？`;
-                    if (type === 'daily') msg1 = `${currentYear.value}年${currentMonth.value}月の「すべての収支データ」を削除しますか？`;
-                    if (type === 'all') msg1 = `${currentYear.value}年${currentMonth.value}月の「すべてのデータ（履歴・収支）」を削除しますか？`;
-
-                    if(!confirm(msg1)) return;
-                    if(!confirm("【最終確認】\nこの操作は絶対に取り消せません。\n本当に削除してもよろしいですか？")) return;
-
-                    const targetPrefix = `${currentYear.value}-${String(currentMonth.value).padStart(2,'0')}`;
-
-                    Object.keys(appData.value).forEach(dateStr => {
-                        if (dateStr.startsWith(targetPrefix)) {
-                            if (type === 'machines') {
-                                appData.value[dateStr].machines = [];
-                            } else if (type === 'daily') {
-                                appData.value[dateStr].daily = { invest:0, recover:0, net:0, medalDelta:0, mode:'manual' };
-                            } else if (type === 'all') {
-                                delete appData.value[dateStr];
-                            }
-                        }
-                    });
-                    
-                    showMonthDeleteModal.value = false;
-                    generateCalendar();
-                    
-                    const td = calDays.value.find(day => day.fullDate === selectedDay.value?.fullDate);
-                    if(td) selectDay(td);
-                };
-
-                const form = ref({ date: todayStr, machineNumber: 1, locationSelect: '', locationNew: '', nameSelect: '', nameNew: '', isSameStore: false, rate: 46, broughtIn: 0, cashInvest: 0, savedSign: -1, savedVal: 0, leftMedals: 0, memo: '', photo: '', counterSnapshots: [] });
                 
+                const form = ref({ date: todayStr, machineNumber: 1, locationSelect: '', locationNew: '', nameSelect: '', nameNew: '', isSameStore: false, rate: 46, broughtIn: 0, cashInvest: 0, savedSign: -1, savedVal: 0, leftMedals: 0, memo: '', photo: '', counterSnapshots: [] });
+                const netBalance = computed(() => form.value.leftMedals - (form.value.broughtIn + Math.floor((form.value.cashInvest / 1000) * form.value.rate) - (form.value.savedSign * form.value.savedVal)));
+
                 const onStoreTypeChange = () => {
-                    const d = form.value.date;
-                    const machines = appData.value[d]?.machines || [];
-                    const prevIdx = form.value.machineNumber - 2;
-                    const prev = prevIdx >= 0 ? machines[prevIdx] : null;
-                    if (form.value.isSameStore && prev) {
-                        form.value.locationSelect = prev.location; form.value.locationNew = ''; form.value.broughtIn = prev.leftMedals;
-                    } else { form.value.locationSelect = ''; form.value.broughtIn = 0; }
+                    const prev = (appData.value[form.value.date]?.machines || [])[form.value.machineNumber - 2];
+                    if (form.value.isSameStore && prev) { form.value.locationSelect = prev.location; form.value.locationNew = ''; form.value.broughtIn = prev.leftMedals; } 
+                    else { form.value.locationSelect = ''; form.value.broughtIn = 0; }
                 };
 
-                const updateBroughtInAndNumber = (dateStr, targetIdx = null) => {
-                    const machines = appData.value[dateStr]?.machines || [];
+                const updateBroughtInAndNumber = (d, targetIdx = null) => {
+                    const macs = appData.value[d]?.machines || [];
                     if (targetIdx !== null) {
                         form.value.machineNumber = targetIdx + 1;
-                        if (targetIdx === 0) {
-                            form.value.isSameStore = false; form.value.broughtIn = 0;
-                        } else {
-                            if(form.value.isSameStore) {
-                                form.value.locationSelect = machines[targetIdx - 1].location; form.value.locationNew = ''; form.value.broughtIn = machines[targetIdx - 1].leftMedals || 0;
-                            }
-                        }
+                        if (targetIdx === 0) { form.value.isSameStore = false; form.value.broughtIn = 0; } 
+                        else if(form.value.isSameStore) { form.value.locationSelect = macs[targetIdx - 1].location; form.value.locationNew = ''; form.value.broughtIn = macs[targetIdx - 1].leftMedals || 0; }
                     } else {
-                        const nextNum = machines.length + 1;
-                        form.value.machineNumber = nextNum;
-                        if (nextNum === 1) {
-                            form.value.isSameStore = false; form.value.locationSelect = ''; form.value.locationNew = ''; form.value.broughtIn = 0;
-                        } else {
-                            form.value.isSameStore = true; form.value.locationSelect = machines[machines.length - 1].location; form.value.locationNew = ''; form.value.broughtIn = machines[machines.length - 1].leftMedals || 0;
-                        }
+                        form.value.machineNumber = macs.length + 1;
+                        if (form.value.machineNumber === 1) { form.value.isSameStore = false; form.value.locationSelect = ''; form.value.locationNew = ''; form.value.broughtIn = 0; } 
+                        else { form.value.isSameStore = true; form.value.locationSelect = macs[macs.length - 1].location; form.value.locationNew = ''; form.value.broughtIn = macs[macs.length - 1].leftMedals || 0; }
                     }
                 };
-
-                watch(() => form.value.date, (newDate) => { if (!isEditing.value) updateBroughtInAndNumber(newDate); });
-
-                const netBalance = computed(() => {
-                    let cashToMedals = Math.floor((form.value.cashInvest / 1000) * form.value.rate);
-                    let savedDelta = form.value.savedSign * form.value.savedVal;
-                    let totalInvest = form.value.broughtIn + cashToMedals - savedDelta;
-                    return form.value.leftMedals - totalInvest;
-                });
-
-                const handlePhotoUpload = (e) => {
-                    const file = e.target.files[0];
-                    if(!file) return;
-                    resizeImage(file, 1000, (compressed) => { form.value.photo = compressed; });
-                };
-
-                const getSnapshots = (m) => {
-                    if (m.counterSnapshots && m.counterSnapshots.length > 0) return m.counterSnapshots;
-                    if (m.counterSnapshot) return [m.counterSnapshot];
-                    return [];
-                };
+                watch(() => form.value.date, (d) => { if (!isEditing.value) updateBroughtInAndNumber(d); });
+                const handlePhotoUpload = (e) => { const f = e.target.files[0]; if(f) resizeImage(f, 1000, (img) => form.value.photo = img); };
 
                 const prepareMachineInput = () => {
-                    isEditing.value = false; editingIndex.value = null;
-                    let targetDate = todayStr;
-                    if (selectedDay.value && !selectedDay.value.empty) targetDate = selectedDay.value.fullDate;
-                    
-                    form.value.date = targetDate; form.value.nameSelect = ''; form.value.nameNew = ''; form.value.rate = 46;
-                    form.value.cashInvest = 0; form.value.savedSign = -1; form.value.savedVal = 0; form.value.leftMedals = 0;
-                    form.value.memo = ''; form.value.photo = '';
-                    
-                    form.value.counterSnapshots = [];
-                    formAttachedPageIndex.value = -1; 
-                    
-                    updateBroughtInAndNumber(targetDate);
-                    currentTab.value = 'input_machine';
+                    isEditing.value = false; editingIndex.value = null; const t = (selectedDay.value && !selectedDay.value.empty) ? selectedDay.value.fullDate : todayStr;
+                    form.value = { date: t, machineNumber: 1, locationSelect: '', locationNew: '', nameSelect: '', nameNew: '', isSameStore: false, rate: 46, broughtIn: 0, cashInvest: 0, savedSign: -1, savedVal: 0, leftMedals: 0, memo: '', photo: '', counterSnapshots: [] };
+                    formAttachedPageIndex.value = -1; updateBroughtInAndNumber(t); currentTab.value = 'input_machine';
                 };
 
                 const editMachine = () => {
                     showActionModal.value = false; isEditing.value = true; editingIndex.value = activeMachineIndex.value;
                     const target = appData.value[selectedDay.value.fullDate].machines[editingIndex.value];
-                    
                     if (target.location && !storeList.value.includes(target.location)) storeList.value.push(target.location);
                     if (target.name && !machineList.value.includes(target.name)) machineList.value.push(target.name);
-
-                    form.value = {
-                        date: selectedDay.value.fullDate, machineNumber: target.machineNumber,
-                        locationSelect: target.location || '', locationNew: '',
-                        isSameStore: target.isSameStore !== undefined ? target.isSameStore : (target.machineNumber > 1),
-                        nameSelect: target.name || '', nameNew: '',
-                        rate: target.rate, broughtIn: target.broughtIn, cashInvest: target.cashInvest,
-                        savedSign: target.savedSign, savedVal: target.savedVal, leftMedals: target.leftMedals,
-                        memo: target.memo || '', photo: target.photo || '',
-                        counterSnapshots: getSnapshots(target) 
-                    };
-                    formAttachedPageIndex.value = -1;
-                    updateBroughtInAndNumber(selectedDay.value.fullDate, editingIndex.value);
-                    currentTab.value = 'input_machine';
+                    form.value = { ...target, locationSelect: target.location || '', locationNew: '', nameSelect: target.name || '', nameNew: '', counterSnapshots: target.counterSnapshots || (target.counterSnapshot ? [target.counterSnapshot] : []) };
+                    formAttachedPageIndex.value = -1; updateBroughtInAndNumber(selectedDay.value.fullDate, editingIndex.value); currentTab.value = 'input_machine';
                 };
 
                 const deleteMachineAction = () => {
-                    showActionModal.value = false;
-                    if(!confirm("この遊技履歴を削除しますか？ 後続の台のデータも自動再調整されます。")) return;
-                    
-                    const d = selectedDay.value.fullDate;
-                    let machines = appData.value[d].machines;
-                    machines.splice(activeMachineIndex.value, 1);
-                    
-                    let prevLeft = 0;
-                    machines.forEach((m, idx) => {
-                        m.machineNumber = idx + 1;
-                        if (idx === 0) { m.broughtIn = 0; m.isSameStore = false; } 
-                        else {
-                            if (m.isSameStore) { m.broughtIn = prevLeft; m.location = machines[idx-1].location; } 
-                            else { m.broughtIn = 0; }
-                        }
-                        let cashToMedals = Math.floor((m.cashInvest / 1000) * m.rate);
-                        let savedDelta = m.savedSign * m.savedVal;
-                        let totalInvest = m.broughtIn + cashToMedals - savedDelta;
-                        m.netBalance = m.leftMedals - totalInvest;
-                        prevLeft = m.leftMedals;
-                    });
-                    appData.value[d].machines = machines;
+                    showActionModal.value = false; if(!confirm("この遊技履歴を削除しますか？ 後続の台のデータも自動再調整されます。")) return;
+                    let macs = appData.value[selectedDay.value.fullDate].machines; macs.splice(activeMachineIndex.value, 1);
+                    recalcMachines(macs); appData.value[selectedDay.value.fullDate].machines = macs;
                 };
 
                 const saveMachine = () => {
-                    let finalLocation = '';
-                    if (form.value.machineNumber === 1 || !form.value.isSameStore) {
-                        if (form.value.locationSelect === 'NEW') {
-                            finalLocation = form.value.locationNew.trim();
-                            if (!finalLocation) { alert("⚠️ 新しい店舗名を入力してください。"); return; }
-                            if (!storeList.value.includes(finalLocation)) storeList.value.push(finalLocation);
-                        } else {
-                            finalLocation = form.value.locationSelect;
-                            if (!finalLocation) { alert("⚠️ 店舗を選択してください。"); return; }
-                        }
-                    }
-
-                    let finalName = '';
-                    if (form.value.nameSelect === 'NEW') {
-                        finalName = form.value.nameNew.trim();
-                        if (!finalName) { alert("⚠️ 新しい機種名を入力してください。"); return; }
-                        if (!machineList.value.includes(finalName)) machineList.value.push(finalName);
-                    } else {
-                        finalName = form.value.nameSelect;
-                        if (!finalName) { alert("⚠️ 機種名を選択してください。"); return; }
-                    }
-
-                    if (form.value.rate <= 0) { alert("⚠️ 貸出枚数は1枚以上に設定してください。"); return; }
-                    if (form.value.cashInvest < 0) { alert("⚠️ 現金投資にマイナスは指定できません。"); return; }
+                    let l = form.value.locationSelect === 'NEW' ? form.value.locationNew.trim() : form.value.locationSelect;
+                    let n = form.value.nameSelect === 'NEW' ? form.value.nameNew.trim() : form.value.nameSelect;
+                    if((form.value.machineNumber===1 || !form.value.isSameStore) && !l) return alert("⚠️ 店舗を選択・入力してください。");
+                    if(!n) return alert("⚠️ 機種名を選択・入力してください。");
+                    if(form.value.rate <= 0 || form.value.cashInvest < 0) return alert("⚠️ 正しい貸出枚数・現金投資を入力してください。");
+                    
+                    if (l && !storeList.value.includes(l)) storeList.value.push(l);
+                    if (n && !machineList.value.includes(n)) machineList.value.push(n);
 
                     const d = form.value.date;
-                    if (!appData.value[d]) appData.value[d] = { machines: [], daily: { invest:0, recover:0, net:0, medalDelta:0 } };
+                    if (!appData.value[d]) appData.value[d] = { machines: [], daily: { invest:0, recover:0, net:0, medalDelta:0, mode:'manual' } };
+                    let macs = appData.value[d].machines;
+                    const saveData = { ...form.value, location: l, name: n, netBalance: netBalance.value }; delete saveData.counterSnapshot;
+                    isEditing.value ? macs[editingIndex.value] = saveData : macs.push(saveData);
+                    recalcMachines(macs); appData.value[d].machines = macs;
                     
-                    let machines = appData.value[d].machines;
-                    
-                    const saveData = { ...form.value, location: finalLocation, name: finalName, netBalance: netBalance.value };
-                    delete saveData.counterSnapshot; 
+                    const savedDate = new Date(d); currentYear.value = savedDate.getFullYear(); currentMonth.value = savedDate.getMonth() + 1;
+                    generateCalendar(); const targetDay = calDays.value.find(day => day.fullDate === d); if(targetDay) selectDay(targetDay);
+                    currentTab.value = 'home';
+                };
 
-                    if (isEditing.value) machines[editingIndex.value] = saveData;
-                    else machines.push(saveData);
-
+                const recalcMachines = (macs) => {
                     let prevLeft = 0;
-                    machines.forEach((m, idx) => {
+                    macs.forEach((m, idx) => {
                         m.machineNumber = idx + 1;
                         if (idx === 0) { m.broughtIn = 0; m.isSameStore = false; } 
-                        else {
-                            if (m.isSameStore) { m.broughtIn = prevLeft; m.location = machines[idx-1].location; } 
-                            else { m.broughtIn = 0; }
-                        }
-                        let cashToMedals = Math.floor((m.cashInvest / 1000) * m.rate);
-                        let savedDelta = m.savedSign * m.savedVal;
-                        let totalInvest = m.broughtIn + cashToMedals - savedDelta;
-                        m.netBalance = m.leftMedals - totalInvest;
+                        else { m.broughtIn = m.isSameStore ? prevLeft : 0; if(m.isSameStore) m.location = macs[idx-1].location; }
+                        m.netBalance = m.leftMedals - (m.broughtIn + Math.floor((m.cashInvest / 1000) * m.rate) - (m.savedSign * m.savedVal));
                         prevLeft = m.leftMedals;
                     });
-                    appData.value[d].machines = machines;
-
-                    const savedDate = new Date(d); currentYear.value = savedDate.getFullYear(); currentMonth.value = savedDate.getMonth() + 1;
-                    generateCalendar();
-                    const targetDay = calDays.value.find(day => day.fullDate === d); if(targetDay) selectDay(targetDay);
-                    currentTab.value = 'home';
                 };
 
                 const autoDailyCalc = computed(() => {
                     if (!selectedDay.value) return { invest: 0, medalDelta: 0, sign: 1, val: 0 };
-                    const d = selectedDay.value.fullDate;
-                    const machines = appData.value[d]?.machines || [];
-                    let invest = 0;
-                    let medalDelta = 0;
-                    machines.forEach(m => {
-                        invest += m.cashInvest;
-                        medalDelta += (m.savedSign * m.savedVal);
-                    });
+                    let invest = 0, medalDelta = 0;
+                    (appData.value[selectedDay.value.fullDate]?.machines || []).forEach(m => { invest += m.cashInvest; medalDelta += (m.savedSign * m.savedVal); });
                     return { invest, medalDelta, sign: medalDelta >= 0 ? 1 : -1, val: Math.abs(medalDelta) };
                 });
-
                 const dailyForm = ref({ mode: 'auto', invest: 0, recover: 0, medalSign: 1, medalVal: 0 });
-                watch(() => currentTab.value, (newTab) => {
-                    if(newTab === 'input_daily' && selectedDay.value) {
-                        const d = selectedDay.value.fullDate;
-                        if (appData.value[d]?.daily) {
-                            dailyForm.value.mode = appData.value[d].daily.mode || 'manual';
-                            dailyForm.value.invest = appData.value[d].daily.invest || 0;
-                            dailyForm.value.recover = appData.value[d].daily.recover || 0;
-                            let delta = appData.value[d].daily.medalDelta || 0;
-                            dailyForm.value.medalSign = delta >= 0 ? 1 : -1; 
-                            dailyForm.value.medalVal = Math.abs(delta);
-                        } else {
-                            dailyForm.value.mode = 'auto';
-                            dailyForm.value.invest = 0;
-                            dailyForm.value.recover = 0;
-                            dailyForm.value.medalSign = 1;
-                            dailyForm.value.medalVal = 0;
-                        }
+                watch(() => currentTab.value, (t) => {
+                    if(t === 'input_daily' && selectedDay.value) {
+                        const daily = appData.value[selectedDay.value.fullDate]?.daily || { mode: 'auto', invest: 0, recover: 0, medalDelta: 0 };
+                        dailyForm.value = { mode: daily.mode || 'auto', invest: daily.invest || 0, recover: daily.recover || 0, medalSign: daily.medalDelta >= 0 ? 1 : -1, medalVal: Math.abs(daily.medalDelta || 0) };
                     }
                 });
-
                 const saveDailyTotal = () => {
                     const isAuto = dailyForm.value.mode === 'auto';
                     const finalInvest = isAuto ? autoDailyCalc.value.invest : dailyForm.value.invest;
                     const finalMedalDelta = isAuto ? autoDailyCalc.value.medalDelta : (dailyForm.value.medalSign * dailyForm.value.medalVal);
-
-                    if (finalInvest < 0 || dailyForm.value.recover < 0 || (!isAuto && dailyForm.value.medalVal < 0)) { 
-                        alert("⚠️ マイナスの値は指定できません。"); return; 
-                    }
-                    
+                    if (finalInvest < 0 || dailyForm.value.recover < 0 || (!isAuto && dailyForm.value.medalVal < 0)) return alert("⚠️ マイナスの値は指定できません。");
                     const d = selectedDay.value.fullDate;
-                    if (!appData.value[d]) appData.value[d] = { machines: [], daily: { invest:0, recover:0, net:0, medalDelta:0, mode: 'manual' } };
-                    
-                    appData.value[d].daily.mode = dailyForm.value.mode;
-                    appData.value[d].daily.invest = finalInvest;
-                    appData.value[d].daily.recover = dailyForm.value.recover;
-                    appData.value[d].daily.net = dailyForm.value.recover - finalInvest;
-                    appData.value[d].daily.medalDelta = finalMedalDelta;
+                    if (!appData.value[d]) appData.value[d] = { machines: [], daily: {} };
+                    appData.value[d].daily = { mode: dailyForm.value.mode, invest: finalInvest, recover: dailyForm.value.recover, net: dailyForm.value.recover - finalInvest, medalDelta: finalMedalDelta };
                     currentTab.value = 'home';
                 };
 
-                // --- 🎲 小役カウンター ---
+                const showMonthDeleteModal = ref(false);
+                const deleteMonthData = (type) => {
+                    if(!confirm("本当に削除してもよろしいですか？（この操作は取り消せません）")) return;
+                    const prefix = `${currentYear.value}-${String(currentMonth.value).padStart(2,'0')}`;
+                    Object.keys(appData.value).forEach(d => {
+                        if (d.startsWith(prefix)) {
+                            if (type === 'machines') appData.value[d].machines = [];
+                            else if (type === 'daily') appData.value[d].daily = { invest:0, recover:0, net:0, medalDelta:0, mode:'manual' };
+                            else delete appData.value[d];
+                        }
+                    });
+                    showMonthDeleteModal.value = false; generateCalendar(); const td = calDays.value.find(day => day.fullDate === selectedDay.value?.fullDate); if(td) selectDay(td);
+                };
+                const deleteAllMachinesForDay = () => {
+                    if(!confirm("この日の遊技履歴を全て削除しますか？\n※収支データは残ります。")) return;
+                    if(appData.value[selectedDay.value.fullDate]) appData.value[selectedDay.value.fullDate].machines = [];
+                };
+
+                // ==========================================
+                // 🎲 小役カウンター処理
+                // ==========================================
+                const defaultCounter = [ { pageName: 'シチュエーションA', games: 0, isDiffMode: false, startGames: 0, currentGames: 0, r1: [0,0,0,0,0], r2Names: ['カスタム1','カスタム2','カスタム3','カスタム4','カスタム5'], r2: [0,0,0,0,0] }, { pageName: 'シチュエーションB', games: 0, isDiffMode: false, startGames: 0, currentGames: 0, r1: [0,0,0,0,0], r2Names: ['カスタム1','カスタム2','カスタム3','カスタム4','カスタム5'], r2: [0,0,0,0,0] }, { pageName: 'シチュエーションC', games: 0, isDiffMode: false, startGames: 0, currentGames: 0, r1: [0,0,0,0,0], r2Names: ['カスタム1','カスタム2','カスタム3','カスタム4','カスタム5'], r2: [0,0,0,0,0] } ];
+                const counterData = ref(getStore('gachi_counter', defaultCounter));
+                counterData.value.forEach((p, i) => { if(p.isDiffMode === undefined) p.isDiffMode = false; if(p.startGames === undefined) p.startGames = 0; if(p.currentGames === undefined) p.currentGames = 0; });
+                watch(counterData, v => setStore('gachi_counter', v), { deep: true });
+
                 const selectedPageIndex = ref(0); const cPage = ref(0); const counterStep = ref(1);
                 const glowR1 = ref([false, false, false, false, false]); const glowR2 = ref([false, false, false, false, false]);
-
-                const defaultCounter = [
-                    { pageName: 'シチュエーションA', games: 0, isDiffMode: false, startGames: 0, currentGames: 0, r1: [0,0,0,0,0], r2Names: ['カスタム1','カスタム2','カスタム3','カスタム4','カスタム5'], r2: [0,0,0,0,0] },
-                    { pageName: 'シチュエーションB', games: 0, isDiffMode: false, startGames: 0, currentGames: 0, r1: [0,0,0,0,0], r2Names: ['カスタム1','カスタム2','カスタム3','カスタム4','カスタム5'], r2: [0,0,0,0,0] },
-                    { pageName: 'シチュエーションC', games: 0, isDiffMode: false, startGames: 0, currentGames: 0, r1: [0,0,0,0,0], r2Names: ['カスタム1','カスタム2','カスタム3','カスタム4','カスタム5'], r2: [0,0,0,0,0] }
-                ];
-                
-                const loadedCounter = localStorage.getItem('gachi_counter') ? JSON.parse(localStorage.getItem('gachi_counter')) : defaultCounter;
-                loadedCounter.forEach((p, i) => { 
-                    if(!p.pageName) p.pageName = (i < 3) ? defaultCounter[i].pageName : `シチュエーション${String.fromCharCode(65 + i)}`; 
-                    if(p.isDiffMode === undefined) p.isDiffMode = false;
-                    if(p.startGames === undefined) p.startGames = 0;
-                    if(p.currentGames === undefined) p.currentGames = 0;
-                });
-                
-                const counterData = ref(loadedCounter);
-                watch(counterData, (newVal) => { localStorage.setItem('gachi_counter', JSON.stringify(newVal)); }, { deep: true });
-
                 const activePage = computed(() => counterData.value[cPage.value]);
                 const r1Colors = ['#e53935', '#4caf50', '#1e88e5', '#fdd835', '#e0e0e0'];
                 const getProb = (count, games) => count === 0 ? '-' : '1/' + (games / count).toFixed(1);
 
-                const calcDiffGames = () => {
-                    if (activePage.value.isDiffMode) {
-                        let s = Number(activePage.value.startGames) || 0;
-                        let c = Number(activePage.value.currentGames) || 0;
-                        let diff = c - s;
-                        activePage.value.games = diff > 0 ? diff : 0;
-                    }
-                };
-
+                const calcDiffGames = () => { if (activePage.value.isDiffMode) activePage.value.games = Math.max(0, (Number(activePage.value.currentGames) || 0) - (Number(activePage.value.startGames) || 0)); };
                 const onPageSelectChange = () => {
                     if (selectedPageIndex.value === 'NEW') {
-                        if (counterData.value.length >= 10) { alert("⚠️ ページは最大10個までしか作成できません。"); selectedPageIndex.value = cPage.value; return; }
-                        const newName = prompt('新しいページ名を入力してください：', `シチュエーション${String.fromCharCode(65 + counterData.value.length)}`);
-                        if (newName && newName.trim() !== '') {
-                            counterData.value.push({ pageName: newName.trim(), games: 0, isDiffMode: false, startGames: 0, currentGames: 0, r1: [0,0,0,0,0], r2Names: ['カスタム1','カスタム2','カスタム3','カスタム4','カスタム5'], r2: [0,0,0,0,0] });
-                            cPage.value = counterData.value.length - 1; selectedPageIndex.value = cPage.value;
-                        } else { selectedPageIndex.value = cPage.value; }
-                    } else { cPage.value = selectedPageIndex.value; }
+                        if (counterData.value.length >= 10) return alert("⚠️ ページは最大10個まで。"), selectedPageIndex.value = cPage.value;
+                        const n = prompt('新しいページ名：', `シチュエーション${String.fromCharCode(65 + counterData.value.length)}`);
+                        if (n?.trim()) { counterData.value.push({ pageName: n.trim(), games: 0, isDiffMode: false, startGames: 0, currentGames: 0, r1: [0,0,0,0,0], r2Names: ['カスタム1','カスタム2','カスタム3','カスタム4','カスタム5'], r2: [0,0,0,0,0] }); cPage.value = counterData.value.length - 1; }
+                    } else cPage.value = selectedPageIndex.value;
+                    selectedPageIndex.value = cPage.value;
                 };
                 
-                const updateR1 = (index) => {
-                    let newVal = activePage.value.r1[index] + counterStep.value; if(newVal < 0) newVal = 0;
-                    activePage.value.r1[index] = newVal;
-                    glowR1.value[index] = true; setTimeout(() => { glowR1.value[index] = false; }, 200);
-                };
-
-                const updateR2 = (index) => {
-                    let newVal = activePage.value.r2[index] + counterStep.value; if(newVal < 0) newVal = 0;
-                    activePage.value.r2[index] = newVal;
-                    glowR2.value[index] = true; setTimeout(() => { glowR2.value[index] = false; }, 200);
-                };
-
-                const resetCounter = () => {
-                    if(confirm("このページをリセットしますか？")) {
-                        counterData.value[cPage.value].games = 0; 
-                        counterData.value[cPage.value].startGames = 0; 
-                        counterData.value[cPage.value].currentGames = 0; 
-                        counterData.value[cPage.value].r1 = [0,0,0,0,0]; 
-                        counterData.value[cPage.value].r2 = [0,0,0,0,0];
-                    }
-                };
+                const updateR1 = (i) => { activePage.value.r1[i] = Math.max(0, activePage.value.r1[i] + counterStep.value); glowR1.value[i] = true; setTimeout(() => glowR1.value[i] = false, 200); };
+                const updateR2 = (i) => { activePage.value.r2[i] = Math.max(0, activePage.value.r2[i] + counterStep.value); glowR2.value[i] = true; setTimeout(() => glowR2.value[i] = false, 200); };
+                const resetCounter = () => { if(confirm("リセットしますか？")) Object.assign(counterData.value[cPage.value], { games: 0, startGames: 0, currentGames: 0, r1: [0,0,0,0,0], r2: [0,0,0,0,0] }); };
+                const editPageName = () => { const n = prompt('新しい名称：', activePage.value.pageName); if (n?.trim()) activePage.value.pageName = n.trim(); };
                 
-                const editPageName = () => {
-                    const newName = prompt(`現在のページ「${activePage.value.pageName}」の新しい名称を入力してください：`, activePage.value.pageName);
-                    if (newName !== null && newName.trim() !== '') activePage.value.pageName = newName.trim();
-                    selectedPageIndex.value = cPage.value; 
-                };
-                
-                const showRoleEditModal = ref(false); const roleEditForm = ref(['', '', '', '', '']);
+                const showRoleEditModal = ref(false); const roleEditForm = ref([]);
                 const openRoleEditModal = () => { roleEditForm.value = [...activePage.value.r2Names]; showRoleEditModal.value = true; };
-                const saveRoleNames = () => {
-                    for(let i = 0; i < 5; i++) { activePage.value.r2Names[i] = roleEditForm.value[i].trim() || `カスタム${i+1}`; }
-                    showRoleEditModal.value = false;
-                };
+                const saveRoleNames = () => { for(let i=0; i<5; i++) activePage.value.r2Names[i] = roleEditForm.value[i].trim() || `カスタム${i+1}`; showRoleEditModal.value = false; };
 
                 const formAttachedPageIndex = ref(-1);
-                const attachCounterData = () => {
-                    if (formAttachedPageIndex.value === -1) return;
-                    if (form.value.counterSnapshots.length >= 3) {
-                        alert("小役データは最大3つまでしか紐付けできません。");
-                        return;
+                const attachCounterData = () => { if (formAttachedPageIndex.value !== -1 && form.value.counterSnapshots.length < 3) { form.value.counterSnapshots.push(JSON.parse(JSON.stringify(counterData.value[formAttachedPageIndex.value]))); formAttachedPageIndex.value = -1; } };
+                const removeCounterData = (idx) => form.value.counterSnapshots.splice(idx, 1);
+                const getSnapshots = (m) => m.counterSnapshots || (m.counterSnapshot ? [m.counterSnapshot] : []);
+
+                const showSnapshotSelectModal = ref(false); const snapshotListToSelect = ref([]);
+                const showSnapshotModal = ref(false); const snapshotData = ref(null);
+                const handleSnapshotClick = (snaps) => { snaps.length === 1 ? openSnapshotModal(snaps[0]) : (snapshotListToSelect.value = snaps, showSnapshotSelectModal.value = true); };
+                const openSnapshotModal = (data) => { snapshotData.value = data; showSnapshotModal.value = true; };
+
+                // ==========================================
+                // 📊 分析・設定・その他モーダル
+                // ==========================================
+                const analysisSubTab = ref('month');
+                const changeMainTab = (t) => { currentTab.value = t; if(t === 'analysis') changeAnalysisTab('month'); };
+                const changeAnalysisTab = async (t) => { analysisSubTab.value = t; if (['month', 'year'].includes(t)) { await nextTick(); renderChart(); } };
+                
+                const renderChart = () => {
+                    const ctx = document.getElementById('analysisChart'); if(!ctx) return;
+                    if(chartInstance) chartInstance.destroy();
+                    const isWhite = themes[themeIndex.value].id === 'white' || (isOriginalTheme.value && originalSettings.value.baseTheme === 'white');
+                    const c = isWhite ? '#6200ea' : '#bb86fc', gc = isWhite ? '#e0e0e0' : '#333333', tc = isWhite ? '#666666' : '#b3b3b3';
+                    let labels = [], dataPoints = [], cumulative = 0;
+
+                    if (analysisSubTab.value === 'month') {
+                        for (let i = 1; i <= new Date(currentYear.value, currentMonth.value, 0).getDate(); i++) { labels.push(`${i}日`); cumulative += getDayTotal(`${currentYear.value}-${String(currentMonth.value).padStart(2,'0')}-${String(i).padStart(2,'0')}`); dataPoints.push(cumulative); }
+                    } else if (analysisSubTab.value === 'year') {
+                        for (let m = 1; m <= 12; m++) {
+                            labels.push(`${m}月`); let mNet = 0;
+                            for(let d = 1; d <= new Date(currentYear.value, m, 0).getDate(); d++) mNet += getDayTotal(`${currentYear.value}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
+                            cumulative += mNet; dataPoints.push(cumulative);
+                        }
                     }
-                    const pageToAttach = counterData.value[formAttachedPageIndex.value];
-                    form.value.counterSnapshots.push(JSON.parse(JSON.stringify(pageToAttach)));
-                    formAttachedPageIndex.value = -1; 
+                    chartInstance = new Chart(ctx, { type: 'line', data: { labels, datasets: [{ label: '累計現金収支 (円)', data: dataPoints, borderColor: c, backgroundColor: c+'33', fill: true, tension: 0.2, pointRadius: 2 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { grid: { color: gc }, ticks: { color: tc } }, x: { grid: { color: gc }, ticks: { color: tc, maxTicksLimit: 10 } } }, plugins: { legend: { labels: { color: tc } } } } });
                 };
 
-                const removeCounterData = (idx) => {
-                    form.value.counterSnapshots.splice(idx, 1);
-                };
-
-                const showSnapshotSelectModal = ref(false);
-                const snapshotListToSelect = ref([]);
-                const showSnapshotModal = ref(false);
-                const snapshotData = ref(null);
-
-                const handleSnapshotClick = (snaps) => {
-                    if (snaps.length === 1) {
-                        openSnapshotModal(snaps[0]);
-                    } else if (snaps.length > 1) {
-                        snapshotListToSelect.value = snaps;
-                        showSnapshotSelectModal.value = true;
-                    }
-                };
-
-                const openSnapshotModal = (data) => {
-                    snapshotData.value = data;
-                    showSnapshotModal.value = true;
-                };
-
-                const showPhotoViewer = ref(false);
-                const photoViewerSrc = ref('');
-                const openPhotoViewer = (src) => {
-                    photoViewerSrc.value = src;
-                    showPhotoViewer.value = true;
-                };
-
-                onMounted(() => {
-                    loadData(); generateCalendar(); updateTime(); applyThemeCSS();
-                    timer = setInterval(updateTime, 1000);
-                    const td = calDays.value.find(day => day.fullDate === todayStr); if(td) selectDay(td);
+                const storeRanking = computed(() => {
+                    const sm = {};
+                    Object.values(appData.value).forEach(d => {
+                        (d.machines || []).forEach(m => {
+                            const n = m.location?.trim() || '店舗未設定';
+                            if(!sm[n]) sm[n] = { name: n, count: 0, winCount: 0, totalNet: 0 };
+                            sm[n].count++; sm[n].totalNet += m.netBalance; if(m.netBalance > 0) sm[n].winCount++;
+                        });
+                    });
+                    return Object.values(sm).map(s => ({ ...s, winRate: s.count > 0 ? Math.round((s.winCount/s.count)*100) : 0 })).sort((a, b) => b.totalNet - a.totalNet);
                 });
+
+                const showSettingsModal = ref(false); const showTransferGuide = ref(false);
+                const mainSettingTab = ref('profile'); const settingTab = ref('store'); 
+                const showPhotoViewer = ref(false); const photoViewerSrc = ref('');
+                const openPhotoViewer = (src) => { photoViewerSrc.value = src; showPhotoViewer.value = true; };
+
+                const replaceNameInApp = (list, key, oldName, newName, addFallback = false) => {
+                    let c = 0;
+                    Object.values(appData.value).forEach(d => {
+                        (d.machines || []).forEach(m => { if (m[key] === oldName) { m[key] = newName; c++; } });
+                    });
+                    if (addFallback && !list.value.includes(newName)) list.value.unshift(newName);
+                    return c;
+                };
+
+                const renameStore = (oldN, idx) => { const n = prompt(`「${oldN}」の新しい名称：`, oldN)?.trim(); if(n && n!==oldN) { storeList.value[idx]=n; alert(`変更完了。過去履歴 ${replaceNameInApp(storeList, 'location', oldN, n)}件 更新`); } };
+                const deleteStore = (oldN, idx) => { if(confirm(`「${oldN}」を削除し、関連履歴を「店舗名設定無し」にしますか？`) && confirm(`本当に削除しますか？`)) { storeList.value.splice(idx, 1); alert(`削除完了。過去履歴 ${replaceNameInApp(storeList, 'location', oldN, '店舗名設定無し', true)}件 変更`); } };
+                const renameMachine = (oldN, idx) => { const n = prompt(`「${oldN}」の新しい名称：`, oldN)?.trim(); if(n && n!==oldN) { machineList.value[idx]=n; alert(`変更完了。過去履歴 ${replaceNameInApp(machineList, 'name', oldN, n)}件 更新`); } };
+                const deleteMachine = (oldN, idx) => { if(confirm(`「${oldN}」を削除し、関連履歴を「機種名設定無し」にしますか？`) && confirm(`本当に削除しますか？`)) { machineList.value.splice(idx, 1); alert(`削除完了。過去履歴 ${replaceNameInApp(machineList, 'name', oldN, '機種名設定無し', true)}件 変更`); } };
+
+                onMounted(() => { loadData(); generateCalendar(); updateTime(); applyThemeCSS(); timer = setInterval(updateTime, 1000); const td = calDays.value.find(d => d.fullDate === todayStr); if(td) selectDay(td); });
                 onUnmounted(() => { if(timer) clearInterval(timer); });
 
                 return {
-                    userProfile, handleUserIconUpload, exportDataShare, importData, showTransferGuide,
+                    userProfile, handleUserIconUpload, exportDataShare, importData, showTransferGuide, forceReload,
                     originalSettings, handleOriginalBgUpload, isOriginalTheme, mainSettingTab, generalSettings,
                     currentTab, headerTitle, currentTime, themes, themeIndex, toggleTheme,
-                    currentYear, currentMonth, changeMonth,
-                    calDays, selectedDay, selectDay, todayStr,
+                    currentYear, currentMonth, changeMonth, calDays, selectedDay, selectDay, todayStr,
                     getMachinesForDate, getDayInvest, getDayRecover, getDayTotal, getDayMedalDelta, monthlySummary, formatDateDisplay,
+                    showMonthPickerModal, pickerYear, openMonthPicker, selectMonth,
                     form, netBalance, prepareMachineInput, saveMachine, handlePhotoUpload, onStoreTypeChange,
                     dailyForm, saveDailyTotal, autoDailyCalc,
                     selectedPageIndex, cPage, onPageSelectChange, counterStep, counterData, activePage, r1Colors, getProb, 
@@ -1671,9 +1082,7 @@
                     storeList, machineList, showSettingsModal, settingTab, renameStore, renameMachine, deleteStore, deleteMachine,
                     formAttachedPageIndex, attachCounterData, removeCounterData, getSnapshots, handleSnapshotClick, 
                     showSnapshotSelectModal, snapshotListToSelect, showSnapshotModal, snapshotData, openSnapshotModal,
-                    showPhotoViewer, photoViewerSrc, openPhotoViewer,
-                    showMonthDeleteModal, deleteMonthData, deleteAllMachinesForDay,
-                    forceReload // 💡 追加：強制リロード関数
+                    showPhotoViewer, photoViewerSrc, openPhotoViewer, showMonthDeleteModal, deleteMonthData, deleteAllMachinesForDay
                 }
             }
         }).mount('#app');
