@@ -28,7 +28,6 @@
         .month-nav { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: var(--surface); }
         .month-nav button { background: transparent; color: var(--primary); border: none; font-size: 18px; cursor: pointer; padding: 5px 15px; font-weight: bold; }
         
-        /* 月間サマリー */
         .month-summary-box { display: flex; justify-content: space-between; background: var(--surface-light); padding: 10px 15px; border-bottom: 1px solid var(--border); border-top: 1px solid var(--border); font-size: 13px; font-weight: bold; }
         .summary-item { display: flex; flex-direction: column; align-items: center; }
         .summary-label { font-size: 10px; color: var(--text-sub); margin-bottom: 2px; }
@@ -44,10 +43,11 @@
         
         /* 詳細・リスト */
         .day-detail { padding: 15px; background: var(--surface); margin-top: 10px; border-top: 1px solid var(--border); }
-        
-        /* 日別サマリー（枠を強調） */
         .day-summary-box { font-size: 13px; margin-bottom: 15px; background: var(--surface-light); padding: 12px; border-radius: 8px; display: flex; flex-direction: column; gap: 8px; border: 2px solid var(--primary); box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
 
+        /* 店舗区切りバッジ */
+        .store-divider { background: var(--surface-light); border-left: 4px solid var(--secondary); color: var(--secondary); padding: 8px 12px; margin: 20px 0 10px 0; font-weight: bold; font-size: 14px; display: flex; align-items: center; border-radius: 4px; }
+        
         .machine-card { background: var(--surface-light); padding: 12px; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid var(--primary); cursor: pointer; }
         .machine-card:active { opacity: 0.8; }
         .btn-outline { display: block; text-align: center; border: 1px dashed var(--text-sub); color: var(--text-sub); padding: 12px; border-radius: 6px; margin-top: 10px; cursor: pointer; font-weight: bold;}
@@ -61,6 +61,11 @@
         .save-btn { background: var(--primary); color: #fff; font-weight: bold; padding: 15px; text-align: center; border-radius: 8px; margin: 20px 15px; cursor: pointer; font-size: 16px; }
         .save-btn:active { opacity: 0.8; }
         
+        /* ラジオボタン */
+        .radio-group { display: flex; gap: 20px; padding: 10px 0; }
+        .radio-label { display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; color: var(--text-main); font-weight: bold; }
+        .radio-label input[type="radio"] { transform: scale(1.3); accent-color: var(--primary); }
+
         /* 小役カウンター */
         .counter-header { display: flex; justify-content: space-between; padding: 10px; background: var(--surface); align-items: center; }
         .page-select { background: var(--surface-light); color: var(--text-main); border: 1px solid var(--border); padding: 5px 10px; border-radius: 4px; font-size: 14px; flex: 1; margin-right: 10px; }
@@ -94,7 +99,7 @@
 </head>
 <body>
     <div id="app">
-        <!-- ヘッダー (時計常時表示) -->
+        <!-- ヘッダー -->
         <header>
             <div style="display:flex; flex-direction:column;">
                 <span style="font-size:16px;">{{ headerTitle }}</span>
@@ -112,7 +117,6 @@
                     <button @click="changeMonth(1)">▶</button>
                 </div>
                 
-                <!-- 月間サマリー -->
                 <div class="month-summary-box">
                     <div class="summary-item">
                         <span class="summary-label">総投資</span>
@@ -151,7 +155,6 @@
                         <button style="padding:5px 10px; border-radius:4px; background:var(--primary); color:#fff; border:none; font-weight:bold;" @click="currentTab='input_daily'">💰 最終収支入力</button>
                     </div>
                     
-                    <!-- 日別サマリー表示（外枠強調） -->
                     <div class="day-summary-box">
                         <div style="display:flex; justify-content:space-between; font-weight:bold;">
                             <span>総投資: ¥{{ getDayInvest(selectedDay.fullDate).toLocaleString() }}</span>
@@ -163,23 +166,30 @@
                         </div>
                     </div>
 
-                    <!-- 遊技履歴カード -->
-                    <div class="machine-card" v-for="(m, index) in getMachinesForDate(selectedDay.fullDate)" :key="index" @click="openActionModal(index)">
-                        <div style="font-weight:bold; font-size:14px; margin-bottom:5px;">{{ m.machineNumber }}台目: {{ m.name || '機種不明' }} (貸出: {{m.rate}}枚)</div>
-                        <div style="display:flex; justify-content:space-between; font-size:13px; margin-top:5px;">
-                            <span>現金投資: ¥{{ m.cashInvest.toLocaleString() }}</span>
-                            <span>持ち込み: {{ m.broughtIn }}枚</span>
+                    <!-- 遊技履歴リスト -->
+                    <template v-for="(m, index) in getMachinesForDate(selectedDay.fullDate)" :key="index">
+                        
+                        <!-- 店舗移動バッジ (1台目 または 前台から店舗移動した場合) -->
+                        <div v-if="index === 0 || !m.isSameStore" class="store-divider">
+                            🏪 {{ m.location || '店舗未設定' }}
                         </div>
-                        <div style="display:flex; justify-content:space-between; font-size:13px; margin-top:3px;">
-                            <span>貯メダル増減: <span :class="(m.savedSign * m.savedVal) >= 0 ? 'val-plus' : 'val-minus'">{{ (m.savedSign * m.savedVal) >= 0 ? '+' : '' }}{{ (m.savedSign * m.savedVal).toLocaleString() }} 枚</span></span>
+
+                        <div class="machine-card" @click="openActionModal(index)">
+                            <div style="font-weight:bold; font-size:14px; margin-bottom:5px;">{{ m.machineNumber }}台目: {{ m.name || '機種不明' }} (貸出: {{m.rate}}枚)</div>
+                            <div style="display:flex; justify-content:space-between; font-size:13px; margin-top:5px;">
+                                <span>現金投資: ¥{{ m.cashInvest.toLocaleString() }}</span>
+                                <span>持ち込み: {{ m.broughtIn }}枚</span>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; font-size:13px; margin-top:3px;">
+                                <span>貯メダル増減: <span :class="(m.savedSign * m.savedVal) >= 0 ? 'val-plus' : 'val-minus'">{{ (m.savedSign * m.savedVal) >= 0 ? '+' : '' }}{{ (m.savedSign * m.savedVal).toLocaleString() }} 枚</span></span>
+                            </div>
+                            <div style="font-size:13px; margin-top:5px; border-bottom:1px dashed var(--border); padding-bottom:5px; font-weight:bold;">
+                                純差枚数: <span :class="m.netBalance >= 0 ? 'val-plus' : 'val-minus'">{{ m.netBalance >= 0 ? '+' : '' }}{{ m.netBalance.toLocaleString() }} 枚</span>
+                            </div>
+                            <div v-if="m.memo" style="font-size:12px; color:var(--text-sub); margin-top:8px; white-space: pre-wrap; background: var(--bg); padding: 8px; border-radius: 4px;">📝 {{ m.memo }}</div>
+                            <img v-if="m.photo" :src="m.photo" style="max-height: 80px; margin-top: 8px; border-radius: 4px; display: block;">
                         </div>
-                        <!-- 純差枚数 左寄せ -->
-                        <div style="font-size:13px; margin-top:5px; border-bottom:1px dashed var(--border); padding-bottom:5px; font-weight:bold;">
-                            純差枚数: <span :class="m.netBalance >= 0 ? 'val-plus' : 'val-minus'">{{ m.netBalance >= 0 ? '+' : '' }}{{ m.netBalance.toLocaleString() }} 枚</span>
-                        </div>
-                        <div v-if="m.memo" style="font-size:12px; color:var(--text-sub); margin-top:8px; white-space: pre-wrap; background: var(--bg); padding: 8px; border-radius: 4px;">📝 {{ m.memo }}</div>
-                        <img v-if="m.photo" :src="m.photo" style="max-height: 80px; margin-top: 8px; border-radius: 4px; display: block;">
-                    </div>
+                    </template>
                     
                     <div class="btn-outline" @click="prepareMachineInput">＋ 遊技履歴を追加</div>
                 </div>
@@ -238,6 +248,37 @@
                 <div class="form-group" style="background: var(--surface-light);">
                     <span style="font-size: 14px; font-weight: bold; color: var(--primary);">📍 今回の稼働: 【 {{ form.machineNumber }}台目 】</span>
                 </div>
+
+                <!-- 🏢 同店舗・別店舗の切り替え (2台目以降のみ表示) -->
+                <div class="form-group" v-if="form.machineNumber > 1">
+                    <span class="form-label">🏢 店舗移動</span>
+                    <div class="radio-group">
+                        <label class="radio-label"><input type="radio" v-model="form.isSameStore" :value="true" @change="onStoreTypeChange"> 同店舗で継続</label>
+                        <label class="radio-label"><input type="radio" v-model="form.isSameStore" :value="false" @change="onStoreTypeChange"> 別店舗へ移動</label>
+                    </div>
+                </div>
+
+                <!-- 🏪 実践店舗入力 (1台目 または 別店舗移動時のみ表示) -->
+                <div class="form-group" v-if="form.machineNumber === 1 || !form.isSameStore">
+                    <span class="form-label">🏪 実践店舗</span>
+                    <input type="text" class="form-input" v-model="form.location" list="store-list" placeholder="店舗名を入力または選択">
+                    <datalist id="store-list">
+                        <!-- 九州・山口西部の主要店舗サジェスト -->
+                        <option value="スペース666"></option>
+                        <option value="ゾーン戸畑"></option>
+                        <option value="メガフェイス1500宗像"></option>
+                        <option value="ワンダーランド福岡東"></option>
+                        <option value="アプロ7"></option>
+                        <option value="スーパーハリウッド1120"></option>
+                        <option value="EVO3"></option>
+                        <option value="D'station中間"></option>
+                        <option value="テキサス下関"></option>
+                        <option value="ピータイム下関"></option>
+                        <option value="まるみつ下関"></option>
+                        <option value="デルパラ山口"></option>
+                    </datalist>
+                </div>
+
                 <div class="form-group">
                     <span class="form-label">🎰 機種名</span>
                     <input type="text" class="form-input" v-model="form.name" placeholder="例: マイジャグラーV">
@@ -249,7 +290,8 @@
                 <div class="form-group">
                     <span class="form-label">📥 持ち込み枚数 (自動反映)</span>
                     <input type="number" class="form-input" v-model.number="form.broughtIn" readonly>
-                    <span style="font-size: 11px; color: var(--text-sub); margin-top: 4px; display: block;" v-if="form.machineNumber > 1">※直前の台の残った枚数が自動で引き継がれています</span>
+                    <span style="font-size: 11px; color: var(--text-sub); margin-top: 4px; display: block;" v-if="form.machineNumber > 1 && form.isSameStore">※同店舗のため、直前の台の残った枚数が引き継がれています</span>
+                    <span style="font-size: 11px; color: var(--text-sub); margin-top: 4px; display: block;" v-if="form.machineNumber > 1 && !form.isSameStore">※別店舗のため、持ち込み枚数は0枚からスタートします</span>
                 </div>
                 <div class="form-group">
                     <span class="form-label">💴 追加現金投資 (円)</span>
@@ -353,7 +395,6 @@
             setup() {
                 const currentTab = ref('home');
                 
-                // ⌚ リアルタイム時計 (1秒更新)
                 const currentTime = ref('');
                 let timer = null;
                 const updateTime = () => {
@@ -430,13 +471,11 @@
                     return appData.value[dateStr]?.machines || [];
                 };
                 
-                // Getter
                 const getDayInvest = (dateStr) => appData.value[dateStr]?.daily?.invest || 0;
                 const getDayRecover = (dateStr) => appData.value[dateStr]?.daily?.recover || 0;
                 const getDayTotal = (dateStr) => appData.value[dateStr]?.daily?.net || 0;
                 const getDayMedalDelta = (dateStr) => appData.value[dateStr]?.daily?.medalDelta || 0;
 
-                // 月間サマリー計算
                 const monthlySummary = computed(() => {
                     let invest = 0;
                     let recover = 0;
@@ -465,23 +504,51 @@
                     showActionModal.value = true;
                 };
 
-                const form = ref({ date: todayStr, machineNumber: 1, name: '', rate: 46, broughtIn: 0, cashInvest: 0, savedSign: -1, savedVal: 0, leftMedals: 0, memo: '', photo: '' });
+                // 店舗関連のプロパティ (location, isSameStore) を追加
+                const form = ref({ date: todayStr, machineNumber: 1, location: '', isSameStore: false, name: '', rate: 46, broughtIn: 0, cashInvest: 0, savedSign: -1, savedVal: 0, leftMedals: 0, memo: '', photo: '' });
                 
+                // ラジオボタン切り替え時の処理（持ち込み・店舗名の連動）
+                const onStoreTypeChange = () => {
+                    const d = form.value.date;
+                    const machines = appData.value[d]?.machines || [];
+                    const prevIdx = form.value.machineNumber - 2;
+                    const prev = prevIdx >= 0 ? machines[prevIdx] : null;
+                    
+                    if (form.value.isSameStore && prev) {
+                        form.value.location = prev.location;
+                        form.value.broughtIn = prev.leftMedals;
+                    } else {
+                        form.value.location = '';
+                        form.value.broughtIn = 0;
+                    }
+                };
+
                 const updateBroughtInAndNumber = (dateStr, targetIdx = null) => {
                     const machines = appData.value[dateStr]?.machines || [];
                     if (targetIdx !== null) {
+                        // 編集時
                         form.value.machineNumber = targetIdx + 1;
                         if (targetIdx === 0) {
+                            form.value.isSameStore = false;
                             form.value.broughtIn = 0;
                         } else {
-                            form.value.broughtIn = machines[targetIdx - 1].leftMedals || 0;
+                            // 編集時は元の isSameStore を維持しつつ、もし同店舗なら前台の leftMedals を反映
+                            if(form.value.isSameStore) {
+                                form.value.location = machines[targetIdx - 1].location;
+                                form.value.broughtIn = machines[targetIdx - 1].leftMedals || 0;
+                            }
                         }
                     } else {
+                        // 新規追加時
                         const nextNum = machines.length + 1;
                         form.value.machineNumber = nextNum;
                         if (nextNum === 1) {
+                            form.value.isSameStore = false;
+                            form.value.location = '';
                             form.value.broughtIn = 0;
                         } else {
+                            form.value.isSameStore = true; // デフォルトは同店舗継続
+                            form.value.location = machines[machines.length - 1].location;
                             form.value.broughtIn = machines[machines.length - 1].leftMedals || 0;
                         }
                     }
@@ -538,6 +605,8 @@
                     form.value = {
                         date: selectedDay.value.fullDate,
                         machineNumber: target.machineNumber,
+                        location: target.location || '',
+                        isSameStore: target.isSameStore !== undefined ? target.isSameStore : (target.machineNumber > 1),
                         name: target.name,
                         rate: target.rate,
                         broughtIn: target.broughtIn,
@@ -548,6 +617,7 @@
                         memo: target.memo || '',
                         photo: target.photo || ''
                     };
+                    updateBroughtInAndNumber(selectedDay.value.fullDate, editingIndex.value);
                     currentTab.value = 'input_machine';
                 };
 
@@ -562,19 +632,22 @@
                     let prevLeft = 0;
                     machines.forEach((m, idx) => {
                         m.machineNumber = idx + 1;
-                        if (idx > 0) {
-                            m.broughtIn = prevLeft;
-                            let cashToMedals = Math.floor((m.cashInvest / 1000) * m.rate);
-                            let savedDelta = m.savedSign * m.savedVal;
-                            let totalInvest = m.broughtIn + cashToMedals - savedDelta;
-                            m.netBalance = m.leftMedals - totalInvest;
-                        } else {
+                        if (idx === 0) {
                             m.broughtIn = 0;
-                            let cashToMedals = Math.floor((m.cashInvest / 1000) * m.rate);
-                            let savedDelta = m.savedSign * m.savedVal;
-                            let totalInvest = m.broughtIn + cashToMedals - savedDelta;
-                            m.netBalance = m.leftMedals - totalInvest;
+                            m.isSameStore = false;
+                        } else {
+                            if (m.isSameStore) {
+                                m.broughtIn = prevLeft;
+                                m.location = machines[idx-1].location; // 前の店舗名を引き継ぐ
+                            } else {
+                                m.broughtIn = 0;
+                            }
                         }
+                        let cashToMedals = Math.floor((m.cashInvest / 1000) * m.rate);
+                        let savedDelta = m.savedSign * m.savedVal;
+                        let totalInvest = m.broughtIn + cashToMedals - savedDelta;
+                        m.netBalance = m.leftMedals - totalInvest;
+                        
                         prevLeft = m.leftMedals;
                     });
                     
@@ -582,6 +655,8 @@
                 };
 
                 const saveMachine = () => {
+                    if (form.value.machineNumber === 1 && !form.value.location.trim()) { alert("⚠️ 1台目は店舗名の入力が必須です。"); return; }
+                    if (!form.value.isSameStore && !form.value.location.trim()) { alert("⚠️ 別店舗へ移動した場合は、移動先の店舗名を入力してください。"); return; }
                     if (!form.value.name.trim()) { alert("⚠️ 機種名を入力してください。"); return; }
                     if (form.value.rate <= 0) { alert("⚠️ 貸出枚数は1枚以上に設定してください。"); return; }
                     if (form.value.cashInvest < 0) { alert("⚠️ 現金投資にマイナスは指定できません。"); return; }
@@ -597,22 +672,26 @@
                         machines.push({ ...form.value, netBalance: netBalance.value });
                     }
 
+                    // 💡 後続の台（2台目以降）の連動を再計算 (店舗一致判定も含む)
                     let prevLeft = 0;
                     machines.forEach((m, idx) => {
                         m.machineNumber = idx + 1;
-                        if (idx > 0) {
-                            m.broughtIn = prevLeft;
-                            let cashToMedals = Math.floor((m.cashInvest / 1000) * m.rate);
-                            let savedDelta = m.savedSign * m.savedVal;
-                            let totalInvest = m.broughtIn + cashToMedals - savedDelta;
-                            m.netBalance = m.leftMedals - totalInvest;
-                        } else {
+                        if (idx === 0) {
                             m.broughtIn = 0;
-                            let cashToMedals = Math.floor((m.cashInvest / 1000) * m.rate);
-                            let savedDelta = m.savedSign * m.savedVal;
-                            let totalInvest = m.broughtIn + cashToMedals - savedDelta;
-                            m.netBalance = m.leftMedals - totalInvest;
+                            m.isSameStore = false;
+                        } else {
+                            if (m.isSameStore) {
+                                m.broughtIn = prevLeft;
+                                m.location = machines[idx-1].location; // 前の店舗名を引き継ぐ
+                            } else {
+                                m.broughtIn = 0; // 別店舗移動なら持ち込み0
+                            }
                         }
+                        let cashToMedals = Math.floor((m.cashInvest / 1000) * m.rate);
+                        let savedDelta = m.savedSign * m.savedVal;
+                        let totalInvest = m.broughtIn + cashToMedals - savedDelta;
+                        m.netBalance = m.leftMedals - totalInvest;
+                        
                         prevLeft = m.leftMedals;
                     });
 
@@ -702,7 +781,7 @@
                     loadData();
                     generateCalendar();
                     updateTime();
-                    timer = setInterval(updateTime, 1000); // 1秒ごとに時計更新
+                    timer = setInterval(updateTime, 1000);
                     
                     const td = calDays.value.find(day => day.fullDate === todayStr);
                     if(td) selectDay(td);
@@ -717,7 +796,7 @@
                     currentYear, currentMonth, changeMonth,
                     calDays, selectedDay, selectDay, todayStr,
                     getMachinesForDate, getDayInvest, getDayRecover, getDayTotal, getDayMedalDelta, monthlySummary, formatDateDisplay,
-                    form, netBalance, prepareMachineInput, saveMachine, handlePhotoUpload,
+                    form, netBalance, prepareMachineInput, saveMachine, handlePhotoUpload, onStoreTypeChange,
                     dailyForm, saveDailyTotal,
                     cPage, counterData, activePage, r1Colors, getProb, resetCounter, editPageName, editRoleNames,
                     showActionModal, openActionModal, editMachine, deleteMachine
