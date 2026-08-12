@@ -158,7 +158,11 @@
             <div v-show="currentTab === 'home'">
                 <div class="month-nav">
                     <button @click="changeMonth(-1)">◀</button>
-                    <span style="font-weight:bold; font-size: 16px;">{{ currentYear }}年 {{ currentMonth }}月</span>
+                    <!-- 💡 変更：月間削除アイコンの追加 -->
+                    <span style="font-weight:bold; font-size: 16px; display: flex; align-items: center; gap: 10px;">
+                        {{ currentYear }}年 {{ currentMonth }}月
+                        <button style="background:transparent; border:none; color:var(--error); font-size:16px; padding:0; cursor:pointer;" @click="showMonthDeleteModal = true">🗑️</button>
+                    </span>
                     <button @click="changeMonth(1)">▶</button>
                 </div>
                 
@@ -179,7 +183,7 @@
                     </div>
                 </div>
 
-                <!-- カレンダー -->
+                <!-- カレンダーエリア -->
                 <div class="calendar-wrapper">
                     <div v-if="isOriginalTheme && originalSettings.bgImage" class="cal-bg-layer" :style="{ backgroundImage: `url(${originalSettings.bgImage})`, opacity: originalSettings.opacity }"></div>
                     <div class="calendar" :class="{ 'original-mode': isOriginalTheme }">
@@ -222,7 +226,6 @@
                         <div class="machine-card" @click="openActionModal(index)">
                             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                                 <div style="font-weight:bold; font-size:14px; margin-bottom:5px;">{{ m.machineNumber }}台目: {{ m.name || '機種不明' }} (貸出: {{m.rate}}枚)</div>
-                                <!-- 💡 変更：カウンターボタンの表示 (スナップショットがある場合のみ) -->
                                 <button v-if="getSnapshots(m).length > 0" @click.stop="handleSnapshotClick(getSnapshots(m))" style="background:var(--primary); color:#fff; border:none; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.2); cursor:pointer;">🎲 カウンター</button>
                             </div>
                             <div style="display:flex; justify-content:space-between; font-size:13px; margin-top:5px;">
@@ -236,12 +239,16 @@
                                 純差枚数: <span :class="m.netBalance >= 0 ? 'val-plus' : 'val-minus'">{{ m.netBalance >= 0 ? '+' : '' }}{{ m.netBalance.toLocaleString() }} 枚</span>
                             </div>
                             <div v-if="m.memo" style="font-size:12px; color:var(--text-sub); margin-top:8px; white-space: pre-wrap; background: var(--bg); padding: 8px; border-radius: 4px;">📝 {{ m.memo }}</div>
-                            <!-- 💡 変更：サムネイル押下で拡大表示 -->
                             <img v-if="m.photo" :src="m.photo" style="max-height: 80px; margin-top: 8px; border-radius: 4px; display: block; cursor:pointer;" @click.stop="openPhotoViewer(m.photo)">
                         </div>
                     </template>
                     
                     <div class="btn-outline" @click="prepareMachineInput">＋ 遊技履歴を追加</div>
+
+                    <!-- 💡 変更：この日の遊技履歴を全て削除ボタン -->
+                    <div v-if="getMachinesForDate(selectedDay.fullDate).length > 0" class="btn-outline" style="border-color:var(--error); color:var(--error); margin-top:15px; background:rgba(207, 102, 121, 0.1);" @click="deleteAllMachinesForDay">
+                        🗑️ この日の遊技履歴を全て削除
+                    </div>
                 </div>
 
                 <div style="text-align:center; padding: 30px 10px 20px 10px;">
@@ -441,7 +448,6 @@
                     <input type="number" class="form-input" v-model.number="form.leftMedals">
                 </div>
 
-                <!-- 💡 変更：小役カウンターの複数紐付けセクション -->
                 <div class="form-group">
                     <span class="form-label">🎲 小役データの紐付け (最大3つ)</span>
                     <div style="display:flex; gap:10px;">
@@ -580,7 +586,7 @@
 
                 <div v-show="mainSettingTab === 'backup'">
                     <div style="background:var(--surface-light); padding:15px; border-radius:8px; border: 1px solid var(--border);">
-                        <div style="font-weight:bold; margin-bottom:10px; text-align:center; font-size:13px;">データ引き継ぎ・手バックアップ</div>
+                        <div style="font-weight:bold; margin-bottom:10px; text-align:center; font-size:13px;">データ引き継ぎ・手動バックアップ</div>
                         <div style="font-size:11px; color:var(--text-sub); margin-bottom:15px; text-align:center; line-height:1.4;">
                             iPhone本体に保存されているデータを<br>丸ごと別の端末に送ったり復元できます。
                         </div>
@@ -625,12 +631,27 @@
             </div>
         </div>
 
+        <!-- 💡 変更：月間データ削除モーダル -->
+        <div class="modal-overlay" v-if="showMonthDeleteModal" @click.self="showMonthDeleteModal = false">
+            <div class="modal-content">
+                <h3 style="margin:0 0 10px 0; font-size:16px; text-align:center; color:var(--error);">月間データの削除</h3>
+                <div style="font-size:11px; color:var(--text-sub); margin-bottom:15px; text-align:center;">{{ currentYear }}年{{ currentMonth }}月のデータを一括削除します。</div>
+                
+                <button class="modal-btn" style="background:var(--surface-light); border:1px solid var(--error); color:var(--error);" @click="deleteMonthData('machines')">🗑️ 月間すべての遊技履歴を削除</button>
+                <button class="modal-btn" style="background:var(--surface-light); border:1px solid var(--error); color:var(--error);" @click="deleteMonthData('daily')">🗑️ 月間すべての収支データを削除</button>
+                <button class="modal-btn" style="background:var(--error); color:#fff;" @click="deleteMonthData('all')">🗑️ 月間すべての遊技履歴・収支データを削除</button>
+                
+                <button class="modal-btn" style="background:var(--surface-light); color:var(--text-main); margin-top:10px;" @click="showMonthDeleteModal = false">キャンセル</button>
+            </div>
+        </div>
+
         <!-- ⚙️ 履歴編集・削除モーダル -->
         <div class="modal-overlay" v-if="showActionModal" @click.self="showActionModal = false">
             <div class="modal-content" style="max-width:300px;">
                 <h3 style="margin:0 0 10px 0; font-size:16px; text-align:center;">遊技履歴の操作</h3>
                 <button class="modal-btn" style="background:var(--primary); color:#fff;" @click="editMachine">✏️ 編集する</button>
-                <button class="modal-btn" style="background:var(--error); color:#fff;" @click="deleteMachine">🗑️ 削除する</button>
+                <!-- 💡 変更：表記の変更 -->
+                <button class="modal-btn" style="background:var(--error); color:#fff;" @click="deleteMachine">🗑️ この遊技履歴を削除</button>
                 <button class="modal-btn" style="background:var(--surface-light); color:var(--text-main);" @click="showActionModal = false">キャンセル</button>
             </div>
         </div>
@@ -651,7 +672,7 @@
             </div>
         </div>
 
-        <!-- 💡 変更：小役データ複数選択ポップアップ -->
+        <!-- 小役データ複数選択ポップアップ -->
         <div class="modal-overlay" v-if="showSnapshotSelectModal" @click.self="showSnapshotSelectModal = false">
             <div class="modal-content">
                 <h3 style="margin:0 0 10px 0; font-size:16px; text-align:center;">どのデータを表示しますか？</h3>
@@ -691,7 +712,7 @@
             </div>
         </div>
 
-        <!-- 💡 変更：写真拡大表示ビューワー -->
+        <!-- 写真拡大表示ビューワー -->
         <div class="modal-overlay" v-if="showPhotoViewer" @click.self="showPhotoViewer = false">
             <div style="position:relative; width:95%; max-width:500px; text-align:center;">
                 <img :src="photoViewerSrc" style="width:100%; border-radius:8px; border:2px solid var(--border);">
@@ -1072,7 +1093,49 @@
 
                 const openActionModal = (index) => { activeMachineIndex.value = index; showActionModal.value = true; };
 
-                // 💡 変更：form に counterSnapshots 配列を追加
+                // 💡 新規追加：日別全削除、月間削除関連機能
+                const showMonthDeleteModal = ref(false);
+
+                const deleteAllMachinesForDay = () => {
+                    if(!confirm(`本当に ${formatDateDisplay(selectedDay.value.fullDate)} の遊技履歴を全て削除しますか？\n※収支データは残ります。`)) return;
+                    if(!confirm(`【最終確認】\nこの操作は取り消せません。\n本当に全て削除してよろしいですか？`)) return;
+                    
+                    const d = selectedDay.value.fullDate;
+                    if(appData.value[d]) {
+                        appData.value[d].machines = [];
+                    }
+                };
+
+                const deleteMonthData = (type) => {
+                    let msg1 = "";
+                    if (type === 'machines') msg1 = `${currentYear.value}年${currentMonth.value}月の「すべての遊技履歴」を削除しますか？`;
+                    if (type === 'daily') msg1 = `${currentYear.value}年${currentMonth.value}月の「すべての収支データ」を削除しますか？`;
+                    if (type === 'all') msg1 = `${currentYear.value}年${currentMonth.value}月の「すべてのデータ（履歴・収支）」を削除しますか？`;
+
+                    if(!confirm(msg1)) return;
+                    if(!confirm("【最終確認】\nこの操作は絶対に取り消せません。\n本当に削除してもよろしいですか？")) return;
+
+                    const targetPrefix = `${currentYear.value}-${String(currentMonth.value).padStart(2,'0')}`;
+
+                    Object.keys(appData.value).forEach(dateStr => {
+                        if (dateStr.startsWith(targetPrefix)) {
+                            if (type === 'machines') {
+                                appData.value[dateStr].machines = [];
+                            } else if (type === 'daily') {
+                                appData.value[dateStr].daily = { invest:0, recover:0, net:0, medalDelta:0 };
+                            } else if (type === 'all') {
+                                delete appData.value[dateStr];
+                            }
+                        }
+                    });
+                    
+                    showMonthDeleteModal.value = false;
+                    generateCalendar();
+                    
+                    const td = calDays.value.find(day => day.fullDate === selectedDay.value?.fullDate);
+                    if(td) selectDay(td);
+                };
+
                 const form = ref({ date: todayStr, machineNumber: 1, locationSelect: '', locationNew: '', nameSelect: '', nameNew: '', isSameStore: false, rate: 46, broughtIn: 0, cashInvest: 0, savedSign: -1, savedVal: 0, leftMedals: 0, memo: '', photo: '', counterSnapshots: [] });
                 
                 const onStoreTypeChange = () => {
@@ -1122,7 +1185,6 @@
                     resizeImage(file, 1000, (compressed) => { form.value.photo = compressed; });
                 };
 
-                // 💡 変更：旧データ（1つだけのスナップショット）を配列として読み込むヘルパー関数
                 const getSnapshots = (m) => {
                     if (m.counterSnapshots && m.counterSnapshots.length > 0) return m.counterSnapshots;
                     if (m.counterSnapshot) return [m.counterSnapshot];
@@ -1139,7 +1201,7 @@
                     form.value.memo = ''; form.value.photo = '';
                     
                     form.value.counterSnapshots = [];
-                    formAttachedPageIndex.value = -1; // デフォルトを登録なしに
+                    formAttachedPageIndex.value = -1; 
                     
                     updateBroughtInAndNumber(targetDate);
                     currentTab.value = 'input_machine';
@@ -1160,7 +1222,7 @@
                         rate: target.rate, broughtIn: target.broughtIn, cashInvest: target.cashInvest,
                         savedSign: target.savedSign, savedVal: target.savedVal, leftMedals: target.leftMedals,
                         memo: target.memo || '', photo: target.photo || '',
-                        counterSnapshots: getSnapshots(target) // 💡 複数データをロード
+                        counterSnapshots: getSnapshots(target) 
                     };
                     formAttachedPageIndex.value = -1;
                     updateBroughtInAndNumber(selectedDay.value.fullDate, editingIndex.value);
@@ -1224,7 +1286,7 @@
                     let machines = appData.value[d].machines;
                     
                     const saveData = { ...form.value, location: finalLocation, name: finalName, netBalance: netBalance.value };
-                    delete saveData.counterSnapshot; // 古い形式のプロパティは消去して整理
+                    delete saveData.counterSnapshot; 
 
                     if (isEditing.value) machines[editingIndex.value] = saveData;
                     else machines.push(saveData);
@@ -1352,7 +1414,6 @@
                     showRoleEditModal.value = false;
                 };
 
-                // 💡 変更：小役データの複数紐付け処理
                 const formAttachedPageIndex = ref(-1);
                 const attachCounterData = () => {
                     if (formAttachedPageIndex.value === -1) return;
@@ -1362,14 +1423,13 @@
                     }
                     const pageToAttach = counterData.value[formAttachedPageIndex.value];
                     form.value.counterSnapshots.push(JSON.parse(JSON.stringify(pageToAttach)));
-                    formAttachedPageIndex.value = -1; // 選択後にリセット
+                    formAttachedPageIndex.value = -1; 
                 };
 
                 const removeCounterData = (idx) => {
                     form.value.counterSnapshots.splice(idx, 1);
                 };
 
-                // 💡 変更：小役データサマリポップアップ表示処理
                 const showSnapshotSelectModal = ref(false);
                 const snapshotListToSelect = ref([]);
                 const showSnapshotModal = ref(false);
@@ -1389,7 +1449,6 @@
                     showSnapshotModal.value = true;
                 };
 
-                // 💡 変更：写真拡大ビューワー
                 const showPhotoViewer = ref(false);
                 const photoViewerSrc = ref('');
                 const openPhotoViewer = (src) => {
@@ -1421,7 +1480,8 @@
                     storeList, machineList, showSettingsModal, settingTab, renameStore, renameMachine,
                     formAttachedPageIndex, attachCounterData, removeCounterData, getSnapshots, handleSnapshotClick, 
                     showSnapshotSelectModal, snapshotListToSelect, showSnapshotModal, snapshotData, openSnapshotModal,
-                    showPhotoViewer, photoViewerSrc, openPhotoViewer
+                    showPhotoViewer, photoViewerSrc, openPhotoViewer,
+                    showMonthDeleteModal, deleteMonthData, deleteAllMachinesForDay
                 }
             }
         }).mount('#app');
