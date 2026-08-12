@@ -499,7 +499,7 @@
                 <div class="save-btn" @click="saveMachine">💾 この台を保存する</div>
             </div>
 
-            <!-- 💰 💡 変更：日別最終収支入力 (自動/手動切り替え) -->
+            <!-- 💰 日別最終収支入力 (自動/手動切り替え) -->
             <div v-show="currentTab === 'input_daily'">
                 <div class="form-group">
                     <h3 style="margin-top:0;">{{ selectedDay ? formatDateDisplay(selectedDay.fullDate) : '' }} 最終収支</h3>
@@ -595,7 +595,6 @@
                         </div>
                     </div>
 
-                    <!-- 💡 変更：カレンダーUI表示設定 -->
                     <div style="background:var(--surface-light); padding:15px; border-radius:8px; border: 1px solid var(--border); margin-bottom:15px;">
                         <div style="font-weight:bold; margin-bottom:10px; text-align:center; font-size:13px;">⚙️ カレンダー表示設定</div>
                         <label style="display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; font-size:13px; color:var(--text-main);">
@@ -663,7 +662,11 @@
                     <div v-show="settingTab === 'store'" style="max-height:300px; overflow-y:auto; padding-right:5px;">
                         <div v-for="(store, index) in storeList" :key="'s'+index" style="display:flex; justify-content:space-between; align-items:center; background:var(--bg); padding:10px; border-radius:6px; margin-bottom:8px; border: 1px solid var(--border);">
                             <span style="font-weight:bold; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-right:10px;">{{ store }}</span>
-                            <button class="modal-btn" style="padding:6px 12px; background:var(--primary); color:#fff; font-size:11px;" @click="renameStore(store, index)">変更</button>
+                            <!-- 💡 変更：変更と削除の2つのボタンを配置 -->
+                            <div style="display:flex; gap:5px;">
+                                <button class="modal-btn" style="padding:6px 12px; background:var(--primary); color:#fff; font-size:11px;" @click="renameStore(store, index)">変更</button>
+                                <button class="modal-btn" style="padding:6px 12px; background:var(--error); color:#fff; font-size:11px;" @click="deleteStore(store, index)">削除</button>
+                            </div>
                         </div>
                         <div v-if="storeList.length === 0" style="text-align:center; padding:20px; font-size:12px; color:var(--text-sub);">登録店舗なし</div>
                     </div>
@@ -671,7 +674,11 @@
                     <div v-show="settingTab === 'machine'" style="max-height:300px; overflow-y:auto; padding-right:5px;">
                         <div v-for="(mac, index) in machineList" :key="'m'+index" style="display:flex; justify-content:space-between; align-items:center; background:var(--bg); padding:10px; border-radius:6px; margin-bottom:8px; border: 1px solid var(--border);">
                             <span style="font-weight:bold; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-right:10px;">{{ mac }}</span>
-                            <button class="modal-btn" style="padding:6px 12px; background:var(--primary); color:#fff; font-size:11px;" @click="renameMachine(mac, index)">変更</button>
+                            <!-- 💡 変更：変更と削除の2つのボタンを配置 -->
+                            <div style="display:flex; gap:5px;">
+                                <button class="modal-btn" style="padding:6px 12px; background:var(--primary); color:#fff; font-size:11px;" @click="renameMachine(mac, index)">変更</button>
+                                <button class="modal-btn" style="padding:6px 12px; background:var(--error); color:#fff; font-size:11px;" @click="deleteMachine(mac, index)">削除</button>
+                            </div>
                         </div>
                         <div v-if="machineList.length === 0" style="text-align:center; padding:20px; font-size:12px; color:var(--text-sub);">登録機種なし</div>
                     </div>
@@ -700,7 +707,7 @@
             <div class="modal-content" style="max-width:300px;">
                 <h3 style="margin:0 0 10px 0; font-size:16px; text-align:center;">遊技履歴の操作</h3>
                 <button class="modal-btn" style="background:var(--primary); color:#fff;" @click="editMachine">✏️ 編集する</button>
-                <button class="modal-btn" style="background:var(--error); color:#fff;" @click="deleteMachine">🗑️ この遊技履歴を削除</button>
+                <button class="modal-btn" style="background:var(--error); color:#fff;" @click="deleteMachineAction">🗑️ この遊技履歴を削除</button>
                 <button class="modal-btn" style="background:var(--surface-light); color:var(--text-main);" @click="showActionModal = false">キャンセル</button>
             </div>
         </div>
@@ -840,7 +847,6 @@
                     resizeImage(file, 200, (compressedDataUrl) => { userProfile.value.icon = compressedDataUrl; });
                 };
 
-                // 💡 変更：設定オブジェクトの追加
                 const defaultGeneral = { showMedalOnCalendar: true };
                 const generalSettings = ref(localStorage.getItem('gachi_general_settings') ? JSON.parse(localStorage.getItem('gachi_general_settings')) : defaultGeneral);
                 watch(generalSettings, (newVal) => { localStorage.setItem('gachi_general_settings', JSON.stringify(newVal)); }, { deep: true });
@@ -909,11 +915,35 @@
                 };
                 watch(appData, (newVal) => { localStorage.setItem('gachi_slot_data', JSON.stringify(newVal)); }, { deep: true });
 
-                const defaultStores = ["スペース666", "ゾーン戸畑", "メガフェイス1500宗像", "ワンダーランド福岡東", "アプロ7", "スーパーハリウッド1120", "EVO3", "D'station中間", "テキサス下関", "ピータイム下関", "まるみつ下関", "デルパラ山口"];
+                // 💡 変更：店舗名の初期値に「店舗名設定無し」を追加
+                const defaultStores = ["店舗名設定無し", "スペース666", "ゾーン戸畑", "メガフェイス1500宗像", "ワンダーランド福岡東", "アプロ7", "スーパーハリウッド1120", "EVO3", "D'station中間", "テキサス下関", "ピータイム下関", "まるみつ下関", "デルパラ山口"];
                 const storeList = ref(localStorage.getItem('gachi_store_list') ? JSON.parse(localStorage.getItem('gachi_store_list')) : defaultStores);
                 watch(storeList, (newVal) => { localStorage.setItem('gachi_store_list', JSON.stringify(newVal)); }, { deep: true });
 
-                const defaultMachines = ["スマスロ北斗の拳", "マイジャグラーV", "パチスロ甲鉄城のカバネリ", "スマスロモンキーターンV", "Lからくりサーカス", "Lヴァルヴレイヴ", "スマスロ ゴッドイーター", "アイムジャグラーEX", "沖ドキ！GOLD", "押忍！番長4"];
+                // 💡 変更：機種名の初期値をトップ20＋「機種名設定無し」に変更
+                const defaultMachines = [
+                    "機種名設定無し",
+                    "スマスロ北斗の拳",
+                    "マイジャグラーV",
+                    "アイムジャグラーEX",
+                    "ゴーゴージャグラー3",
+                    "押忍！番長4",
+                    "Lヴァルヴレイヴ",
+                    "Lからくりサーカス",
+                    "スマスロモンキーターンV",
+                    "スマスロ ゴッドイーター",
+                    "甲鉄城のカバネリ",
+                    "沖ドキ！GOLD",
+                    "L戦国乙女4",
+                    "スマスロ防振り",
+                    "スマスロ真・北斗無双",
+                    "スマスロToLOVEる",
+                    "スマスロシンフォギア",
+                    "スマスロ星矢",
+                    "L南国育ち",
+                    "ファンキージャグラー2",
+                    "スマスロバジリスク絆2天膳"
+                ];
                 const machineList = ref(localStorage.getItem('gachi_machine_list') ? JSON.parse(localStorage.getItem('gachi_machine_list')) : defaultMachines);
                 watch(machineList, (newVal) => { localStorage.setItem('gachi_machine_list', JSON.stringify(newVal)); }, { deep: true });
 
@@ -1125,6 +1155,34 @@
                     }
                 };
 
+                // 💡 変更：店舗名の削除処理追加
+                const deleteStore = (oldName, index) => {
+                    if (!confirm(`「${oldName}」を削除しますか？\n\nこの店舗を登録している履歴の店舗は全て「店舗名設定無し」に設定されてしまいます。名称を変える際は【変更】ボタンを選んでください。`)) {
+                        return;
+                    }
+                    if (!confirm(`【最終確認】\n本当に「${oldName}」を削除してもよろしいですか？`)) {
+                        return;
+                    }
+
+                    storeList.value.splice(index, 1);
+                    let updateCount = 0;
+                    Object.keys(appData.value).forEach(dateStr => {
+                        if (appData.value[dateStr].machines) {
+                            appData.value[dateStr].machines.forEach(m => {
+                                if (m.location === oldName) {
+                                    m.location = '店舗名設定無し';
+                                    updateCount++;
+                                }
+                            });
+                        }
+                    });
+
+                    if (!storeList.value.includes('店舗名設定無し')) {
+                        storeList.value.unshift('店舗名設定無し');
+                    }
+                    alert(`削除が完了しました。\n（過去の履歴 ${updateCount}件 が「店舗名設定無し」に変更されました）`);
+                };
+
                 const renameMachine = (oldName, index) => {
                     const newName = prompt(`「${oldName}」の新しい機種名を入力してください：`, oldName);
                     if (newName && newName.trim() !== '' && newName.trim() !== oldName) {
@@ -1140,6 +1198,34 @@
                         });
                         alert(`機種名を変更しました。\n（過去の履歴 ${updateCount}件 も一括更新されました）`);
                     }
+                };
+
+                // 💡 変更：機種名の削除処理追加
+                const deleteMachine = (oldName, index) => {
+                    if (!confirm(`「${oldName}」を削除しますか？\n\nこの機種を登録している履歴の機種は全て「機種名設定無し」に設定されてしまいます。名称を変える際は【変更】ボタンを選んでください。`)) {
+                        return;
+                    }
+                    if (!confirm(`【最終確認】\n本当に「${oldName}」を削除してもよろしいですか？`)) {
+                        return;
+                    }
+
+                    machineList.value.splice(index, 1);
+                    let updateCount = 0;
+                    Object.keys(appData.value).forEach(dateStr => {
+                        if (appData.value[dateStr].machines) {
+                            appData.value[dateStr].machines.forEach(m => {
+                                if (m.name === oldName) {
+                                    m.name = '機種名設定無し';
+                                    updateCount++;
+                                }
+                            });
+                        }
+                    });
+
+                    if (!machineList.value.includes('機種名設定無し')) {
+                        machineList.value.unshift('機種名設定無し');
+                    }
+                    alert(`削除が完了しました。\n（過去の履歴 ${updateCount}件 が「機種名設定無し」に変更されました）`);
                 };
 
                 const isEditing = ref(false);
@@ -1284,7 +1370,7 @@
                     currentTab.value = 'input_machine';
                 };
 
-                const deleteMachine = () => {
+                const deleteMachineAction = () => {
                     showActionModal.value = false;
                     if(!confirm("この遊技履歴を削除しますか？ 後続の台のデータも自動再調整されます。")) return;
                     
@@ -1368,7 +1454,6 @@
                     currentTab.value = 'home';
                 };
 
-                // 💡 変更：日別収支の自動計算用 computed
                 const autoDailyCalc = computed(() => {
                     if (!selectedDay.value) return { invest: 0, medalDelta: 0, sign: 1, val: 0 };
                     const d = selectedDay.value.fullDate;
@@ -1382,7 +1467,6 @@
                     return { invest, medalDelta, sign: medalDelta >= 0 ? 1 : -1, val: Math.abs(medalDelta) };
                 });
 
-                // 💡 変更：dailyForm に mode プロパティを追加
                 const dailyForm = ref({ mode: 'auto', invest: 0, recover: 0, medalSign: 1, medalVal: 0 });
                 watch(() => currentTab.value, (newTab) => {
                     if(newTab === 'input_daily' && selectedDay.value) {
@@ -1565,9 +1649,9 @@
                     selectedPageIndex, cPage, onPageSelectChange, counterStep, counterData, activePage, r1Colors, getProb, 
                     calcDiffGames, glowR1, glowR2, updateR1, updateR2, resetCounter, editPageName, 
                     showRoleEditModal, roleEditForm, openRoleEditModal, saveRoleNames,
-                    showActionModal, openActionModal, editMachine, deleteMachine,
+                    showActionModal, openActionModal, editMachine, deleteMachineAction,
                     analysisSubTab, changeMainTab, changeAnalysisTab, storeRanking,
-                    storeList, machineList, showSettingsModal, settingTab, renameStore, renameMachine,
+                    storeList, machineList, showSettingsModal, settingTab, renameStore, renameMachine, deleteStore, deleteMachine,
                     formAttachedPageIndex, attachCounterData, removeCounterData, getSnapshots, handleSnapshotClick, 
                     showSnapshotSelectModal, snapshotListToSelect, showSnapshotModal, snapshotData, openSnapshotModal,
                     showPhotoViewer, photoViewerSrc, openPhotoViewer,
