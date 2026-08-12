@@ -215,7 +215,6 @@
                     <div class="btn-outline" @click="prepareMachineInput">＋ 遊技履歴を追加</div>
                 </div>
 
-                <!-- 💡 変更：機種変更・引き継ぎ案内 -->
                 <div style="text-align:center; padding: 30px 10px 20px 10px;">
                     <button style="background:var(--surface-light); color:var(--primary); border:1px solid var(--border); padding:12px 20px; border-radius:30px; font-size:13px; font-weight:bold; cursor:pointer;" @click="showTransferGuide = true">
                         📱 携帯の機種変更をされる方はコチラ
@@ -450,12 +449,11 @@
             </div>
         </div>
 
-        <!-- ⚙️ 設定・管理モーダル (プロフィール・バックアップ・名称変更) -->
+        <!-- ⚙️ 設定・管理モーダル -->
         <div class="modal-overlay" v-if="showSettingsModal" @click.self="showSettingsModal = false">
             <div class="modal-content">
                 <h3 style="margin:0 0 15px 0; font-size:16px; text-align:center;">設定 / データ管理</h3>
                 
-                <!-- 💡 変更：プロフィール設定 -->
                 <div style="background:var(--surface-light); padding:15px; border-radius:8px; margin-bottom:15px; text-align:center; border: 1px solid var(--border);">
                     <div style="font-weight:bold; margin-bottom:10px; font-size:13px;">プロフィール設定</div>
                     <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
@@ -468,12 +466,16 @@
                     </div>
                 </div>
 
-                <!-- 💡 変更：手動バックアップ・復元機能 -->
+                <!-- 💡 変更：共有（シェア）機能によるデータバックアップ -->
                 <div style="background:var(--surface-light); padding:15px; border-radius:8px; margin-bottom:15px; border: 1px solid var(--border);">
                     <div style="font-weight:bold; margin-bottom:10px; text-align:center; font-size:13px;">データ引き継ぎ・手動バックアップ</div>
-                    <button class="modal-btn" style="width:100%; background:var(--primary); color:#fff; margin-bottom:10px;" @click="exportData">📥 バックアップファイルを保存</button>
+                    
+                    <button class="modal-btn" style="width:100%; background:var(--primary); color:#fff; margin-bottom:10px; display:flex; justify-content:center; align-items:center; gap:8px;" @click="exportDataShare">
+                        <span style="font-size:16px;">📤</span> データを送る (AirDrop / LINE 等)
+                    </button>
+                    
                     <label class="modal-btn" style="width:100%; background:var(--surface); color:var(--text-main); border:1px solid var(--border); display:block; text-align:center; cursor:pointer;">
-                        📤 バックアップデータを復元
+                        📥 データを受け取る (復元)
                         <input type="file" accept=".json" style="display:none;" @change="importData">
                     </label>
                 </div>
@@ -538,13 +540,27 @@
                 <h3 style="margin:0 0 15px 0; font-size:16px; text-align:center; color:var(--primary);">📱 機種変更・データ引き継ぎ手順</h3>
                 <div style="font-size:13px; line-height:1.6; color:var(--text-main); overflow-y:auto; max-height:60vh;">
                     <p>このアプリは個人情報を一切収集しないため、データはすべてお使いのスマホ本体にのみ保存されています。</p>
-                    <p style="font-weight:bold; margin-top:10px; color:var(--primary);">【引き継ぎのステップ】</p>
-                    <ol style="padding-left:20px; margin-top:5px;">
-                        <li style="margin-bottom:10px;">古いスマホで左上の「⚙️設定」を開き、<br><b>「📥 バックアップデータを保存」</b>を押してファイル（.json）を本体に保存します。</li>
-                        <li style="margin-bottom:10px;">保存したファイルを、メールやLINEのファイル送信、AirDropなどで<b>新しいスマホに送信</b>します。</li>
-                        <li style="margin-bottom:10px;">新しいスマホでこのアプリを開き、「⚙️設定」から<br><b>「📤 バックアップデータを復元」</b>を押し、受け取ったファイルを選択します。</li>
-                    </ol>
-                    <p style="color:var(--error); font-size:12px; margin-top:10px; font-weight:bold;">※復元を実行すると、現在のデータはすべて上書きされますのでご注意ください。</p>
+                    
+                    <div style="background:var(--surface-light); padding:10px; border-radius:6px; margin-top:10px; border:1px solid var(--primary);">
+                        <p style="font-weight:bold; margin:0 0 5px 0; color:var(--primary);">【STEP 1: 古いスマホでの操作】</p>
+                        <ol style="padding-left:20px; margin:0;">
+                            <li>左上の「⚙️設定」を開きます。</li>
+                            <li><b>「📤 データを送る」</b>を押します。</li>
+                            <li>メニューが出たら<b>「AirDrop」</b>または<b>「LINE (Keepメモ等)」</b>を選んで、新しいスマホにデータを送ります。</li>
+                        </ol>
+                    </div>
+
+                    <div style="background:var(--surface-light); padding:10px; border-radius:6px; margin-top:10px; border:1px solid var(--secondary);">
+                        <p style="font-weight:bold; margin:0 0 5px 0; color:var(--secondary);">【STEP 2: 新しいスマホでの操作】</p>
+                        <ol style="padding-left:20px; margin:0;">
+                            <li>AirDropで受け取った場合は自動で「ファイル」アプリに保存されます。<br>
+                            ※LINEで送った場合は、LINEを開き受け取ったデータを<b>「ファイルに保存」</b>してください。</li>
+                            <li>このアプリを開き、「⚙️設定」から<b>「📥 データを受け取る (復元)」</b>を押します。</li>
+                            <li>保存したファイルを選択すれば引き継ぎ完了です！</li>
+                        </ol>
+                    </div>
+                    
+                    <p style="color:var(--error); font-size:12px; margin-top:15px; font-weight:bold; text-align:center;">※復元を実行すると、現在のデータはすべて上書きされます。</p>
                 </div>
                 <button class="modal-btn" style="background:var(--surface-light); color:var(--text-main); margin-top:10px;" @click="showTransferGuide = false">閉じる</button>
             </div>
@@ -573,7 +589,6 @@
                     reader.readAsDataURL(file);
                 };
 
-                // ⌚ 時計
                 const currentTime = ref('');
                 let timer = null;
                 const updateTime = () => {
@@ -611,9 +626,7 @@
                     const saved = localStorage.getItem('gachi_slot_data');
                     if (saved) appData.value = JSON.parse(saved);
                 };
-                watch(appData, (newVal) => {
-                    localStorage.setItem('gachi_slot_data', JSON.stringify(newVal));
-                }, { deep: true });
+                watch(appData, (newVal) => { localStorage.setItem('gachi_slot_data', JSON.stringify(newVal)); }, { deep: true });
 
                 const defaultStores = ["スペース666", "ゾーン戸畑", "メガフェイス1500宗像", "ワンダーランド福岡東", "アプロ7", "スーパーハリウッド1120", "EVO3", "D'station中間", "テキサス下関", "ピータイム下関", "まるみつ下関", "デルパラ山口"];
                 const storeList = ref(localStorage.getItem('gachi_store_list') ? JSON.parse(localStorage.getItem('gachi_store_list')) : defaultStores);
@@ -623,8 +636,8 @@
                 const machineList = ref(localStorage.getItem('gachi_machine_list') ? JSON.parse(localStorage.getItem('gachi_machine_list')) : defaultMachines);
                 watch(machineList, (newVal) => { localStorage.setItem('gachi_machine_list', JSON.stringify(newVal)); }, { deep: true });
 
-                // 💡 手動バックアップ（エクスポート）
-                const exportData = () => {
+                // 💡 変更：共有（Web Share API）によるバックアップ出力
+                const exportDataShare = async () => {
                     const exportObj = {
                         appData: appData.value,
                         storeList: storeList.value,
@@ -633,21 +646,46 @@
                         userProfile: userProfile.value,
                         exportDate: new Date().toISOString()
                     };
-                    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj));
-                    const downloadAnchorNode = document.createElement('a');
-                    downloadAnchorNode.setAttribute("href", dataStr);
-                    downloadAnchorNode.setAttribute("download", `gachislot_backup_${todayStr}.json`);
-                    document.body.appendChild(downloadAnchorNode);
-                    downloadAnchorNode.click();
-                    downloadAnchorNode.remove();
+                    const dataStr = JSON.stringify(exportObj);
+                    const blob = new Blob([dataStr], { type: 'application/json' });
+                    const fileName = `gachislot_backup_${todayStr}.json`;
+                    const file = new File([blob], fileName, { type: 'application/json' });
+
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                        try {
+                            await navigator.share({
+                                files: [file],
+                                title: 'Gachi-Slot 引き継ぎデータ',
+                                text: '新しいスマホでこのファイルを読み込んでください。'
+                            });
+                        } catch (error) {
+                            console.log('Share canceled or failed:', error);
+                            // 共有に失敗（またはキャンセル）した場合は従来のダウンロードを試行（フォールバック）
+                            fallbackDownload(blob, fileName);
+                        }
+                    } else {
+                        // ブラウザが共有機能に対応していない場合のフォールバック
+                        fallbackDownload(blob, fileName);
+                    }
                 };
 
-                // 💡 手動リストア（インポート）
+                // 安全装置：ファイルアプリへ直接保存する処理
+                const fallbackDownload = (blob, fileName) => {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = fileName;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                };
+
                 const importData = (e) => {
                     const file = e.target.files[0];
                     if(!file) return;
                     if(!confirm("現在のデータはすべて上書きされます。よろしいですか？")) {
-                        e.target.value = ''; // キャンセル時はリセット
+                        e.target.value = ''; 
                         return;
                     }
                     const reader = new FileReader();
@@ -663,7 +701,6 @@
                             alert("✅ データの復元が完了しました！");
                             showSettingsModal.value = false;
                             
-                            // カレンダー再描画
                             generateCalendar();
                             const td = calDays.value.find(day => day.fullDate === todayStr);
                             if(td) selectDay(td);
@@ -806,9 +843,8 @@
                     return list.sort((a, b) => b.totalNet - a.totalNet);
                 });
 
-                // --- ⚙️ 設定モーダル ---
                 const showSettingsModal = ref(false);
-                const showTransferGuide = ref(false); // 💡 機種変更ガイド
+                const showTransferGuide = ref(false);
                 const settingTab = ref('store');
 
                 const renameStore = (oldName, index) => {
@@ -845,7 +881,6 @@
                     }
                 };
 
-                // --- 🎰 遊技履歴 編集・削除制御用 ---
                 const isEditing = ref(false);
                 const editingIndex = ref(null);
                 const showActionModal = ref(false);
@@ -1203,7 +1238,7 @@
                 onUnmounted(() => { if(timer) clearInterval(timer); });
 
                 return {
-                    userProfile, handleUserIconUpload, exportData, importData, showTransferGuide,
+                    userProfile, handleUserIconUpload, exportDataShare, importData, showTransferGuide,
                     currentTab, headerTitle, currentTime, themes, themeIndex, toggleTheme,
                     currentYear, currentMonth, changeMonth,
                     calDays, selectedDay, selectDay, todayStr,
