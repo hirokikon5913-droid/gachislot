@@ -4,8 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Gachi-Slot 収支管理</title>
+    <!-- Vue 3 -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Firebase SDK (Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
     <style>
         /* 🎨 テーマ設定 */
         :root[data-theme="black"] { --bg: #121212; --surface: #1e1e1e; --surface-light: #2c2c2c; --primary: #bb86fc; --secondary: #03dac6; --error: #cf6679; --success: #4caf50; --text-main: #ffffff; --text-sub: #b3b3b3; --border: #333333; }
@@ -32,7 +39,7 @@
         .summary-item { display: flex; flex-direction: column; align-items: center; }
         .summary-label { font-size: 10px; color: var(--text-sub); margin-bottom: 2px; }
 
-        /* カレンダー Originalテーマ用 */
+        /* カレンダー Originalテーマ用のラッパー設定 */
         .calendar-wrapper { position: relative; border-bottom: 1px solid var(--border); }
         .cal-bg-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; pointer-events: none; z-index: 0; }
         
@@ -58,7 +65,7 @@
 
         .store-divider { background: var(--surface-light); border-left: 4px solid var(--secondary); color: var(--secondary); padding: 8px 12px; margin: 20px 0 10px 0; font-weight: bold; font-size: 14px; display: flex; align-items: center; border-radius: 4px; }
         
-        .machine-card { background: var(--surface-light); padding: 12px; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid var(--primary); cursor: pointer; }
+        .machine-card { background: var(--surface-light); padding: 12px; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid var(--primary); cursor: pointer; position: relative; }
         .machine-card:active { opacity: 0.8; }
         .btn-outline { display: block; text-align: center; border: 1px dashed var(--text-sub); color: var(--text-sub); padding: 12px; border-radius: 6px; margin-top: 10px; cursor: pointer; font-weight: bold;}
         
@@ -180,7 +187,7 @@
                     </div>
                 </div>
 
-                <!-- カレンダー -->
+                <!-- カレンダーエリア -->
                 <div class="calendar-wrapper">
                     <div v-if="isOriginalTheme && originalSettings.bgImage" class="cal-bg-layer" :style="{ backgroundImage: `url(${originalSettings.bgImage})`, opacity: originalSettings.opacity }"></div>
                     <div class="calendar" :class="{ 'original-mode': isOriginalTheme }">
@@ -221,7 +228,11 @@
                             🏪 {{ m.location || '店舗未設定' }}
                         </div>
                         <div class="machine-card" @click="openActionModal(index)">
-                            <div style="font-weight:bold; font-size:14px; margin-bottom:5px;">{{ m.machineNumber }}台目: {{ m.name || '機種不明' }} (貸出: {{m.rate}}枚)</div>
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                                <div style="font-weight:bold; font-size:14px; margin-bottom:5px;">{{ m.machineNumber }}台目: {{ m.name || '機種不明' }} (貸出: {{m.rate}}枚)</div>
+                                <!-- 💡 変更：カウンターボタンの表示 -->
+                                <button v-if="m.counterSnapshot" @click.stop="openSnapshotModal(m.counterSnapshot)" style="background:var(--primary); color:#fff; border:none; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.2);">🎲 カウンター</button>
+                            </div>
                             <div style="display:flex; justify-content:space-between; font-size:13px; margin-top:5px;">
                                 <span>現金投資: ¥{{ m.cashInvest.toLocaleString() }}</span>
                                 <span>持ち込み: {{ m.broughtIn }}枚</span>
@@ -259,13 +270,11 @@
                 </div>
                 
                 <div class="games-area">
-                    <!-- 💡 変更：差引計算モードへの切り替えスイッチ -->
                     <label style="display:inline-flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; margin-bottom:15px; font-size:12px; color:var(--text-sub);">
                         <input type="checkbox" v-model="activePage.isDiffMode" style="transform:scale(1.2); accent-color:var(--primary);">
                         打ち始め / 現在G数から差引計算する
                     </label>
 
-                    <!-- 直接入力モード -->
                     <template v-if="!activePage.isDiffMode">
                         <div style="font-size:12px; color:var(--text-sub); margin-bottom:5px;">🎯 回転数 (ゲーム数)</div>
                         <input type="number" class="games-input" v-model.number="activePage.games">
@@ -275,8 +284,6 @@
                             <button class="g-btn" @click="activePage.games += 1">+1</button>
                         </div>
                     </template>
-
-                    <!-- 💡 変更：差引計算モード -->
                     <template v-else>
                         <div class="diff-input-group">
                             <div class="diff-input-box">
@@ -441,6 +448,25 @@
                     <input type="number" class="form-input" v-model.number="form.leftMedals">
                 </div>
                 
+                <!-- 💡 変更：小役データの紐付けセクション -->
+                <div class="form-group">
+                    <span class="form-label">🎲 小役データの紐付け</span>
+                    <div v-if="!form.counterSnapshot">
+                        <div style="display:flex; gap:10px;">
+                            <select class="form-input" v-model="formAttachedPageIndex">
+                                <option v-for="(p, i) in counterData" :key="i" :value="i">{{ p.pageName }}</option>
+                            </select>
+                            <button class="modal-btn" style="background:var(--primary); color:#fff; white-space:nowrap; padding: 12px 15px;" @click="attachCounterData">保存</button>
+                        </div>
+                        <div style="font-size:11px; color:var(--text-sub); margin-top:5px;">※現在の小役カウントを遊技履歴と一緒に記録します</div>
+                    </div>
+                    <div v-else style="background:var(--surface-light); padding:12px; border-radius:6px; position:relative; border:1px solid var(--primary);">
+                        <div style="font-weight:bold; font-size:14px; color:var(--primary); margin-bottom:4px;">✅ {{ form.counterSnapshot.pageName }} を紐付け済み</div>
+                        <div style="font-size:12px; color:var(--text-sub);">回転数: {{ form.counterSnapshot.games }}G</div>
+                        <button style="position:absolute; top:12px; right:12px; background:var(--bg); border:1px solid var(--border); color:var(--text-main); border-radius:4px; padding:4px 8px; font-size:11px; cursor:pointer;" @click="form.counterSnapshot = null">解除</button>
+                    </div>
+                </div>
+
                 <div class="form-group">
                     <span class="form-label">📝 メモ</span>
                     <textarea class="form-input" v-model="form.memo" rows="3" placeholder="台の挙動や設定推測要素など"></textarea>
@@ -625,6 +651,35 @@
                 
                 <button class="modal-btn" style="background:var(--primary); color:#fff; margin-top:10px;" @click="saveRoleNames">💾 保存する</button>
                 <button class="modal-btn" style="background:var(--surface-light); color:var(--text-main);" @click="showRoleEditModal = false">キャンセル</button>
+            </div>
+        </div>
+
+        <!-- 💡 変更：小役データスナップショット(サマリ)表示モーダル -->
+        <div class="modal-overlay" v-if="showSnapshotModal" @click.self="showSnapshotModal = false">
+            <div class="modal-content" style="max-width:340px;">
+                <h3 style="margin:0 0 10px 0; font-size:16px; text-align:center;">🎰 小役データサマリ</h3>
+                <div style="font-weight:bold; text-align:center; color:var(--primary); margin-bottom:10px;">{{ snapshotData.pageName }}</div>
+                <div style="text-align:center; font-size:18px; font-weight:bold; margin-bottom:15px;">🎯 回転数: {{ snapshotData.games }} G</div>
+                
+                <div style="font-size:12px; color:var(--text-sub); margin-bottom:5px;">【基本小役】</div>
+                <div style="display:flex; justify-content:space-around; margin-bottom:15px; background:var(--surface-light); padding:10px; border-radius:8px;">
+                    <div v-for="(count, i) in snapshotData.r1" :key="'sr1'+i" style="text-align:center;">
+                        <div :style="{width:'16px', height:'16px', borderRadius:'50%', background: r1Colors[i], margin:'0 auto 4px auto'}"></div>
+                        <div style="font-weight:bold; font-size:14px;">{{ count }}</div>
+                        <div style="font-size:10px; color:var(--text-sub);">{{ getProb(count, snapshotData.games) }}</div>
+                    </div>
+                </div>
+                
+                <div style="font-size:12px; color:var(--text-sub); margin-bottom:5px;">【カスタム小役】</div>
+                <div style="display:flex; justify-content:space-around; background:var(--surface-light); padding:10px; border-radius:8px;">
+                    <div v-for="(name, i) in snapshotData.r2Names" :key="'sr2'+i" style="text-align:center; width:45px;">
+                        <div style="font-size:9px; color:var(--text-sub); margin-bottom:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ name }}</div>
+                        <div style="font-weight:bold; font-size:14px;">{{ snapshotData.r2[i] }}</div>
+                        <div style="font-size:10px; color:var(--text-sub);">{{ getProb(snapshotData.r2[i], snapshotData.games) }}</div>
+                    </div>
+                </div>
+                
+                <button class="modal-btn" style="background:var(--surface); border:1px solid var(--border); color:var(--text-main); margin-top:15px;" @click="showSnapshotModal = false">閉じる</button>
             </div>
         </div>
 
@@ -1001,7 +1056,8 @@
 
                 const openActionModal = (index) => { activeMachineIndex.value = index; showActionModal.value = true; };
 
-                const form = ref({ date: todayStr, machineNumber: 1, locationSelect: '', locationNew: '', nameSelect: '', nameNew: '', isSameStore: false, rate: 46, broughtIn: 0, cashInvest: 0, savedSign: -1, savedVal: 0, leftMedals: 0, memo: '', photo: '' });
+                // 💡 変更：form に counterSnapshot を追加
+                const form = ref({ date: todayStr, machineNumber: 1, locationSelect: '', locationNew: '', nameSelect: '', nameNew: '', isSameStore: false, rate: 46, broughtIn: 0, cashInvest: 0, savedSign: -1, savedVal: 0, leftMedals: 0, memo: '', photo: '', counterSnapshot: null });
                 
                 const onStoreTypeChange = () => {
                     const d = form.value.date;
@@ -1059,6 +1115,10 @@
                     form.value.cashInvest = 0; form.value.savedSign = -1; form.value.savedVal = 0; form.value.leftMedals = 0;
                     form.value.memo = ''; form.value.photo = '';
                     
+                    // 💡 リセット時にスナップショットと選択インデックスも初期化
+                    form.value.counterSnapshot = null;
+                    formAttachedPageIndex.value = cPage.value;
+                    
                     updateBroughtInAndNumber(targetDate);
                     currentTab.value = 'input_machine';
                 };
@@ -1077,7 +1137,8 @@
                         nameSelect: target.name || '', nameNew: '',
                         rate: target.rate, broughtIn: target.broughtIn, cashInvest: target.cashInvest,
                         savedSign: target.savedSign, savedVal: target.savedVal, leftMedals: target.leftMedals,
-                        memo: target.memo || '', photo: target.photo || ''
+                        memo: target.memo || '', photo: target.photo || '',
+                        counterSnapshot: target.counterSnapshot || null // 💡 保存されたスナップショットをロード
                     };
                     updateBroughtInAndNumber(selectedDay.value.fullDate, editingIndex.value);
                     currentTab.value = 'input_machine';
@@ -1138,6 +1199,8 @@
                     if (!appData.value[d]) appData.value[d] = { machines: [], daily: { invest:0, recover:0, net:0, medalDelta:0 } };
                     
                     let machines = appData.value[d].machines;
+                    
+                    // 💡 スナップショットごと保存
                     const saveData = { ...form.value, location: finalLocation, name: finalName, netBalance: netBalance.value };
 
                     if (isEditing.value) machines[editingIndex.value] = saveData;
@@ -1211,7 +1274,6 @@
                 const r1Colors = ['#e53935', '#4caf50', '#1e88e5', '#fdd835', '#e0e0e0'];
                 const getProb = (count, games) => count === 0 ? '-' : '1/' + (games / count).toFixed(1);
 
-                // 💡 変更：差引計算ロジック
                 const calcDiffGames = () => {
                     if (activePage.value.isDiffMode) {
                         let s = Number(activePage.value.startGames) || 0;
@@ -1267,6 +1329,22 @@
                     showRoleEditModal.value = false;
                 };
 
+                // 💡 変更：小役データの紐付け処理
+                const formAttachedPageIndex = ref(0);
+                const attachCounterData = () => {
+                    const pageToAttach = counterData.value[formAttachedPageIndex.value];
+                    // ディープコピーしてスナップショットを作成（以降カウンターをいじってもここには影響しない）
+                    form.value.counterSnapshot = JSON.parse(JSON.stringify(pageToAttach));
+                };
+
+                // 💡 変更：小役データサマリのポップアップ表示処理
+                const showSnapshotModal = ref(false);
+                const snapshotData = ref(null);
+                const openSnapshotModal = (data) => {
+                    snapshotData.value = data;
+                    showSnapshotModal.value = true;
+                };
+
                 onMounted(() => {
                     loadData(); generateCalendar(); updateTime(); applyThemeCSS();
                     timer = setInterval(updateTime, 1000);
@@ -1288,7 +1366,8 @@
                     showRoleEditModal, roleEditForm, openRoleEditModal, saveRoleNames,
                     showActionModal, openActionModal, editMachine, deleteMachine,
                     analysisSubTab, changeMainTab, changeAnalysisTab, storeRanking,
-                    storeList, machineList, showSettingsModal, settingTab, renameStore, renameMachine
+                    storeList, machineList, showSettingsModal, settingTab, renameStore, renameMachine,
+                    formAttachedPageIndex, attachCounterData, showSnapshotModal, snapshotData, openSnapshotModal
                 }
             }
         }).mount('#app');
