@@ -112,19 +112,22 @@
         .nav-item.active { color: var(--primary); font-weight: bold; }
         .nav-icon { font-size: 22px; margin-bottom: 4px; }
 
-        /* モーダル */
+        /* モーダル共通 */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 100; }
-        .modal-content { background: var(--surface); padding: 20px; border-radius: 8px; width: 80%; max-width: 320px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
+        .modal-content { background: var(--surface); padding: 20px; border-radius: 8px; width: 85%; max-width: 340px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; max-height: 80vh; overflow-y: auto; }
         .modal-btn { padding: 12px; border-radius: 6px; font-weight: bold; text-align: center; cursor: pointer; border: none; font-size: 14px; }
     </style>
 </head>
 <body>
     <div id="app">
-        <!-- ヘッダー -->
+        <!-- ヘッダー (設定アイコン追加) -->
         <header>
-            <div style="display:flex; flex-direction:column;">
-                <span style="font-size:16px;">{{ headerTitle }}</span>
-                <span style="font-size:11px; color:var(--text-sub); font-weight:normal; margin-top:2px;">{{ currentTime }}</span>
+            <div style="display:flex; align-items:center; gap: 12px;">
+                <span style="font-size:22px; cursor:pointer;" @click="showSettingsModal = true">⚙️</span>
+                <div style="display:flex; flex-direction:column;">
+                    <span style="font-size:16px;">{{ headerTitle }}</span>
+                    <span style="font-size:11px; color:var(--text-sub); font-weight:normal; margin-top:2px;">{{ currentTime }}</span>
+                </div>
             </div>
             <button class="theme-btn" @click="toggleTheme">🎨 {{ themes[themeIndex].name }}</button>
         </header>
@@ -268,14 +271,12 @@
 
             <!-- 📊 分析タブ -->
             <div v-show="currentTab === 'analysis'">
-                <!-- 分析サブナビゲーション -->
                 <div class="analysis-nav">
                     <div class="analysis-tab" :class="{active: analysisSubTab === 'month'}" @click="changeAnalysisTab('month')">月間推移</div>
                     <div class="analysis-tab" :class="{active: analysisSubTab === 'year'}" @click="changeAnalysisTab('year')">年間推移</div>
                     <div class="analysis-tab" :class="{active: analysisSubTab === 'store'}" @click="changeAnalysisTab('store')">店舗別成績</div>
                 </div>
 
-                <!-- グラフエリア (月間/年間) -->
                 <div v-show="analysisSubTab === 'month' || analysisSubTab === 'year'">
                     <div style="text-align:center; padding: 15px 0 0 0; font-weight:bold;">
                         {{ analysisSubTab === 'month' ? `${currentYear}年${currentMonth}月 収支推移` : `${currentYear}年 月別収支推移` }}
@@ -285,14 +286,11 @@
                     </div>
                 </div>
 
-                <!-- 店舗別ランキングエリア -->
                 <div v-show="analysisSubTab === 'store'" class="store-ranking-list">
                     <div style="font-size:12px; color:var(--text-sub); margin-bottom:15px; text-align:center;">全期間の店舗別 純差枚数ランキング</div>
-                    
                     <div v-if="storeRanking.length === 0" style="text-align:center; padding: 20px; color:var(--text-sub);">
                         データがありません。
                     </div>
-                    
                     <div class="store-rank-item" v-for="(store, index) in storeRanking" :key="index">
                         <div class="rank-badge" :class="`rank-${index + 1}`">{{ index + 1 }}</div>
                         <div class="store-info">
@@ -327,23 +325,16 @@
                     </div>
                 </div>
 
+                <!-- 🏪 実践店舗（プルダウン + 新規入力） -->
                 <div class="form-group" v-if="form.machineNumber === 1 || !form.isSameStore">
                     <span class="form-label">🏪 実践店舗</span>
-                    <input type="text" class="form-input" v-model="form.location" list="store-list" placeholder="店舗名を入力または選択">
-                    <datalist id="store-list">
-                        <option value="スペース666"></option>
-                        <option value="ゾーン戸畑"></option>
-                        <option value="メガフェイス1500宗像"></option>
-                        <option value="ワンダーランド福岡東"></option>
-                        <option value="アプロ7"></option>
-                        <option value="スーパーハリウッド1120"></option>
-                        <option value="EVO3"></option>
-                        <option value="D'station中間"></option>
-                        <option value="テキサス下関"></option>
-                        <option value="ピータイム下関"></option>
-                        <option value="まるみつ下関"></option>
-                        <option value="デルパラ山口"></option>
-                    </datalist>
+                    <select class="form-input" v-model="form.locationSelect">
+                        <option disabled value="">▼ 過去の店舗から選択</option>
+                        <option v-for="s in storeList" :key="s" :value="s">{{ s }}</option>
+                        <option value="NEW">➕ 自分で入力する (新規追加)</option>
+                    </select>
+                    <!-- 新規追加を選んだ場合に出現するテキストボックス -->
+                    <input v-if="form.locationSelect === 'NEW'" type="text" class="form-input" v-model="form.locationNew" placeholder="新しい店舗名を入力" style="margin-top: 10px; border-color: var(--primary);">
                 </div>
 
                 <div class="form-group">
@@ -439,6 +430,25 @@
             </div>
         </div>
 
+        <!-- ⚙️ 設定・店舗管理モーダル -->
+        <div class="modal-overlay" v-if="showSettingsModal" @click.self="showSettingsModal = false">
+            <div class="modal-content">
+                <h3 style="margin:0 0 5px 0; font-size:16px; text-align:center;">設定 / 店舗管理</h3>
+                <div style="font-size:11px; color:var(--text-sub); margin-bottom:15px; text-align:center;">店舗名を変更すると、過去の全履歴も一括で新しい名前に書き換わります。</div>
+                
+                <div v-for="(store, index) in storeList" :key="index" style="display:flex; justify-content:space-between; align-items:center; background:var(--bg); padding:10px; border-radius:6px; margin-bottom:8px; border: 1px solid var(--border);">
+                    <span style="font-weight:bold; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-right:10px;">{{ store }}</span>
+                    <button class="modal-btn" style="padding:6px 12px; background:var(--primary); color:#fff; font-size:12px;" @click="renameStore(store, index)">名称変更</button>
+                </div>
+
+                <div v-if="storeList.length === 0" style="text-align:center; padding:20px; font-size:12px; color:var(--text-sub);">
+                    登録されている店舗はありません。
+                </div>
+
+                <button class="modal-btn" style="background:var(--surface-light); color:var(--text-main); margin-top:10px;" @click="showSettingsModal = false">閉じる</button>
+            </div>
+        </div>
+
         <!-- ⚙️ 履歴編集・削除モーダル -->
         <div class="modal-overlay" v-if="showActionModal" @click.self="showActionModal = false">
             <div class="modal-content">
@@ -484,9 +494,7 @@
                 const toggleTheme = () => {
                     themeIndex.value = (themeIndex.value + 1) % themes.length;
                     document.documentElement.setAttribute('data-theme', themes[themeIndex.value].id);
-                    if(currentTab.value === 'analysis' && analysisSubTab.value !== 'store') {
-                        renderChart(); // テーマ切り替え時にグラフの色も更新
-                    }
+                    if(currentTab.value === 'analysis' && analysisSubTab.value !== 'store') renderChart();
                 };
                 document.documentElement.setAttribute('data-theme', themes[0].id);
 
@@ -498,6 +506,11 @@
                 watch(appData, (newVal) => {
                     localStorage.setItem('gachi_slot_data', JSON.stringify(newVal));
                 }, { deep: true });
+
+                // 💡 新設：店舗リストの管理
+                const defaultStores = ["スペース666", "ゾーン戸畑", "メガフェイス1500宗像", "ワンダーランド福岡東", "アプロ7", "スーパーハリウッド1120", "EVO3", "D'station中間", "テキサス下関", "ピータイム下関", "まるみつ下関", "デルパラ山口"];
+                const storeList = ref(localStorage.getItem('gachi_store_list') ? JSON.parse(localStorage.getItem('gachi_store_list')) : defaultStores);
+                watch(storeList, (newVal) => { localStorage.setItem('gachi_store_list', JSON.stringify(newVal)); }, { deep: true });
 
                 const today = new Date();
                 const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
@@ -526,16 +539,10 @@
                     currentYear.value = newDate.getFullYear();
                     currentMonth.value = newDate.getMonth() + 1;
                     generateCalendar();
-                    
-                    // 分析タブ表示中に月を変えたらグラフも更新
-                    if(currentTab.value === 'analysis' && analysisSubTab.value !== 'store') {
-                        renderChart();
-                    }
+                    if(currentTab.value === 'analysis' && analysisSubTab.value !== 'store') renderChart();
                 };
 
-                const selectDay = (day) => {
-                    if(!day.empty) selectedDay.value = day;
-                };
+                const selectDay = (day) => { if(!day.empty) selectedDay.value = day; };
 
                 const getMachinesForDate = (dateStr) => { return appData.value[dateStr]?.machines || []; };
                 const getDayInvest = (dateStr) => appData.value[dateStr]?.daily?.invest || 0;
@@ -544,13 +551,9 @@
                 const getDayMedalDelta = (dateStr) => appData.value[dateStr]?.daily?.medalDelta || 0;
 
                 const monthlySummary = computed(() => {
-                    let invest = 0;
-                    let recover = 0;
+                    let invest = 0; let recover = 0;
                     calDays.value.forEach(day => {
-                        if(!day.empty) {
-                            invest += getDayInvest(day.fullDate);
-                            recover += getDayRecover(day.fullDate);
-                        }
+                        if(!day.empty) { invest += getDayInvest(day.fullDate); recover += getDayRecover(day.fullDate); }
                     });
                     return { invest, recover, net: recover - invest };
                 });
@@ -560,15 +563,11 @@
                     return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
                 };
 
-                // --- 📊 分析タブ制御ロジック ---
-                const analysisSubTab = ref('month'); // 'month', 'year', 'store'
+                const analysisSubTab = ref('month');
                 let chartInstance = null;
-
                 const changeMainTab = (tabName) => {
                     currentTab.value = tabName;
-                    if(tabName === 'analysis') {
-                        changeAnalysisTab('month'); // 分析タブを開いたら最初は月間グラフ
-                    }
+                    if(tabName === 'analysis') changeAnalysisTab('month');
                 };
 
                 const changeAnalysisTab = async (subTab) => {
@@ -579,7 +578,6 @@
                     }
                 };
 
-                // 📈 グラフ描画処理
                 const renderChart = () => {
                     const ctx = document.getElementById('analysisChart');
                     if(!ctx) return;
@@ -590,25 +588,19 @@
                     const gridColor = isWhite ? '#e0e0e0' : '#333333';
                     const textColor = isWhite ? '#666666' : '#b3b3b3';
 
-                    let labels = [];
-                    let dataPoints = [];
-                    let cumulativeNet = 0;
+                    let labels = []; let dataPoints = []; let cumulativeNet = 0;
 
                     if (analysisSubTab.value === 'month') {
-                        // 月間グラフ（1日〜末日）
                         const lastDate = new Date(currentYear.value, currentMonth.value, 0).getDate();
                         for (let i = 1; i <= lastDate; i++) {
                             labels.push(`${i}日`);
                             const dStr = `${currentYear.value}-${String(currentMonth.value).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
-                            const dailyNet = getDayTotal(dStr);
-                            cumulativeNet += dailyNet;
+                            cumulativeNet += getDayTotal(dStr);
                             dataPoints.push(cumulativeNet);
                         }
                     } else if (analysisSubTab.value === 'year') {
-                        // 年間グラフ（1月〜12月）
                         for (let m = 1; m <= 12; m++) {
                             labels.push(`${m}月`);
-                            // その月の収支合計を算出
                             let monthNet = 0;
                             const lastD = new Date(currentYear.value, m, 0).getDate();
                             for(let d = 1; d <= lastD; d++) {
@@ -624,52 +616,58 @@
                         type: 'line',
                         data: {
                             labels: labels,
-                            datasets: [{
-                                label: '累計現金収支 (円)',
-                                data: dataPoints,
-                                borderColor: lineColor,
-                                backgroundColor: lineColor + '33',
-                                fill: true, tension: 0.2, pointRadius: 2
-                            }]
+                            datasets: [{ label: '累計現金収支 (円)', data: dataPoints, borderColor: lineColor, backgroundColor: lineColor + '33', fill: true, tension: 0.2, pointRadius: 2 }]
                         },
                         options: {
                             responsive: true, maintainAspectRatio: false,
-                            scales: {
-                                y: { grid: { color: gridColor }, ticks: { color: textColor } },
-                                x: { grid: { color: gridColor }, ticks: { color: textColor, maxTicksLimit: 10 } }
-                            },
+                            scales: { y: { grid: { color: gridColor }, ticks: { color: textColor } }, x: { grid: { color: gridColor }, ticks: { color: textColor, maxTicksLimit: 10 } } },
                             plugins: { legend: { labels: { color: textColor } } }
                         }
                     });
                 };
 
-                // 🏬 店舗別ランキング算出
                 const storeRanking = computed(() => {
                     const storeMap = {};
-                    
-                    // appData全体を走査して店舗ごとの成績を集計
                     Object.values(appData.value).forEach(dayData => {
                         if(dayData.machines) {
                             dayData.machines.forEach(m => {
                                 const sName = m.location && m.location.trim() !== '' ? m.location.trim() : '店舗未設定';
-                                if(!storeMap[sName]) {
-                                    storeMap[sName] = { name: sName, count: 0, winCount: 0, totalNet: 0 };
-                                }
+                                if(!storeMap[sName]) storeMap[sName] = { name: sName, count: 0, winCount: 0, totalNet: 0 };
                                 storeMap[sName].count++;
                                 storeMap[sName].totalNet += m.netBalance;
                                 if(m.netBalance > 0) storeMap[sName].winCount++;
                             });
                         }
                     });
-
-                    // 配列に変換してソート（純差枚数が多い順）
                     const list = Object.values(storeMap);
-                    list.forEach(s => {
-                        s.winRate = s.count > 0 ? Math.round((s.winCount / s.count) * 100) : 0;
-                    });
-                    
+                    list.forEach(s => { s.winRate = s.count > 0 ? Math.round((s.winCount / s.count) * 100) : 0; });
                     return list.sort((a, b) => b.totalNet - a.totalNet);
                 });
+
+                // --- ⚙️ 設定モーダル（店舗名変更機能） ---
+                const showSettingsModal = ref(false);
+                const renameStore = (oldName, index) => {
+                    const newName = prompt(`「${oldName}」の新しい店舗名を入力してください：`, oldName);
+                    if (newName && newName.trim() !== '' && newName.trim() !== oldName) {
+                        const trimmedNewName = newName.trim();
+                        // 1. リストの更新
+                        storeList.value[index] = trimmedNewName;
+                        
+                        // 2. 過去のデータ一括置換
+                        let updateCount = 0;
+                        Object.keys(appData.value).forEach(dateStr => {
+                            if (appData.value[dateStr].machines) {
+                                appData.value[dateStr].machines.forEach(m => {
+                                    if (m.location === oldName) {
+                                        m.location = trimmedNewName;
+                                        updateCount++;
+                                    }
+                                });
+                            }
+                        });
+                        alert(`「${oldName}」を「${trimmedNewName}」に変更しました。\n（過去の履歴 ${updateCount}件 も一括で更新されました）`);
+                    }
+                };
 
                 // --- 🎰 遊技履歴 編集・削除制御用 ---
                 const isEditing = ref(false);
@@ -682,7 +680,8 @@
                     showActionModal.value = true;
                 };
 
-                const form = ref({ date: todayStr, machineNumber: 1, location: '', isSameStore: false, name: '', rate: 46, broughtIn: 0, cashInvest: 0, savedSign: -1, savedVal: 0, leftMedals: 0, memo: '', photo: '' });
+                // formのlocationをプルダウン対応に変更
+                const form = ref({ date: todayStr, machineNumber: 1, locationSelect: '', locationNew: '', isSameStore: false, name: '', rate: 46, broughtIn: 0, cashInvest: 0, savedSign: -1, savedVal: 0, leftMedals: 0, memo: '', photo: '' });
                 
                 const onStoreTypeChange = () => {
                     const d = form.value.date;
@@ -691,10 +690,11 @@
                     const prev = prevIdx >= 0 ? machines[prevIdx] : null;
                     
                     if (form.value.isSameStore && prev) {
-                        form.value.location = prev.location;
+                        form.value.locationSelect = prev.location;
+                        form.value.locationNew = '';
                         form.value.broughtIn = prev.leftMedals;
                     } else {
-                        form.value.location = '';
+                        form.value.locationSelect = '';
                         form.value.broughtIn = 0;
                     }
                 };
@@ -708,7 +708,8 @@
                             form.value.broughtIn = 0;
                         } else {
                             if(form.value.isSameStore) {
-                                form.value.location = machines[targetIdx - 1].location;
+                                form.value.locationSelect = machines[targetIdx - 1].location;
+                                form.value.locationNew = '';
                                 form.value.broughtIn = machines[targetIdx - 1].leftMedals || 0;
                             }
                         }
@@ -717,20 +718,20 @@
                         form.value.machineNumber = nextNum;
                         if (nextNum === 1) {
                             form.value.isSameStore = false;
-                            form.value.location = '';
+                            form.value.locationSelect = '';
+                            form.value.locationNew = '';
                             form.value.broughtIn = 0;
                         } else {
                             form.value.isSameStore = true; 
-                            form.value.location = machines[machines.length - 1].location;
+                            form.value.locationSelect = machines[machines.length - 1].location;
+                            form.value.locationNew = '';
                             form.value.broughtIn = machines[machines.length - 1].leftMedals || 0;
                         }
                     }
                 };
 
                 watch(() => form.value.date, (newDate) => {
-                    if (!isEditing.value) {
-                        updateBroughtInAndNumber(newDate);
-                    }
+                    if (!isEditing.value) updateBroughtInAndNumber(newDate);
                 });
 
                 const netBalance = computed(() => {
@@ -752,9 +753,8 @@
                     isEditing.value = false;
                     editingIndex.value = null;
                     let targetDate = todayStr;
-                    if (selectedDay.value && !selectedDay.value.empty) {
-                        targetDate = selectedDay.value.fullDate;
-                    }
+                    if (selectedDay.value && !selectedDay.value.empty) targetDate = selectedDay.value.fullDate;
+                    
                     form.value.date = targetDate;
                     form.value.name = '';
                     form.value.rate = 46;
@@ -775,10 +775,16 @@
                     editingIndex.value = activeMachineIndex.value;
                     const target = appData.value[selectedDay.value.fullDate].machines[editingIndex.value];
                     
+                    // 店舗名がリストになければ追加しておく（互換性担保）
+                    if (target.location && !storeList.value.includes(target.location)) {
+                        storeList.value.push(target.location);
+                    }
+
                     form.value = {
                         date: selectedDay.value.fullDate,
                         machineNumber: target.machineNumber,
-                        location: target.location || '',
+                        locationSelect: target.location || '',
+                        locationNew: '',
                         isSameStore: target.isSameStore !== undefined ? target.isSameStore : (target.machineNumber > 1),
                         name: target.name,
                         rate: target.rate,
@@ -806,12 +812,10 @@
                     machines.forEach((m, idx) => {
                         m.machineNumber = idx + 1;
                         if (idx === 0) {
-                            m.broughtIn = 0;
-                            m.isSameStore = false;
+                            m.broughtIn = 0; m.isSameStore = false;
                         } else {
                             if (m.isSameStore) {
-                                m.broughtIn = prevLeft;
-                                m.location = machines[idx-1].location; 
+                                m.broughtIn = prevLeft; m.location = machines[idx-1].location; 
                             } else {
                                 m.broughtIn = 0;
                             }
@@ -820,7 +824,6 @@
                         let savedDelta = m.savedSign * m.savedVal;
                         let totalInvest = m.broughtIn + cashToMedals - savedDelta;
                         m.netBalance = m.leftMedals - totalInvest;
-                        
                         prevLeft = m.leftMedals;
                     });
                     
@@ -828,8 +831,20 @@
                 };
 
                 const saveMachine = () => {
-                    if (form.value.machineNumber === 1 && !form.value.location.trim()) { alert("⚠️ 1台目は店舗名の入力が必須です。"); return; }
-                    if (!form.value.isSameStore && !form.value.location.trim()) { alert("⚠️ 別店舗へ移動した場合は、移動先の店舗名を入力してください。"); return; }
+                    // 店舗名の決定ロジック
+                    let finalLocation = '';
+                    if (form.value.machineNumber === 1 || !form.value.isSameStore) {
+                        if (form.value.locationSelect === 'NEW') {
+                            finalLocation = form.value.locationNew.trim();
+                            if (!finalLocation) { alert("⚠️ 新しい店舗名を入力してください。"); return; }
+                            // リストになければ追加
+                            if (!storeList.value.includes(finalLocation)) storeList.value.push(finalLocation);
+                        } else {
+                            finalLocation = form.value.locationSelect;
+                            if (!finalLocation) { alert("⚠️ 店舗を選択してください。"); return; }
+                        }
+                    }
+
                     if (!form.value.name.trim()) { alert("⚠️ 機種名を入力してください。"); return; }
                     if (form.value.rate <= 0) { alert("⚠️ 貸出枚数は1枚以上に設定してください。"); return; }
                     if (form.value.cashInvest < 0) { alert("⚠️ 現金投資にマイナスは指定できません。"); return; }
@@ -838,23 +853,22 @@
                     if (!appData.value[d]) appData.value[d] = { machines: [], daily: { invest:0, recover:0, net:0, medalDelta:0 } };
                     
                     let machines = appData.value[d].machines;
+                    const saveData = { ...form.value, location: finalLocation, netBalance: netBalance.value };
 
                     if (isEditing.value) {
-                        machines[editingIndex.value] = { ...form.value, netBalance: netBalance.value };
+                        machines[editingIndex.value] = saveData;
                     } else {
-                        machines.push({ ...form.value, netBalance: netBalance.value });
+                        machines.push(saveData);
                     }
 
                     let prevLeft = 0;
                     machines.forEach((m, idx) => {
                         m.machineNumber = idx + 1;
                         if (idx === 0) {
-                            m.broughtIn = 0;
-                            m.isSameStore = false;
+                            m.broughtIn = 0; m.isSameStore = false;
                         } else {
                             if (m.isSameStore) {
-                                m.broughtIn = prevLeft;
-                                m.location = machines[idx-1].location; 
+                                m.broughtIn = prevLeft; m.location = machines[idx-1].location; 
                             } else {
                                 m.broughtIn = 0; 
                             }
@@ -863,7 +877,6 @@
                         let savedDelta = m.savedSign * m.savedVal;
                         let totalInvest = m.broughtIn + cashToMedals - savedDelta;
                         m.netBalance = m.leftMedals - totalInvest;
-                        
                         prevLeft = m.leftMedals;
                     });
 
@@ -908,7 +921,6 @@
                 // --- 🎲 小役カウンター ---
                 const cPage = ref(0);
                 const counterStep = ref(1);
-
                 const defaultCounter = [
                     { pageName: '通常時', games: 0, r1: [0,0,0,0,0], r2Names: ['チェリー','スイカ','ベル','チャンス目','カスタム5'], r2: [0,0,0,0,0] },
                     { pageName: 'CZ/高確', games: 0, r1: [0,0,0,0,0], r2Names: ['カスタム1','カスタム2','カスタム3','カスタム4','カスタム5'], r2: [0,0,0,0,0] },
@@ -923,7 +935,6 @@
 
                 const activePage = computed(() => counterData.value[cPage.value]);
                 const r1Colors = ['#e53935', '#4caf50', '#1e88e5', '#fdd835', '#e0e0e0'];
-                
                 const getProb = (count, games) => count === 0 ? '-' : '1/' + (games / count).toFixed(1);
                 
                 const updateR1 = (index) => {
@@ -948,17 +959,13 @@
                 
                 const editPageName = () => {
                     const newName = prompt('ページ名を入力してください', activePage.value.pageName);
-                    if (newName !== null && newName.trim() !== '') {
-                        activePage.value.pageName = newName.trim();
-                    }
+                    if (newName !== null && newName.trim() !== '') activePage.value.pageName = newName.trim();
                 };
                 
                 const editRoleNames = () => {
                     for(let i = 0; i < 5; i++) {
                         const newName = prompt(`ボタン${i+1}の名前を入力`, activePage.value.r2Names[i]);
-                        if (newName !== null) {
-                            activePage.value.r2Names[i] = newName.trim() || `カスタム${i+1}`;
-                        }
+                        if (newName !== null) activePage.value.r2Names[i] = newName.trim() || `カスタム${i+1}`;
                     }
                 };
 
@@ -967,14 +974,11 @@
                     generateCalendar();
                     updateTime();
                     timer = setInterval(updateTime, 1000);
-                    
                     const td = calDays.value.find(day => day.fullDate === todayStr);
                     if(td) selectDay(td);
                 });
                 
-                onUnmounted(() => {
-                    if(timer) clearInterval(timer);
-                });
+                onUnmounted(() => { if(timer) clearInterval(timer); });
 
                 return {
                     currentTab, headerTitle, currentTime, themes, themeIndex, toggleTheme,
@@ -985,7 +989,8 @@
                     dailyForm, saveDailyTotal,
                     cPage, counterStep, counterData, activePage, r1Colors, getProb, updateR1, updateR2, resetCounter, editPageName, editRoleNames,
                     showActionModal, openActionModal, editMachine, deleteMachine,
-                    analysisSubTab, changeMainTab, changeAnalysisTab, storeRanking
+                    analysisSubTab, changeMainTab, changeAnalysisTab, storeRanking,
+                    storeList, showSettingsModal, renameStore
                 }
             }
         }).mount('#app');
