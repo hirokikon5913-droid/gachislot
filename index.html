@@ -82,17 +82,18 @@
         .roles-area { padding: 15px; }
         .role-row { display: flex; justify-content: space-around; margin-bottom: 25px; }
         .role-item { display: flex; flex-direction: column; align-items: center; width: 60px; }
-        .circle-btn { width: 50px; height: 50px; border-radius: 50%; border: 2px solid #555; margin-bottom: 5px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: transform 0.05s ease, filter 0.05s ease, box-shadow 0.05s ease; }
-        .square-btn { width: 55px; height: 55px; border-radius: 8px; background: var(--surface-light); border: 2px solid #555; margin-bottom: 5px; cursor: pointer; color: var(--text-main); font-size: 11px; display: flex; align-items: center; justify-content: center; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3); line-height: 1.1; word-break: break-all; padding: 2px; transition: transform 0.05s ease, filter 0.05s ease, box-shadow 0.05s ease; }
-        .circle-btn:active, .square-btn:active { transform: scale(0.85); filter: brightness(1.5); box-shadow: 0 1px 2px rgba(0,0,0,0.8); }
+        
+        /* 💡 発光エフェクトのためのベース設定 */
+        .circle-btn { width: 50px; height: 50px; border-radius: 50%; border: 2px solid #555; margin-bottom: 5px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: all 0.2s ease-out; }
+        .square-btn { width: 55px; height: 55px; border-radius: 8px; background: var(--surface-light); border: 2px solid #555; margin-bottom: 5px; cursor: pointer; color: var(--text-main); font-size: 11px; display: flex; align-items: center; justify-content: center; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3); line-height: 1.1; word-break: break-all; padding: 2px; transition: all 0.2s ease-out; }
+        
         .role-count { font-size: 16px; font-weight: bold; margin-top: 4px; }
         .role-prob { font-size: 10px; color: var(--secondary); }
 
-        /* 分析タブ専用スタイル */
+        /* 分析タブ */
         .analysis-nav { display: flex; border-bottom: 1px solid var(--border); background: var(--surface); }
         .analysis-tab { flex: 1; text-align: center; padding: 15px 0; font-size: 13px; color: var(--text-sub); cursor: pointer; font-weight: bold; }
         .analysis-tab.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
-        
         .chart-container { padding: 15px; background: var(--surface); margin: 15px; border-radius: 8px; border: 1px solid var(--border); height: 300px; }
         
         .store-ranking-list { padding: 15px; }
@@ -112,7 +113,7 @@
         .nav-item.active { color: var(--primary); font-weight: bold; }
         .nav-icon { font-size: 22px; margin-bottom: 4px; }
 
-        /* モーダル共通 */
+        /* モーダル */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 100; }
         .modal-content { background: var(--surface); padding: 20px; border-radius: 8px; width: 85%; max-width: 340px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; max-height: 80vh; overflow-y: auto; }
         .modal-btn { padding: 12px; border-radius: 6px; font-weight: bold; text-align: center; cursor: pointer; border: none; font-size: 14px; }
@@ -120,7 +121,7 @@
 </head>
 <body>
     <div id="app">
-        <!-- ヘッダー (設定アイコン追加) -->
+        <!-- ヘッダー -->
         <header>
             <div style="display:flex; align-items:center; gap: 12px;">
                 <span style="font-size:22px; cursor:pointer;" @click="showSettingsModal = true">⚙️</span>
@@ -249,7 +250,13 @@
                     <div style="font-size:12px; color:var(--text-sub); margin-bottom:10px;">【1段目：基本小役】</div>
                     <div class="role-row">
                         <div class="role-item" v-for="(col, i) in r1Colors" :key="'r1'+i">
-                            <button class="circle-btn" :style="{background: col}" @click="updateR1(i)"></button>
+                            <!-- 💡 発光エフェクトを動的スタイルで適用 -->
+                            <button class="circle-btn" 
+                                    :style="[
+                                        { background: col },
+                                        glowR1[i] ? { boxShadow: '0 0 25px 5px ' + col, transform: 'scale(0.85)', filter: 'brightness(1.5)' } : {}
+                                    ]" 
+                                    @click="updateR1(i)"></button>
                             <span class="role-count">{{ activePage.r1[i] }}</span>
                             <span class="role-prob">{{ getProb(activePage.r1[i], activePage.games) }}</span>
                         </div>
@@ -261,7 +268,10 @@
                     </div>
                     <div class="role-row">
                         <div class="role-item" v-for="(name, i) in activePage.r2Names" :key="'r2'+i">
-                            <button class="square-btn" @click="updateR2(i)">{{name}}</button>
+                            <!-- 💡 発光エフェクトを動的スタイルで適用 -->
+                            <button class="square-btn" 
+                                    :style="glowR2[i] ? { boxShadow: '0 0 25px 5px var(--primary)', borderColor: 'var(--primary)', transform: 'scale(0.85)', filter: 'brightness(1.3)' } : {}"
+                                    @click="updateR2(i)">{{name}}</button>
                             <span class="role-count">{{ activePage.r2[i] }}</span>
                             <span class="role-prob">{{ getProb(activePage.r2[i], activePage.games) }}</span>
                         </div>
@@ -325,7 +335,6 @@
                     </div>
                 </div>
 
-                <!-- 🏪 実践店舗（プルダウン + 新規入力） -->
                 <div class="form-group" v-if="form.machineNumber === 1 || !form.isSameStore">
                     <span class="form-label">🏪 実践店舗</span>
                     <select class="form-input" v-model="form.locationSelect">
@@ -333,14 +342,20 @@
                         <option v-for="s in storeList" :key="s" :value="s">{{ s }}</option>
                         <option value="NEW">➕ 自分で入力する (新規追加)</option>
                     </select>
-                    <!-- 新規追加を選んだ場合に出現するテキストボックス -->
                     <input v-if="form.locationSelect === 'NEW'" type="text" class="form-input" v-model="form.locationNew" placeholder="新しい店舗名を入力" style="margin-top: 10px; border-color: var(--primary);">
                 </div>
 
+                <!-- 💡 変更：機種名プルダウン -->
                 <div class="form-group">
                     <span class="form-label">🎰 機種名</span>
-                    <input type="text" class="form-input" v-model="form.name" placeholder="例: マイジャグラーV">
+                    <select class="form-input" v-model="form.nameSelect">
+                        <option disabled value="">▼ 過去の機種から選択</option>
+                        <option v-for="m in machineList" :key="m" :value="m">{{ m }}</option>
+                        <option value="NEW">➕ 自分で入力する (新規追加)</option>
+                    </select>
+                    <input v-if="form.nameSelect === 'NEW'" type="text" class="form-input" v-model="form.nameNew" placeholder="新しい機種名を入力" style="margin-top: 10px; border-color: var(--primary);">
                 </div>
+
                 <div class="form-group">
                     <span class="form-label">🪙 1000円あたりの貸出枚数</span>
                     <input type="number" class="form-input" v-model.number="form.rate">
@@ -430,19 +445,38 @@
             </div>
         </div>
 
-        <!-- ⚙️ 設定・店舗管理モーダル -->
+        <!-- ⚙️ 設定・管理モーダル (店舗・機種) -->
         <div class="modal-overlay" v-if="showSettingsModal" @click.self="showSettingsModal = false">
             <div class="modal-content">
-                <h3 style="margin:0 0 5px 0; font-size:16px; text-align:center;">設定 / 店舗管理</h3>
-                <div style="font-size:11px; color:var(--text-sub); margin-bottom:15px; text-align:center;">店舗名を変更すると、過去の全履歴も一括で新しい名前に書き換わります。</div>
+                <h3 style="margin:0 0 5px 0; font-size:16px; text-align:center;">設定 / 名称管理</h3>
+                <div style="font-size:11px; color:var(--text-sub); margin-bottom:10px; text-align:center;">名称を変更すると、過去の全履歴も一括で書き換わります。</div>
                 
-                <div v-for="(store, index) in storeList" :key="index" style="display:flex; justify-content:space-between; align-items:center; background:var(--bg); padding:10px; border-radius:6px; margin-bottom:8px; border: 1px solid var(--border);">
-                    <span style="font-weight:bold; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-right:10px;">{{ store }}</span>
-                    <button class="modal-btn" style="padding:6px 12px; background:var(--primary); color:#fff; font-size:12px;" @click="renameStore(store, index)">名称変更</button>
+                <!-- タブ切替 -->
+                <div style="display:flex; margin-bottom:15px; border-bottom:2px solid var(--surface-light);">
+                    <div style="flex:1; text-align:center; padding:10px; cursor:pointer; font-weight:bold;" 
+                         :style="settingTab === 'store' ? 'color:var(--primary); border-bottom:2px solid var(--primary); margin-bottom:-2px;' : 'color:var(--text-sub)'" 
+                         @click="settingTab = 'store'">🏪 店舗</div>
+                    <div style="flex:1; text-align:center; padding:10px; cursor:pointer; font-weight:bold;" 
+                         :style="settingTab === 'machine' ? 'color:var(--primary); border-bottom:2px solid var(--primary); margin-bottom:-2px;' : 'color:var(--text-sub)'" 
+                         @click="settingTab = 'machine'">🎰 機種</div>
                 </div>
 
-                <div v-if="storeList.length === 0" style="text-align:center; padding:20px; font-size:12px; color:var(--text-sub);">
-                    登録されている店舗はありません。
+                <!-- 店舗リスト -->
+                <div v-show="settingTab === 'store'">
+                    <div v-for="(store, index) in storeList" :key="'s'+index" style="display:flex; justify-content:space-between; align-items:center; background:var(--bg); padding:10px; border-radius:6px; margin-bottom:8px; border: 1px solid var(--border);">
+                        <span style="font-weight:bold; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-right:10px;">{{ store }}</span>
+                        <button class="modal-btn" style="padding:6px 12px; background:var(--primary); color:#fff; font-size:12px;" @click="renameStore(store, index)">変更</button>
+                    </div>
+                    <div v-if="storeList.length === 0" style="text-align:center; padding:20px; font-size:12px; color:var(--text-sub);">登録店舗なし</div>
+                </div>
+
+                <!-- 機種リスト -->
+                <div v-show="settingTab === 'machine'">
+                    <div v-for="(mac, index) in machineList" :key="'m'+index" style="display:flex; justify-content:space-between; align-items:center; background:var(--bg); padding:10px; border-radius:6px; margin-bottom:8px; border: 1px solid var(--border);">
+                        <span style="font-weight:bold; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-right:10px;">{{ mac }}</span>
+                        <button class="modal-btn" style="padding:6px 12px; background:var(--primary); color:#fff; font-size:12px;" @click="renameMachine(mac, index)">変更</button>
+                    </div>
+                    <div v-if="machineList.length === 0" style="text-align:center; padding:20px; font-size:12px; color:var(--text-sub);">登録機種なし</div>
                 </div>
 
                 <button class="modal-btn" style="background:var(--surface-light); color:var(--text-main); margin-top:10px;" @click="showSettingsModal = false">閉じる</button>
@@ -507,10 +541,15 @@
                     localStorage.setItem('gachi_slot_data', JSON.stringify(newVal));
                 }, { deep: true });
 
-                // 💡 新設：店舗リストの管理
+                // 店舗リスト
                 const defaultStores = ["スペース666", "ゾーン戸畑", "メガフェイス1500宗像", "ワンダーランド福岡東", "アプロ7", "スーパーハリウッド1120", "EVO3", "D'station中間", "テキサス下関", "ピータイム下関", "まるみつ下関", "デルパラ山口"];
                 const storeList = ref(localStorage.getItem('gachi_store_list') ? JSON.parse(localStorage.getItem('gachi_store_list')) : defaultStores);
                 watch(storeList, (newVal) => { localStorage.setItem('gachi_store_list', JSON.stringify(newVal)); }, { deep: true });
+
+                // 💡 機種リスト（初期データ追加）
+                const defaultMachines = ["スマスロ北斗の拳", "マイジャグラーV", "パチスロ甲鉄城のカバネリ", "スマスロモンキーターンV", "Lからくりサーカス", "Lヴァルヴレイヴ", "スマスロ ゴッドイーター", "アイムジャグラーEX", "沖ドキ！GOLD", "押忍！番長4"];
+                const machineList = ref(localStorage.getItem('gachi_machine_list') ? JSON.parse(localStorage.getItem('gachi_machine_list')) : defaultMachines);
+                watch(machineList, (newVal) => { localStorage.setItem('gachi_machine_list', JSON.stringify(newVal)); }, { deep: true });
 
                 const today = new Date();
                 const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
@@ -524,7 +563,6 @@
                     calDays.value = [];
                     const firstDay = new Date(currentYear.value, currentMonth.value - 1, 1).getDay();
                     const offset = firstDay === 0 ? 6 : firstDay - 1;
-                    
                     for(let i=0; i<offset; i++) calDays.value.push({ empty: true });
                     const lastDate = new Date(currentYear.value, currentMonth.value, 0).getDate();
                     for(let i=1; i<=lastDate; i++) {
@@ -644,28 +682,41 @@
                     return list.sort((a, b) => b.totalNet - a.totalNet);
                 });
 
-                // --- ⚙️ 設定モーダル（店舗名変更機能） ---
+                // --- ⚙️ 設定モーダル（店舗・機種名変更機能） ---
                 const showSettingsModal = ref(false);
+                const settingTab = ref('store');
+
                 const renameStore = (oldName, index) => {
                     const newName = prompt(`「${oldName}」の新しい店舗名を入力してください：`, oldName);
                     if (newName && newName.trim() !== '' && newName.trim() !== oldName) {
                         const trimmedNewName = newName.trim();
-                        // 1. リストの更新
                         storeList.value[index] = trimmedNewName;
-                        
-                        // 2. 過去のデータ一括置換
                         let updateCount = 0;
                         Object.keys(appData.value).forEach(dateStr => {
                             if (appData.value[dateStr].machines) {
                                 appData.value[dateStr].machines.forEach(m => {
-                                    if (m.location === oldName) {
-                                        m.location = trimmedNewName;
-                                        updateCount++;
-                                    }
+                                    if (m.location === oldName) { m.location = trimmedNewName; updateCount++; }
                                 });
                             }
                         });
-                        alert(`「${oldName}」を「${trimmedNewName}」に変更しました。\n（過去の履歴 ${updateCount}件 も一括で更新されました）`);
+                        alert(`店舗名を変更しました。\n（過去の履歴 ${updateCount}件 も一括更新されました）`);
+                    }
+                };
+
+                const renameMachine = (oldName, index) => {
+                    const newName = prompt(`「${oldName}」の新しい機種名を入力してください：`, oldName);
+                    if (newName && newName.trim() !== '' && newName.trim() !== oldName) {
+                        const trimmedNewName = newName.trim();
+                        machineList.value[index] = trimmedNewName;
+                        let updateCount = 0;
+                        Object.keys(appData.value).forEach(dateStr => {
+                            if (appData.value[dateStr].machines) {
+                                appData.value[dateStr].machines.forEach(m => {
+                                    if (m.name === oldName) { m.name = trimmedNewName; updateCount++; }
+                                });
+                            }
+                        });
+                        alert(`機種名を変更しました。\n（過去の履歴 ${updateCount}件 も一括更新されました）`);
                     }
                 };
 
@@ -680,8 +731,8 @@
                     showActionModal.value = true;
                 };
 
-                // formのlocationをプルダウン対応に変更
-                const form = ref({ date: todayStr, machineNumber: 1, locationSelect: '', locationNew: '', isSameStore: false, name: '', rate: 46, broughtIn: 0, cashInvest: 0, savedSign: -1, savedVal: 0, leftMedals: 0, memo: '', photo: '' });
+                // 機種名も location と同様の選択式に変更
+                const form = ref({ date: todayStr, machineNumber: 1, locationSelect: '', locationNew: '', nameSelect: '', nameNew: '', isSameStore: false, rate: 46, broughtIn: 0, cashInvest: 0, savedSign: -1, savedVal: 0, leftMedals: 0, memo: '', photo: '' });
                 
                 const onStoreTypeChange = () => {
                     const d = form.value.date;
@@ -756,7 +807,8 @@
                     if (selectedDay.value && !selectedDay.value.empty) targetDate = selectedDay.value.fullDate;
                     
                     form.value.date = targetDate;
-                    form.value.name = '';
+                    form.value.nameSelect = '';
+                    form.value.nameNew = '';
                     form.value.rate = 46;
                     form.value.cashInvest = 0;
                     form.value.savedSign = -1;
@@ -775,10 +827,8 @@
                     editingIndex.value = activeMachineIndex.value;
                     const target = appData.value[selectedDay.value.fullDate].machines[editingIndex.value];
                     
-                    // 店舗名がリストになければ追加しておく（互換性担保）
-                    if (target.location && !storeList.value.includes(target.location)) {
-                        storeList.value.push(target.location);
-                    }
+                    if (target.location && !storeList.value.includes(target.location)) storeList.value.push(target.location);
+                    if (target.name && !machineList.value.includes(target.name)) machineList.value.push(target.name);
 
                     form.value = {
                         date: selectedDay.value.fullDate,
@@ -786,7 +836,8 @@
                         locationSelect: target.location || '',
                         locationNew: '',
                         isSameStore: target.isSameStore !== undefined ? target.isSameStore : (target.machineNumber > 1),
-                        name: target.name,
+                        nameSelect: target.name || '',
+                        nameNew: '',
                         rate: target.rate,
                         broughtIn: target.broughtIn,
                         cashInvest: target.cashInvest,
@@ -831,13 +882,11 @@
                 };
 
                 const saveMachine = () => {
-                    // 店舗名の決定ロジック
                     let finalLocation = '';
                     if (form.value.machineNumber === 1 || !form.value.isSameStore) {
                         if (form.value.locationSelect === 'NEW') {
                             finalLocation = form.value.locationNew.trim();
                             if (!finalLocation) { alert("⚠️ 新しい店舗名を入力してください。"); return; }
-                            // リストになければ追加
                             if (!storeList.value.includes(finalLocation)) storeList.value.push(finalLocation);
                         } else {
                             finalLocation = form.value.locationSelect;
@@ -845,7 +894,17 @@
                         }
                     }
 
-                    if (!form.value.name.trim()) { alert("⚠️ 機種名を入力してください。"); return; }
+                    // 機種名の決定ロジック
+                    let finalName = '';
+                    if (form.value.nameSelect === 'NEW') {
+                        finalName = form.value.nameNew.trim();
+                        if (!finalName) { alert("⚠️ 新しい機種名を入力してください。"); return; }
+                        if (!machineList.value.includes(finalName)) machineList.value.push(finalName);
+                    } else {
+                        finalName = form.value.nameSelect;
+                        if (!finalName) { alert("⚠️ 機種名を選択してください。"); return; }
+                    }
+
                     if (form.value.rate <= 0) { alert("⚠️ 貸出枚数は1枚以上に設定してください。"); return; }
                     if (form.value.cashInvest < 0) { alert("⚠️ 現金投資にマイナスは指定できません。"); return; }
 
@@ -853,7 +912,7 @@
                     if (!appData.value[d]) appData.value[d] = { machines: [], daily: { invest:0, recover:0, net:0, medalDelta:0 } };
                     
                     let machines = appData.value[d].machines;
-                    const saveData = { ...form.value, location: finalLocation, netBalance: netBalance.value };
+                    const saveData = { ...form.value, location: finalLocation, name: finalName, netBalance: netBalance.value };
 
                     if (isEditing.value) {
                         machines[editingIndex.value] = saveData;
@@ -921,6 +980,11 @@
                 // --- 🎲 小役カウンター ---
                 const cPage = ref(0);
                 const counterStep = ref(1);
+
+                // 💡 発光エフェクト用の状態配列 (JS制御用)
+                const glowR1 = ref([false, false, false, false, false]);
+                const glowR2 = ref([false, false, false, false, false]);
+
                 const defaultCounter = [
                     { pageName: '通常時', games: 0, r1: [0,0,0,0,0], r2Names: ['チェリー','スイカ','ベル','チャンス目','カスタム5'], r2: [0,0,0,0,0] },
                     { pageName: 'CZ/高確', games: 0, r1: [0,0,0,0,0], r2Names: ['カスタム1','カスタム2','カスタム3','カスタム4','カスタム5'], r2: [0,0,0,0,0] },
@@ -941,12 +1005,20 @@
                     let newVal = activePage.value.r1[index] + counterStep.value;
                     if(newVal < 0) newVal = 0;
                     activePage.value.r1[index] = newVal;
+
+                    // 発光エフェクトのオンオフ
+                    glowR1.value[index] = true;
+                    setTimeout(() => { glowR1.value[index] = false; }, 200); // 0.2秒後に消灯
                 };
 
                 const updateR2 = (index) => {
                     let newVal = activePage.value.r2[index] + counterStep.value;
                     if(newVal < 0) newVal = 0;
                     activePage.value.r2[index] = newVal;
+
+                    // 発光エフェクトのオンオフ
+                    glowR2.value[index] = true;
+                    setTimeout(() => { glowR2.value[index] = false; }, 200);
                 };
 
                 const resetCounter = () => {
@@ -987,10 +1059,11 @@
                     getMachinesForDate, getDayInvest, getDayRecover, getDayTotal, getDayMedalDelta, monthlySummary, formatDateDisplay,
                     form, netBalance, prepareMachineInput, saveMachine, handlePhotoUpload, onStoreTypeChange,
                     dailyForm, saveDailyTotal,
-                    cPage, counterStep, counterData, activePage, r1Colors, getProb, updateR1, updateR2, resetCounter, editPageName, editRoleNames,
+                    cPage, counterStep, counterData, activePage, r1Colors, getProb, 
+                    glowR1, glowR2, updateR1, updateR2, resetCounter, editPageName, editRoleNames,
                     showActionModal, openActionModal, editMachine, deleteMachine,
                     analysisSubTab, changeMainTab, changeAnalysisTab, storeRanking,
-                    storeList, showSettingsModal, renameStore
+                    storeList, machineList, showSettingsModal, settingTab, renameStore, renameMachine
                 }
             }
         }).mount('#app');
