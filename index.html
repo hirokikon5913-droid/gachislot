@@ -4,8 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Gachi-Slot 収支管理</title>
+    <!-- Vue 3 -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Firebase SDK (Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
     <style>
         /* 🎨 テーマ設定 */
         :root[data-theme="black"] { --bg: #121212; --surface: #1e1e1e; --surface-light: #2c2c2c; --primary: #bb86fc; --secondary: #03dac6; --error: #cf6679; --success: #4caf50; --text-main: #ffffff; --text-sub: #b3b3b3; --border: #333333; }
@@ -122,8 +129,11 @@
         <!-- ヘッダー -->
         <header>
             <div style="display:flex; align-items:center; gap: 12px;">
-                <!-- 💡 変更：ホームタブの時だけ設定マークを表示 -->
-                <span v-show="currentTab === 'home'" style="font-size:22px; cursor:pointer;" @click="showSettingsModal = true">⚙️</span>
+                <!-- 💡 ホームタブのみ設定マーク＆ユーザーアイコンを表示 -->
+                <span v-show="currentTab === 'home'" style="cursor:pointer;" @click="showSettingsModal = true">
+                    <img v-if="currentUser" :src="currentUser.photoURL || 'https://via.placeholder.com/30'" style="width:30px; height:30px; border-radius:50%; object-fit:cover; border:2px solid var(--primary);">
+                    <span v-else style="font-size:24px;">⚙️</span>
+                </span>
                 <div style="display:flex; flex-direction:column;">
                     <span style="font-size:16px;">{{ headerTitle }}</span>
                     <span style="font-size:11px; color:var(--text-sub); font-weight:normal; margin-top:2px;">{{ currentTime }}</span>
@@ -218,7 +228,6 @@
             <!-- 🎲 小役カウンター -->
             <div v-show="currentTab === 'counter'">
                 <div class="counter-header">
-                    <!-- 💡 変更：新規ページ作成機能の追加 -->
                     <select class="page-select" v-model="selectedPageIndex" @change="onPageSelectChange">
                         <option v-for="(p, i) in counterData" :key="i" :value="i">📄 {{ p.pageName }}</option>
                         <option value="NEW" v-if="counterData.length < 10" style="color:var(--primary); font-weight:bold;">➕ 新しいページを作成</option>
@@ -443,11 +452,26 @@
             </div>
         </div>
 
-        <!-- ⚙️ 設定・管理モーダル -->
+        <!-- ⚙️ 設定・管理モーダル (アカウント・店舗・機種) -->
         <div class="modal-overlay" v-if="showSettingsModal" @click.self="showSettingsModal = false">
             <div class="modal-content">
-                <h3 style="margin:0 0 5px 0; font-size:16px; text-align:center;">設定 / 名称管理</h3>
-                <div style="font-size:11px; color:var(--text-sub); margin-bottom:10px; text-align:center;">名称を変更すると、過去の全履歴も一括で書き換わります。</div>
+                <h3 style="margin:0 0 15px 0; font-size:16px; text-align:center;">設定 / データ管理</h3>
+                
+                <!-- 💡 変更：Googleログイン＆クラウド同期エリア -->
+                <div style="background:var(--surface-light); padding:15px; border-radius:8px; margin-bottom:15px; text-align:center; border: 1px solid var(--border);">
+                    <div v-if="currentUser">
+                        <img :src="currentUser.photoURL || 'https://via.placeholder.com/50'" style="width:50px; height:50px; border-radius:50%; margin-bottom:10px; border: 2px solid var(--primary);">
+                        <div style="font-weight:bold; font-size:14px; margin-bottom:5px;">{{ currentUser.displayName || 'ユーザー' }}</div>
+                        <div style="font-size:12px; color:var(--primary); font-weight:bold; margin-bottom:15px;">{{ syncStatus }}</div>
+                        <button class="modal-btn" style="background:var(--surface); color:var(--text-main); border:1px solid var(--border); padding: 8px 15px;" @click="logout">ログアウト</button>
+                    </div>
+                    <div v-else>
+                        <div style="font-size:12px; color:var(--text-sub); margin-bottom:10px; line-height:1.4;">Googleアカウントと連携すると<br>データをクラウドに自動保存・復元できます</div>
+                        <button class="modal-btn" style="background:#4285F4; color:#fff; width:100%; display:flex; align-items:center; justify-content:center; gap:10px;" @click="loginWithGoogle">
+                            <span style="font-size:18px; background:#fff; border-radius:50%; padding:2px;">G</span> Googleでログイン
+                        </button>
+                    </div>
+                </div>
                 
                 <div style="display:flex; margin-bottom:15px; border-bottom:2px solid var(--surface-light);">
                     <div style="flex:1; text-align:center; padding:10px; cursor:pointer; font-weight:bold;" 
@@ -487,7 +511,7 @@
             </div>
         </div>
 
-        <!-- 💡 新設：小役名前一括変更モーダル -->
+        <!-- 💡 小役名前一括変更モーダル -->
         <div class="modal-overlay" v-if="showRoleEditModal" @click.self="showRoleEditModal = false">
             <div class="modal-content">
                 <h3 style="margin:0 0 10px 0; font-size:16px; text-align:center;">カスタム小役の名前一括変更</h3>
@@ -507,10 +531,94 @@
     <script>
         const { createApp, ref, computed, watch, onMounted, onUnmounted, nextTick } = Vue;
 
+        // 💡 Firebase初期化設定
+        const firebaseConfig = {
+            apiKey: "AIzaSyBhZ6XDcAaXL5uJPkfHDr-qGpfQPMmGFvs",
+            authDomain: "gachi-slot.firebaseapp.com",
+            projectId: "gachi-slot",
+            storageBucket: "gachi-slot.firebasestorage.app",
+            messagingSenderId: "986303391989",
+            appId: "1:986303391989:web:ccceda9cb480de1e433dbc",
+            measurementId: "G-Z8W4R0FXJG"
+        };
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
         createApp({
             setup() {
                 const currentTab = ref('home');
                 
+                // --- ☁️ Firebase アカウント連携 & 同期 ---
+                const currentUser = ref(null);
+                const syncStatus = ref('ローカルに保存');
+                let isCloudLoading = false; // 無限ループ防止フラグ
+
+                const loginWithGoogle = () => {
+                    const provider = new firebase.auth.GoogleAuthProvider();
+                    auth.signInWithRedirect(provider);
+                };
+
+                const logout = () => {
+                    if(confirm("ログアウトしますか？（現在のデータは端末に残ります）")) {
+                        auth.signOut();
+                    }
+                };
+
+                let saveTimeout = null;
+                const saveToCloud = () => {
+                    if (!currentUser.value || isCloudLoading) return;
+                    syncStatus.value = '☁️ 保存中...';
+                    if (saveTimeout) clearTimeout(saveTimeout);
+                    
+                    // 1.5秒後に入力が止まったらクラウドへ保存
+                    saveTimeout = setTimeout(() => {
+                        db.collection('users').doc(currentUser.value.uid).set({
+                            appData: appData.value,
+                            storeList: storeList.value,
+                            machineList: machineList.value,
+                            counterData: counterData.value,
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        }, { merge: true })
+                        .then(() => { syncStatus.value = '☁️ 同期完了'; })
+                        .catch((e) => { syncStatus.value = '⚠️ 同期エラー'; console.error(e); });
+                    }, 1500);
+                };
+
+                auth.onAuthStateChanged((user) => {
+                    if (user) {
+                        currentUser.value = user;
+                        syncStatus.value = '☁️ クラウドから読込中...';
+                        
+                        // ログイン成功時にクラウドからデータを取得して上書き
+                        db.collection('users').doc(user.uid).get().then(doc => {
+                            if (doc.exists) {
+                                const d = doc.data();
+                                isCloudLoading = true; // 監視(watch)による上書きループを防ぐ
+                                if(d.appData) appData.value = d.appData;
+                                if(d.storeList) storeList.value = d.storeList;
+                                if(d.machineList) machineList.value = d.machineList;
+                                if(d.counterData) counterData.value = d.counterData;
+                                
+                                setTimeout(() => { isCloudLoading = false; }, 500);
+                                syncStatus.value = '☁️ 同期完了';
+                            } else {
+                                // 初回ログインの場合は現在のローカルデータをクラウドに送信
+                                saveToCloud();
+                            }
+                        }).catch(e => {
+                            syncStatus.value = '⚠️ 読込エラー';
+                            console.error(e);
+                        });
+                    } else {
+                        currentUser.value = null;
+                        syncStatus.value = 'ローカルに保存';
+                    }
+                });
+
+                // --- ⌚ 時計 ---
                 const currentTime = ref('');
                 let timer = null;
                 const updateTime = () => {
@@ -542,6 +650,7 @@
                 };
                 document.documentElement.setAttribute('data-theme', themes[0].id);
 
+                // --- 💾 データ連携と監視 (ローカル＆クラウド) ---
                 const appData = ref({});
                 const loadData = () => {
                     const saved = localStorage.getItem('gachi_slot_data');
@@ -549,15 +658,16 @@
                 };
                 watch(appData, (newVal) => {
                     localStorage.setItem('gachi_slot_data', JSON.stringify(newVal));
+                    saveToCloud(); // 変更があればクラウド保存もトリガー
                 }, { deep: true });
 
                 const defaultStores = ["スペース666", "ゾーン戸畑", "メガフェイス1500宗像", "ワンダーランド福岡東", "アプロ7", "スーパーハリウッド1120", "EVO3", "D'station中間", "テキサス下関", "ピータイム下関", "まるみつ下関", "デルパラ山口"];
                 const storeList = ref(localStorage.getItem('gachi_store_list') ? JSON.parse(localStorage.getItem('gachi_store_list')) : defaultStores);
-                watch(storeList, (newVal) => { localStorage.setItem('gachi_store_list', JSON.stringify(newVal)); }, { deep: true });
+                watch(storeList, (newVal) => { localStorage.setItem('gachi_store_list', JSON.stringify(newVal)); saveToCloud(); }, { deep: true });
 
                 const defaultMachines = ["スマスロ北斗の拳", "マイジャグラーV", "パチスロ甲鉄城のカバネリ", "スマスロモンキーターンV", "Lからくりサーカス", "Lヴァルヴレイヴ", "スマスロ ゴッドイーター", "アイムジャグラーEX", "沖ドキ！GOLD", "押忍！番長4"];
                 const machineList = ref(localStorage.getItem('gachi_machine_list') ? JSON.parse(localStorage.getItem('gachi_machine_list')) : defaultMachines);
-                watch(machineList, (newVal) => { localStorage.setItem('gachi_machine_list', JSON.stringify(newVal)); }, { deep: true });
+                watch(machineList, (newVal) => { localStorage.setItem('gachi_machine_list', JSON.stringify(newVal)); saveToCloud(); }, { deep: true });
 
                 const today = new Date();
                 const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
@@ -991,7 +1101,6 @@
                 const glowR1 = ref([false, false, false, false, false]);
                 const glowR2 = ref([false, false, false, false, false]);
 
-                // 💡 変更：初期ページのセットをシチュエーションA〜Cに変更
                 const defaultCounter = [
                     { pageName: 'シチュエーションA', games: 0, r1: [0,0,0,0,0], r2Names: ['カスタム1','カスタム2','カスタム3','カスタム4','カスタム5'], r2: [0,0,0,0,0] },
                     { pageName: 'シチュエーションB', games: 0, r1: [0,0,0,0,0], r2Names: ['カスタム1','カスタム2','カスタム3','カスタム4','カスタム5'], r2: [0,0,0,0,0] },
@@ -999,19 +1108,17 @@
                 ];
                 
                 const loadedCounter = localStorage.getItem('gachi_counter') ? JSON.parse(localStorage.getItem('gachi_counter')) : defaultCounter;
-                // 既存のセーブデータに pageName が無ければ補完
                 loadedCounter.forEach((p, i) => { 
                     if(!p.pageName) p.pageName = (i < 3) ? defaultCounter[i].pageName : `シチュエーション${String.fromCharCode(65 + i)}`; 
                 });
                 
                 const counterData = ref(loadedCounter);
-                watch(counterData, (newVal) => { localStorage.setItem('gachi_counter', JSON.stringify(newVal)); }, { deep: true });
+                watch(counterData, (newVal) => { localStorage.setItem('gachi_counter', JSON.stringify(newVal)); saveToCloud(); }, { deep: true });
 
                 const activePage = computed(() => counterData.value[cPage.value]);
                 const r1Colors = ['#e53935', '#4caf50', '#1e88e5', '#fdd835', '#e0e0e0'];
                 const getProb = (count, games) => count === 0 ? '-' : '1/' + (games / count).toFixed(1);
 
-                // 💡 新規ページ作成ロジック
                 const onPageSelectChange = () => {
                     if (selectedPageIndex.value === 'NEW') {
                         if (counterData.value.length >= 10) {
@@ -1025,7 +1132,7 @@
                             cPage.value = counterData.value.length - 1;
                             selectedPageIndex.value = cPage.value;
                         } else {
-                            selectedPageIndex.value = cPage.value; // キャンセル時は元のページに戻す
+                            selectedPageIndex.value = cPage.value; 
                         }
                     } else {
                         cPage.value = selectedPageIndex.value;
@@ -1059,9 +1166,9 @@
                 const editPageName = () => {
                     const newName = prompt(`現在のページ「${activePage.value.pageName}」の新しい名称を入力してください：`, activePage.value.pageName);
                     if (newName !== null && newName.trim() !== '') activePage.value.pageName = newName.trim();
+                    selectedPageIndex.value = cPage.value; // プルダウンの表示更新
                 };
                 
-                // 💡 新設：小役名の一括変更モーダル機能
                 const showRoleEditModal = ref(false);
                 const roleEditForm = ref(['', '', '', '', '']);
 
@@ -1089,6 +1196,7 @@
                 onUnmounted(() => { if(timer) clearInterval(timer); });
 
                 return {
+                    currentUser, syncStatus, loginWithGoogle, logout,
                     currentTab, headerTitle, currentTime, themes, themeIndex, toggleTheme,
                     currentYear, currentMonth, changeMonth,
                     calDays, selectedDay, selectDay, todayStr,
