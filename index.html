@@ -32,7 +32,7 @@
         .summary-item { display: flex; flex-direction: column; align-items: center; }
         .summary-label { font-size: 10px; color: var(--text-sub); margin-bottom: 2px; }
 
-        /* カレンダー Originalテーマ用のラッパー設定 */
+        /* カレンダー Originalテーマ用 */
         .calendar-wrapper { position: relative; border-bottom: 1px solid var(--border); }
         .cal-bg-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; pointer-events: none; z-index: 0; }
         
@@ -45,7 +45,6 @@
         .cal-date { font-size: 12px; margin-bottom: 2px; text-align: center; }
         .cal-val { font-size: 9px; text-align: right; font-weight: bold; word-break: break-all; margin-top: auto; }
 
-        /* Originalテーマ適応時のカレンダー透過設定 */
         .original-mode.calendar { background-color: rgba(128,128,128,0.3); }
         .original-mode .cal-header { background: rgba(0, 0, 0, 0.4); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.8); }
         .original-mode .cal-cell { background: rgba(0, 0, 0, 0.2); }
@@ -87,6 +86,11 @@
         .g-btn { background: var(--surface-light); color: var(--text-main); border: 1px solid var(--border); padding: 10px 15px; border-radius: 8px; font-weight: bold; font-size: 16px; flex: 1; transition: all 0.1s; }
         .g-btn:active { transform: scale(0.9); opacity: 0.7; }
         
+        /* 差引計算モード用入力枠 */
+        .diff-input-group { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 15px; }
+        .diff-input-box { display: flex; flex-direction: column; align-items: center; }
+        .diff-input { background: transparent; border: none; color: var(--text-main); font-size: 28px; font-weight: bold; width: 100px; text-align: center; border-bottom: 2px solid var(--primary); outline: none; }
+
         .step-toggle-group { display: flex; justify-content: center; gap: 8px; margin-bottom: 15px; }
         .step-toggle-btn { background: var(--surface-light); color: var(--text-sub); border: 1px solid var(--border); padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; transition: all 0.2s; }
         .step-toggle-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
@@ -140,7 +144,6 @@
         <header>
             <div style="display:flex; align-items:center; gap: 12px;">
                 <span v-show="currentTab === 'home'" style="cursor:pointer;" @click="showSettingsModal = true">
-                    <!-- 💡 プロフィール画像サイズを拡大 -->
                     <img :src="userProfile.icon || 'https://via.placeholder.com/40'" style="width:40px; height:40px; border-radius:50%; object-fit:cover; border:2px solid var(--primary);">
                 </span>
                 <div style="display:flex; flex-direction:column;">
@@ -177,7 +180,7 @@
                     </div>
                 </div>
 
-                <!-- カレンダーエリア（Originalテーマ対応） -->
+                <!-- カレンダー -->
                 <div class="calendar-wrapper">
                     <div v-if="isOriginalTheme && originalSettings.bgImage" class="cal-bg-layer" :style="{ backgroundImage: `url(${originalSettings.bgImage})`, opacity: originalSettings.opacity }"></div>
                     <div class="calendar" :class="{ 'original-mode': isOriginalTheme }">
@@ -256,13 +259,40 @@
                 </div>
                 
                 <div class="games-area">
-                    <div style="font-size:12px; color:var(--text-sub); margin-bottom:5px;">🎯 回転数 (ゲーム数)</div>
-                    <input type="number" class="games-input" v-model.number="activePage.games">
-                    <div class="games-btn-group">
-                        <button class="g-btn" @click="activePage.games += 100">+100</button>
-                        <button class="g-btn" @click="activePage.games += 10">+10</button>
-                        <button class="g-btn" @click="activePage.games += 1">+1</button>
-                    </div>
+                    <!-- 💡 変更：差引計算モードへの切り替えスイッチ -->
+                    <label style="display:inline-flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; margin-bottom:15px; font-size:12px; color:var(--text-sub);">
+                        <input type="checkbox" v-model="activePage.isDiffMode" style="transform:scale(1.2); accent-color:var(--primary);">
+                        打ち始め / 現在G数から差引計算する
+                    </label>
+
+                    <!-- 直接入力モード -->
+                    <template v-if="!activePage.isDiffMode">
+                        <div style="font-size:12px; color:var(--text-sub); margin-bottom:5px;">🎯 回転数 (ゲーム数)</div>
+                        <input type="number" class="games-input" v-model.number="activePage.games">
+                        <div class="games-btn-group">
+                            <button class="g-btn" @click="activePage.games += 100">+100</button>
+                            <button class="g-btn" @click="activePage.games += 10">+10</button>
+                            <button class="g-btn" @click="activePage.games += 1">+1</button>
+                        </div>
+                    </template>
+
+                    <!-- 💡 変更：差引計算モード -->
+                    <template v-else>
+                        <div class="diff-input-group">
+                            <div class="diff-input-box">
+                                <span style="font-size:10px; color:var(--text-sub);">打ち始めG数</span>
+                                <input type="number" class="diff-input" v-model.number="activePage.startGames" @input="calcDiffGames">
+                            </div>
+                            <div style="font-size:20px; color:var(--text-sub); margin-top:10px;">〜</div>
+                            <div class="diff-input-box">
+                                <span style="font-size:10px; color:var(--text-sub);">現在のG数</span>
+                                <input type="number" class="diff-input" v-model.number="activePage.currentGames" @input="calcDiffGames">
+                            </div>
+                        </div>
+                        <div style="font-size:14px; font-weight:bold; color:var(--primary);">
+                            🎯 算出された回転数: <span style="font-size:24px; margin: 0 5px;">{{ activePage.games }}</span> G
+                        </div>
+                    </template>
                 </div>
                 
                 <div class="roles-area">
@@ -417,7 +447,6 @@
                 </div>
                 <div class="form-group">
                     <span class="form-label">📷 写真添付 (終了画面やグラフなど)</span>
-                    <!-- 💡 画像リサイズ処理適用 -->
                     <input type="file" accept="image/*" class="form-input" @change="handlePhotoUpload">
                     <img v-if="form.photo" :src="form.photo" style="max-height: 100px; margin-top: 10px; border-radius: 6px; display: block;">
                 </div>
@@ -477,14 +506,12 @@
             <div class="modal-content">
                 <h3 style="margin:0 0 10px 0; font-size:16px; text-align:center;">設定 / データ管理</h3>
                 
-                <!-- タブナビゲーション -->
                 <div class="settings-tab-nav">
                     <div class="settings-tab" :class="{active: mainSettingTab === 'profile'}" @click="mainSettingTab = 'profile'">👤 プロフィール</div>
                     <div class="settings-tab" :class="{active: mainSettingTab === 'backup'}" @click="mainSettingTab = 'backup'">💾 引き継ぎ</div>
                     <div class="settings-tab" :class="{active: mainSettingTab === 'edit'}" @click="mainSettingTab = 'edit'">✏️ 名称編集</div>
                 </div>
 
-                <!-- タブ A: プロフィール ＆ Originalテーマ設定 -->
                 <div v-show="mainSettingTab === 'profile'">
                     <div style="background:var(--surface-light); padding:15px; border-radius:8px; margin-bottom:15px; text-align:center; border: 1px solid var(--border);">
                         <div style="font-weight:bold; margin-bottom:10px; font-size:13px;">プロフィール設定</div>
@@ -528,7 +555,6 @@
                     </div>
                 </div>
 
-                <!-- タブ B: 引き継ぎ -->
                 <div v-show="mainSettingTab === 'backup'">
                     <div style="background:var(--surface-light); padding:15px; border-radius:8px; border: 1px solid var(--border);">
                         <div style="font-weight:bold; margin-bottom:10px; text-align:center; font-size:13px;">データ引き継ぎ・手動バックアップ</div>
@@ -545,7 +571,6 @@
                     </div>
                 </div>
                 
-                <!-- タブ C: 名称編集 -->
                 <div v-show="mainSettingTab === 'edit'">
                     <div style="display:flex; margin-bottom:15px; border-bottom:2px solid var(--surface-light);">
                         <div style="flex:1; text-align:center; padding:10px; cursor:pointer; font-weight:bold; font-size:12px;" 
@@ -644,7 +669,6 @@
             setup() {
                 const currentTab = ref('home');
                 
-                // --- 💡 汎用画像リサイズ圧縮ツール (容量超過防止) ---
                 const resizeImage = (file, maxSize, callback) => {
                     const reader = new FileReader();
                     reader.onload = (e) => {
@@ -659,27 +683,22 @@
                             canvas.width = w; canvas.height = h;
                             const ctx = canvas.getContext('2d');
                             ctx.drawImage(img, 0, 0, w, h);
-                            callback(canvas.toDataURL('image/jpeg', 0.8)); // 圧縮率80%
+                            callback(canvas.toDataURL('image/jpeg', 0.8));
                         };
                         img.src = e.target.result;
                     };
                     reader.readAsDataURL(file);
                 };
 
-                // --- 👤 プロフィール & テーマ設定 ---
                 const userProfile = ref(localStorage.getItem('gachi_user_profile') ? JSON.parse(localStorage.getItem('gachi_user_profile')) : { name: 'ガチ勢', icon: '' });
                 watch(userProfile, (newVal) => { localStorage.setItem('gachi_user_profile', JSON.stringify(newVal)); }, { deep: true });
 
                 const handleUserIconUpload = (e) => {
                     const file = e.target.files[0];
                     if(!file) return;
-                    // プロフィールアイコンは200pxに自動圧縮
-                    resizeImage(file, 200, (compressedDataUrl) => {
-                        userProfile.value.icon = compressedDataUrl;
-                    });
+                    resizeImage(file, 200, (compressedDataUrl) => { userProfile.value.icon = compressedDataUrl; });
                 };
 
-                // Originalテーマ設定
                 const defaultOriginal = { bgImage: '', opacity: 0.5, baseTheme: 'black' };
                 const originalSettings = ref(localStorage.getItem('gachi_original_theme') ? JSON.parse(localStorage.getItem('gachi_original_theme')) : defaultOriginal);
                 watch(originalSettings, (newVal) => { localStorage.setItem('gachi_original_theme', JSON.stringify(newVal)); }, { deep: true });
@@ -687,13 +706,9 @@
                 const handleOriginalBgUpload = (e) => {
                     const file = e.target.files[0];
                     if(!file) return;
-                    // 背景画像は800pxに自動圧縮（ローカルストレージ容量対策）
-                    resizeImage(file, 800, (compressedDataUrl) => {
-                        originalSettings.value.bgImage = compressedDataUrl;
-                    });
+                    resizeImage(file, 800, (compressedDataUrl) => { originalSettings.value.bgImage = compressedDataUrl; });
                 };
 
-                // テーマ制御
                 const themes = [{id:'black', name:'Dark'}, {id:'white', name:'Light'}, {id:'cyber', name:'Cyber'}, {id:'original', name:'Original'}];
                 const themeIndex = ref(parseInt(localStorage.getItem('gachi_theme_index')) || 0);
                 
@@ -741,7 +756,6 @@
                     return 'Gachi-Slot';
                 });
 
-                // --- 💾 データ保存 ---
                 const appData = ref({});
                 const loadData = () => {
                     const saved = localStorage.getItem('gachi_slot_data');
@@ -757,7 +771,6 @@
                 const machineList = ref(localStorage.getItem('gachi_machine_list') ? JSON.parse(localStorage.getItem('gachi_machine_list')) : defaultMachines);
                 watch(machineList, (newVal) => { localStorage.setItem('gachi_machine_list', JSON.stringify(newVal)); }, { deep: true });
 
-                // --- 📦 バックアップ・リストア ---
                 const exportDataShare = async () => {
                     const exportObj = {
                         appData: appData.value,
@@ -816,7 +829,6 @@
                     reader.readAsText(file);
                 };
 
-                // --- 📅 カレンダー ---
                 const today = new Date();
                 const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
                 const currentYear = ref(today.getFullYear());
@@ -866,7 +878,6 @@
                     return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
                 };
 
-                // --- 📊 分析タブ ---
                 const analysisSubTab = ref('month');
                 let chartInstance = null;
                 const changeMainTab = (tabName) => {
@@ -886,7 +897,6 @@
                     if(!ctx) return;
                     if(chartInstance) chartInstance.destroy();
 
-                    // Originalテーマ時はbaseThemeの色を参照する
                     const isWhite = (themes[themeIndex.value].id === 'white') || (isOriginalTheme.value && originalSettings.value.baseTheme === 'white');
                     const lineColor = isWhite ? '#6200ea' : '#bb86fc';
                     const gridColor = isWhite ? '#e0e0e0' : '#333333';
@@ -945,11 +955,10 @@
                     return list.sort((a, b) => b.totalNet - a.totalNet);
                 });
 
-                // --- ⚙️ 総合設定モーダル ---
                 const showSettingsModal = ref(false);
                 const showTransferGuide = ref(false);
-                const mainSettingTab = ref('profile'); // profile, backup, edit
-                const settingTab = ref('store'); // editサブタブ
+                const mainSettingTab = ref('profile'); 
+                const settingTab = ref('store'); 
 
                 const renameStore = (oldName, index) => {
                     const newName = prompt(`「${oldName}」の新しい店舗名を入力してください：`, oldName);
@@ -985,7 +994,6 @@
                     }
                 };
 
-                // --- 🎰 遊技履歴 編集・削除制御用 ---
                 const isEditing = ref(false);
                 const editingIndex = ref(null);
                 const showActionModal = ref(false);
@@ -1039,7 +1047,6 @@
                 const handlePhotoUpload = (e) => {
                     const file = e.target.files[0];
                     if(!file) return;
-                    // 遊技履歴の画像もリサイズ (1000px)
                     resizeImage(file, 1000, (compressed) => { form.value.photo = compressed; });
                 };
 
@@ -1184,13 +1191,19 @@
                 const glowR1 = ref([false, false, false, false, false]); const glowR2 = ref([false, false, false, false, false]);
 
                 const defaultCounter = [
-                    { pageName: 'シチュエーションA', games: 0, r1: [0,0,0,0,0], r2Names: ['カスタム1','カスタム2','カスタム3','カスタム4','カスタム5'], r2: [0,0,0,0,0] },
-                    { pageName: 'シチュエーションB', games: 0, r1: [0,0,0,0,0], r2Names: ['カスタム1','カスタム2','カスタム3','カスタム4','カスタム5'], r2: [0,0,0,0,0] },
-                    { pageName: 'シチュエーションC', games: 0, r1: [0,0,0,0,0], r2Names: ['カスタム1','カスタム2','カスタム3','カスタム4','カスタム5'], r2: [0,0,0,0,0] }
+                    { pageName: 'シチュエーションA', games: 0, isDiffMode: false, startGames: 0, currentGames: 0, r1: [0,0,0,0,0], r2Names: ['カスタム1','カスタム2','カスタム3','カスタム4','カスタム5'], r2: [0,0,0,0,0] },
+                    { pageName: 'シチュエーションB', games: 0, isDiffMode: false, startGames: 0, currentGames: 0, r1: [0,0,0,0,0], r2Names: ['カスタム1','カスタム2','カスタム3','カスタム4','カスタム5'], r2: [0,0,0,0,0] },
+                    { pageName: 'シチュエーションC', games: 0, isDiffMode: false, startGames: 0, currentGames: 0, r1: [0,0,0,0,0], r2Names: ['カスタム1','カスタム2','カスタム3','カスタム4','カスタム5'], r2: [0,0,0,0,0] }
                 ];
                 
                 const loadedCounter = localStorage.getItem('gachi_counter') ? JSON.parse(localStorage.getItem('gachi_counter')) : defaultCounter;
-                loadedCounter.forEach((p, i) => { if(!p.pageName) p.pageName = (i < 3) ? defaultCounter[i].pageName : `シチュエーション${String.fromCharCode(65 + i)}`; });
+                loadedCounter.forEach((p, i) => { 
+                    if(!p.pageName) p.pageName = (i < 3) ? defaultCounter[i].pageName : `シチュエーション${String.fromCharCode(65 + i)}`; 
+                    if(p.isDiffMode === undefined) p.isDiffMode = false;
+                    if(p.startGames === undefined) p.startGames = 0;
+                    if(p.currentGames === undefined) p.currentGames = 0;
+                });
+                
                 const counterData = ref(loadedCounter);
                 watch(counterData, (newVal) => { localStorage.setItem('gachi_counter', JSON.stringify(newVal)); }, { deep: true });
 
@@ -1198,12 +1211,22 @@
                 const r1Colors = ['#e53935', '#4caf50', '#1e88e5', '#fdd835', '#e0e0e0'];
                 const getProb = (count, games) => count === 0 ? '-' : '1/' + (games / count).toFixed(1);
 
+                // 💡 変更：差引計算ロジック
+                const calcDiffGames = () => {
+                    if (activePage.value.isDiffMode) {
+                        let s = Number(activePage.value.startGames) || 0;
+                        let c = Number(activePage.value.currentGames) || 0;
+                        let diff = c - s;
+                        activePage.value.games = diff > 0 ? diff : 0;
+                    }
+                };
+
                 const onPageSelectChange = () => {
                     if (selectedPageIndex.value === 'NEW') {
                         if (counterData.value.length >= 10) { alert("⚠️ ページは最大10個までしか作成できません。"); selectedPageIndex.value = cPage.value; return; }
                         const newName = prompt('新しいページ名を入力してください：', `シチュエーション${String.fromCharCode(65 + counterData.value.length)}`);
                         if (newName && newName.trim() !== '') {
-                            counterData.value.push({ pageName: newName.trim(), games: 0, r1: [0,0,0,0,0], r2Names: ['カスタム1','カスタム2','カスタム3','カスタム4','カスタム5'], r2: [0,0,0,0,0] });
+                            counterData.value.push({ pageName: newName.trim(), games: 0, isDiffMode: false, startGames: 0, currentGames: 0, r1: [0,0,0,0,0], r2Names: ['カスタム1','カスタム2','カスタム3','カスタム4','カスタム5'], r2: [0,0,0,0,0] });
                             cPage.value = counterData.value.length - 1; selectedPageIndex.value = cPage.value;
                         } else { selectedPageIndex.value = cPage.value; }
                     } else { cPage.value = selectedPageIndex.value; }
@@ -1223,7 +1246,11 @@
 
                 const resetCounter = () => {
                     if(confirm("このページをリセットしますか？")) {
-                        counterData.value[cPage.value].games = 0; counterData.value[cPage.value].r1 = [0,0,0,0,0]; counterData.value[cPage.value].r2 = [0,0,0,0,0];
+                        counterData.value[cPage.value].games = 0; 
+                        counterData.value[cPage.value].startGames = 0; 
+                        counterData.value[cPage.value].currentGames = 0; 
+                        counterData.value[cPage.value].r1 = [0,0,0,0,0]; 
+                        counterData.value[cPage.value].r2 = [0,0,0,0,0];
                     }
                 };
                 
@@ -1257,7 +1284,7 @@
                     form, netBalance, prepareMachineInput, saveMachine, handlePhotoUpload, onStoreTypeChange,
                     dailyForm, saveDailyTotal,
                     selectedPageIndex, cPage, onPageSelectChange, counterStep, counterData, activePage, r1Colors, getProb, 
-                    glowR1, glowR2, updateR1, updateR2, resetCounter, editPageName, 
+                    calcDiffGames, glowR1, glowR2, updateR1, updateR2, resetCounter, editPageName, 
                     showRoleEditModal, roleEditForm, openRoleEditModal, saveRoleNames,
                     showActionModal, openActionModal, editMachine, deleteMachine,
                     analysisSubTab, changeMainTab, changeAnalysisTab, storeRanking,
