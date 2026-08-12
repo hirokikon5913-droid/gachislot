@@ -32,7 +32,11 @@
         .summary-item { display: flex; flex-direction: column; align-items: center; }
         .summary-label { font-size: 10px; color: var(--text-sub); margin-bottom: 2px; }
 
-        .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--border); border-bottom: 1px solid var(--border); }
+        /* カレンダー Originalテーマ用のラッパー設定 */
+        .calendar-wrapper { position: relative; border-bottom: 1px solid var(--border); }
+        .cal-bg-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; pointer-events: none; z-index: 0; }
+        
+        .calendar { position: relative; display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--border); z-index: 1; }
         .cal-header { background: var(--surface); text-align: center; padding: 5px 0; font-size: 12px; color: var(--text-sub); }
         .cal-cell { background: var(--bg); min-height: 60px; padding: 4px; display: flex; flex-direction: column; cursor: pointer; position: relative; }
         .cal-cell.selected-day { outline: 2px solid var(--primary); outline-offset: -2px; background: var(--surface-light); z-index: 2; }
@@ -40,6 +44,14 @@
         
         .cal-date { font-size: 12px; margin-bottom: 2px; text-align: center; }
         .cal-val { font-size: 9px; text-align: right; font-weight: bold; word-break: break-all; margin-top: auto; }
+
+        /* Originalテーマ適応時のカレンダー透過設定 */
+        .original-mode.calendar { background-color: rgba(128,128,128,0.3); }
+        .original-mode .cal-header { background: rgba(0, 0, 0, 0.4); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.8); }
+        .original-mode .cal-cell { background: rgba(0, 0, 0, 0.2); }
+        .original-mode .cal-cell.selected-day { background: rgba(255, 255, 255, 0.1); }
+        .original-mode .cal-date { color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.8); font-weight: bold; }
+        .original-mode .cal-val { text-shadow: 0 1px 2px rgba(0,0,0,0.8); }
         
         /* 詳細・リスト */
         .day-detail { padding: 15px; background: var(--surface); margin-top: 10px; border-top: 1px solid var(--border); }
@@ -113,8 +125,13 @@
 
         /* モーダル */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 100; }
-        .modal-content { background: var(--surface); padding: 20px; border-radius: 8px; width: 85%; max-width: 340px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; max-height: 80vh; overflow-y: auto; }
+        .modal-content { background: var(--surface); padding: 20px; border-radius: 8px; width: 90%; max-width: 360px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; max-height: 85vh; overflow-y: auto; }
         .modal-btn { padding: 12px; border-radius: 6px; font-weight: bold; text-align: center; cursor: pointer; border: none; font-size: 14px; }
+        
+        .settings-tab-nav { display:flex; margin-bottom:15px; border-bottom:2px solid var(--surface-light); }
+        .settings-tab { flex:1; text-align:center; padding:10px 5px; cursor:pointer; font-weight:bold; font-size: 12px; }
+        .settings-tab.active { color:var(--primary); border-bottom:2px solid var(--primary); margin-bottom:-2px; }
+        .settings-tab:not(.active) { color:var(--text-sub); }
     </style>
 </head>
 <body>
@@ -123,7 +140,8 @@
         <header>
             <div style="display:flex; align-items:center; gap: 12px;">
                 <span v-show="currentTab === 'home'" style="cursor:pointer;" @click="showSettingsModal = true">
-                    <img :src="userProfile.icon || 'https://via.placeholder.com/30'" style="width:30px; height:30px; border-radius:50%; object-fit:cover; border:2px solid var(--primary);">
+                    <!-- 💡 プロフィール画像サイズを拡大 -->
+                    <img :src="userProfile.icon || 'https://via.placeholder.com/40'" style="width:40px; height:40px; border-radius:50%; object-fit:cover; border:2px solid var(--primary);">
                 </span>
                 <div style="display:flex; flex-direction:column;">
                     <span style="font-size:16px;">{{ currentTab === 'home' ? userProfile.name : headerTitle }}</span>
@@ -159,18 +177,22 @@
                     </div>
                 </div>
 
-                <div class="calendar">
-                    <div class="cal-header" v-for="d in ['月','火','水','木','金','土','日']">{{d}}</div>
-                    <div class="cal-cell" 
-                         v-for="(day, i) in calDays" :key="i" 
-                         :class="{
-                             'selected-day': selectedDay && !day.empty && selectedDay.fullDate === day.fullDate,
-                             'today-marker': day.fullDate === todayStr
-                         }" 
-                         @click="selectDay(day)">
-                        <div class="cal-date" :style="{opacity: day.empty ? 0 : 1}">{{ day.date || 1 }}</div>
-                        <div class="cal-val val-plus" v-if="!day.empty && getDayTotal(day.fullDate) > 0">+¥{{ getDayTotal(day.fullDate).toLocaleString() }}</div>
-                        <div class="cal-val val-minus" v-if="!day.empty && getDayTotal(day.fullDate) < 0">-¥{{ Math.abs(getDayTotal(day.fullDate)).toLocaleString() }}</div>
+                <!-- カレンダーエリア（Originalテーマ対応） -->
+                <div class="calendar-wrapper">
+                    <div v-if="isOriginalTheme && originalSettings.bgImage" class="cal-bg-layer" :style="{ backgroundImage: `url(${originalSettings.bgImage})`, opacity: originalSettings.opacity }"></div>
+                    <div class="calendar" :class="{ 'original-mode': isOriginalTheme }">
+                        <div class="cal-header" v-for="d in ['月','火','水','木','金','土','日']">{{d}}</div>
+                        <div class="cal-cell" 
+                             v-for="(day, i) in calDays" :key="i" 
+                             :class="{
+                                 'selected-day': selectedDay && !day.empty && selectedDay.fullDate === day.fullDate,
+                                 'today-marker': day.fullDate === todayStr
+                             }" 
+                             @click="selectDay(day)">
+                            <div class="cal-date" :style="{opacity: day.empty ? 0 : 1}">{{ day.date || 1 }}</div>
+                            <div class="cal-val val-plus" v-if="!day.empty && getDayTotal(day.fullDate) > 0">+¥{{ getDayTotal(day.fullDate).toLocaleString() }}</div>
+                            <div class="cal-val val-minus" v-if="!day.empty && getDayTotal(day.fullDate) < 0">-¥{{ Math.abs(getDayTotal(day.fullDate)).toLocaleString() }}</div>
+                        </div>
                     </div>
                 </div>
                 
@@ -395,6 +417,7 @@
                 </div>
                 <div class="form-group">
                     <span class="form-label">📷 写真添付 (終了画面やグラフなど)</span>
+                    <!-- 💡 画像リサイズ処理適用 -->
                     <input type="file" accept="image/*" class="form-input" @change="handlePhotoUpload">
                     <img v-if="form.photo" :src="form.photo" style="max-height: 100px; margin-top: 10px; border-radius: 6px; display: block;">
                 </div>
@@ -449,68 +472,114 @@
             </div>
         </div>
 
-        <!-- ⚙️ 設定・管理モーダル -->
+        <!-- ⚙️ 総合設定・データ管理モーダル -->
         <div class="modal-overlay" v-if="showSettingsModal" @click.self="showSettingsModal = false">
             <div class="modal-content">
-                <h3 style="margin:0 0 15px 0; font-size:16px; text-align:center;">設定 / データ管理</h3>
+                <h3 style="margin:0 0 10px 0; font-size:16px; text-align:center;">設定 / データ管理</h3>
                 
-                <div style="background:var(--surface-light); padding:15px; border-radius:8px; margin-bottom:15px; text-align:center; border: 1px solid var(--border);">
-                    <div style="font-weight:bold; margin-bottom:10px; font-size:13px;">プロフィール設定</div>
-                    <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
-                        <label style="cursor:pointer; position:relative;">
-                            <img :src="userProfile.icon || 'https://via.placeholder.com/50'" style="width:50px; height:50px; border-radius:50%; object-fit:cover; border:2px solid var(--primary);">
-                            <input type="file" accept="image/*" style="display:none;" @change="handleUserIconUpload">
-                            <div style="position:absolute; bottom:-5px; right:-5px; background:var(--surface); border-radius:50%; width:20px; height:20px; display:flex; align-items:center; justify-content:center; font-size:10px; border:1px solid var(--border);">📷</div>
+                <!-- タブナビゲーション -->
+                <div class="settings-tab-nav">
+                    <div class="settings-tab" :class="{active: mainSettingTab === 'profile'}" @click="mainSettingTab = 'profile'">👤 プロフィール</div>
+                    <div class="settings-tab" :class="{active: mainSettingTab === 'backup'}" @click="mainSettingTab = 'backup'">💾 引き継ぎ</div>
+                    <div class="settings-tab" :class="{active: mainSettingTab === 'edit'}" @click="mainSettingTab = 'edit'">✏️ 名称編集</div>
+                </div>
+
+                <!-- タブ A: プロフィール ＆ Originalテーマ設定 -->
+                <div v-show="mainSettingTab === 'profile'">
+                    <div style="background:var(--surface-light); padding:15px; border-radius:8px; margin-bottom:15px; text-align:center; border: 1px solid var(--border);">
+                        <div style="font-weight:bold; margin-bottom:10px; font-size:13px;">プロフィール設定</div>
+                        <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
+                            <label style="cursor:pointer; position:relative;">
+                                <img :src="userProfile.icon || 'https://via.placeholder.com/50'" style="width:50px; height:50px; border-radius:50%; object-fit:cover; border:2px solid var(--primary);">
+                                <input type="file" accept="image/*" style="display:none;" @change="handleUserIconUpload">
+                                <div style="position:absolute; bottom:-5px; right:-5px; background:var(--surface); border-radius:50%; width:20px; height:20px; display:flex; align-items:center; justify-content:center; font-size:10px; border:1px solid var(--border);">📷</div>
+                            </label>
+                            <input type="text" v-model="userProfile.name" class="form-input" style="width:150px; padding:8px; font-size:14px;" placeholder="ユーザー名">
+                        </div>
+                    </div>
+
+                    <div style="background:var(--surface-light); padding:15px; border-radius:8px; border: 1px solid var(--border);">
+                        <div style="font-weight:bold; margin-bottom:10px; text-align:center; font-size:13px;">🎨 Originalテーマ カスタマイズ</div>
+                        
+                        <div style="font-size:12px; color:var(--text-sub); margin-bottom:5px;">ベーステーマ (カレンダー以外)</div>
+                        <select v-model="originalSettings.baseTheme" class="form-input" style="padding:8px; font-size:14px; margin-bottom:15px;">
+                            <option value="black">Dark (黒ベース)</option>
+                            <option value="white">Light (白ベース)</option>
+                            <option value="cyber">Cyber (ネオンベース)</option>
+                        </select>
+
+                        <div style="font-size:12px; color:var(--text-sub); margin-bottom:5px;">カレンダー背景画像</div>
+                        <label class="modal-btn" style="background:var(--surface); color:var(--text-main); border:1px dashed var(--border); display:block; text-align:center; cursor:pointer; padding:8px; font-size:12px; margin-bottom:15px;">
+                            画像を選択
+                            <input type="file" accept="image/*" style="display:none;" @change="handleOriginalBgUpload">
                         </label>
-                        <input type="text" v-model="userProfile.name" class="form-input" style="width:150px; padding:8px; font-size:14px;" placeholder="ユーザー名">
+
+                        <div style="font-size:12px; color:var(--text-sub); margin-bottom:5px;">画像の透過率: {{ Math.round(originalSettings.opacity * 100) }}%</div>
+                        <input type="range" v-model.number="originalSettings.opacity" min="0" max="1" step="0.1" style="width:100%; margin-bottom:15px; accent-color:var(--primary);">
+
+                        <div style="font-size:11px; color:var(--text-sub); text-align:center; margin-bottom:5px;">プレビュー</div>
+                        <div style="width:100%; height:70px; position:relative; background:var(--bg); border:1px solid var(--border); overflow:hidden; border-radius:4px;">
+                            <div :style="{ position:'absolute', width:'100%', height:'100%', backgroundImage: `url(${originalSettings.bgImage})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: originalSettings.opacity }"></div>
+                            <div style="position:relative; z-index:1; padding:10px; text-shadow:0 1px 2px rgba(0,0,0,0.8); color:#fff; font-size:12px;">
+                                <div style="font-weight:bold;">10日</div>
+                                <div class="val-plus" style="text-align:right;">+¥10,000</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- 💡 変更：共有（シェア）機能によるデータバックアップ -->
-                <div style="background:var(--surface-light); padding:15px; border-radius:8px; margin-bottom:15px; border: 1px solid var(--border);">
-                    <div style="font-weight:bold; margin-bottom:10px; text-align:center; font-size:13px;">データ引き継ぎ・手動バックアップ</div>
-                    
-                    <button class="modal-btn" style="width:100%; background:var(--primary); color:#fff; margin-bottom:10px; display:flex; justify-content:center; align-items:center; gap:8px;" @click="exportDataShare">
-                        <span style="font-size:16px;">📤</span> データを送る (AirDrop / LINE 等)
-                    </button>
-                    
-                    <label class="modal-btn" style="width:100%; background:var(--surface); color:var(--text-main); border:1px solid var(--border); display:block; text-align:center; cursor:pointer;">
-                        📥 データを受け取る (復元)
-                        <input type="file" accept=".json" style="display:none;" @change="importData">
-                    </label>
+                <!-- タブ B: 引き継ぎ -->
+                <div v-show="mainSettingTab === 'backup'">
+                    <div style="background:var(--surface-light); padding:15px; border-radius:8px; border: 1px solid var(--border);">
+                        <div style="font-weight:bold; margin-bottom:10px; text-align:center; font-size:13px;">データ引き継ぎ・手動バックアップ</div>
+                        <div style="font-size:11px; color:var(--text-sub); margin-bottom:15px; text-align:center; line-height:1.4;">
+                            iPhone本体に保存されているデータを<br>丸ごと別の端末に送ったり復元できます。
+                        </div>
+                        <button class="modal-btn" style="width:100%; background:var(--primary); color:#fff; margin-bottom:10px; display:flex; justify-content:center; align-items:center; gap:8px;" @click="exportDataShare">
+                            <span style="font-size:16px;">📤</span> データを送る (AirDrop / LINE等)
+                        </button>
+                        <label class="modal-btn" style="width:100%; background:var(--surface); color:var(--text-main); border:1px solid var(--border); display:block; text-align:center; cursor:pointer;">
+                            📥 データを受け取る (復元)
+                            <input type="file" accept=".json" style="display:none;" @change="importData">
+                        </label>
+                    </div>
                 </div>
                 
-                <div style="display:flex; margin-bottom:15px; border-bottom:2px solid var(--surface-light);">
-                    <div style="flex:1; text-align:center; padding:10px; cursor:pointer; font-weight:bold;" 
-                         :style="settingTab === 'store' ? 'color:var(--primary); border-bottom:2px solid var(--primary); margin-bottom:-2px;' : 'color:var(--text-sub)'" 
-                         @click="settingTab = 'store'">🏪 店舗名</div>
-                    <div style="flex:1; text-align:center; padding:10px; cursor:pointer; font-weight:bold;" 
-                         :style="settingTab === 'machine' ? 'color:var(--primary); border-bottom:2px solid var(--primary); margin-bottom:-2px;' : 'color:var(--text-sub)'" 
-                         @click="settingTab = 'machine'">🎰 機種名</div>
+                <!-- タブ C: 名称編集 -->
+                <div v-show="mainSettingTab === 'edit'">
+                    <div style="display:flex; margin-bottom:15px; border-bottom:2px solid var(--surface-light);">
+                        <div style="flex:1; text-align:center; padding:10px; cursor:pointer; font-weight:bold; font-size:12px;" 
+                             :style="settingTab === 'store' ? 'color:var(--primary); border-bottom:2px solid var(--primary); margin-bottom:-2px;' : 'color:var(--text-sub)'" 
+                             @click="settingTab = 'store'">🏪 店舗名</div>
+                        <div style="flex:1; text-align:center; padding:10px; cursor:pointer; font-weight:bold; font-size:12px;" 
+                             :style="settingTab === 'machine' ? 'color:var(--primary); border-bottom:2px solid var(--primary); margin-bottom:-2px;' : 'color:var(--text-sub)'" 
+                             @click="settingTab = 'machine'">🎰 機種名</div>
+                    </div>
+
+                    <div v-show="settingTab === 'store'" style="max-height:300px; overflow-y:auto; padding-right:5px;">
+                        <div v-for="(store, index) in storeList" :key="'s'+index" style="display:flex; justify-content:space-between; align-items:center; background:var(--bg); padding:10px; border-radius:6px; margin-bottom:8px; border: 1px solid var(--border);">
+                            <span style="font-weight:bold; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-right:10px;">{{ store }}</span>
+                            <button class="modal-btn" style="padding:6px 12px; background:var(--primary); color:#fff; font-size:11px;" @click="renameStore(store, index)">変更</button>
+                        </div>
+                        <div v-if="storeList.length === 0" style="text-align:center; padding:20px; font-size:12px; color:var(--text-sub);">登録店舗なし</div>
+                    </div>
+
+                    <div v-show="settingTab === 'machine'" style="max-height:300px; overflow-y:auto; padding-right:5px;">
+                        <div v-for="(mac, index) in machineList" :key="'m'+index" style="display:flex; justify-content:space-between; align-items:center; background:var(--bg); padding:10px; border-radius:6px; margin-bottom:8px; border: 1px solid var(--border);">
+                            <span style="font-weight:bold; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-right:10px;">{{ mac }}</span>
+                            <button class="modal-btn" style="padding:6px 12px; background:var(--primary); color:#fff; font-size:11px;" @click="renameMachine(mac, index)">変更</button>
+                        </div>
+                        <div v-if="machineList.length === 0" style="text-align:center; padding:20px; font-size:12px; color:var(--text-sub);">登録機種なし</div>
+                    </div>
                 </div>
 
-                <div v-show="settingTab === 'store'">
-                    <div v-for="(store, index) in storeList" :key="'s'+index" style="display:flex; justify-content:space-between; align-items:center; background:var(--bg); padding:10px; border-radius:6px; margin-bottom:8px; border: 1px solid var(--border);">
-                        <span style="font-weight:bold; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-right:10px;">{{ store }}</span>
-                        <button class="modal-btn" style="padding:6px 12px; background:var(--primary); color:#fff; font-size:12px;" @click="renameStore(store, index)">変更</button>
-                    </div>
-                    <div v-if="storeList.length === 0" style="text-align:center; padding:20px; font-size:12px; color:var(--text-sub);">登録店舗なし</div>
-                </div>
-
-                <div v-show="settingTab === 'machine'">
-                    <div v-for="(mac, index) in machineList" :key="'m'+index" style="display:flex; justify-content:space-between; align-items:center; background:var(--bg); padding:10px; border-radius:6px; margin-bottom:8px; border: 1px solid var(--border);">
-                        <span style="font-weight:bold; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-right:10px;">{{ mac }}</span>
-                        <button class="modal-btn" style="padding:6px 12px; background:var(--primary); color:#fff; font-size:12px;" @click="renameMachine(mac, index)">変更</button>
-                    </div>
-                    <div v-if="machineList.length === 0" style="text-align:center; padding:20px; font-size:12px; color:var(--text-sub);">登録機種なし</div>
-                </div>
                 <button class="modal-btn" style="background:var(--surface-light); color:var(--text-main); margin-top:10px;" @click="showSettingsModal = false">閉じる</button>
             </div>
         </div>
 
         <!-- ⚙️ 履歴編集・削除モーダル -->
         <div class="modal-overlay" v-if="showActionModal" @click.self="showActionModal = false">
-            <div class="modal-content">
+            <div class="modal-content" style="max-width:300px;">
                 <h3 style="margin:0 0 10px 0; font-size:16px; text-align:center;">遊技履歴の操作</h3>
                 <button class="modal-btn" style="background:var(--primary); color:#fff;" @click="editMachine">✏️ 編集する</button>
                 <button class="modal-btn" style="background:var(--error); color:#fff;" @click="deleteMachine">🗑️ 削除する</button>
@@ -544,23 +613,23 @@
                     <div style="background:var(--surface-light); padding:10px; border-radius:6px; margin-top:10px; border:1px solid var(--primary);">
                         <p style="font-weight:bold; margin:0 0 5px 0; color:var(--primary);">【STEP 1: 古いスマホでの操作】</p>
                         <ol style="padding-left:20px; margin:0;">
-                            <li>左上の「⚙️設定」を開きます。</li>
+                            <li>左上のアイコン（設定）を開き、<b>「💾 引き継ぎ」</b>タブへ。</li>
                             <li><b>「📤 データを送る」</b>を押します。</li>
-                            <li>メニューが出たら<b>「AirDrop」</b>または<b>「LINE (Keepメモ等)」</b>を選んで、新しいスマホにデータを送ります。</li>
+                            <li>メニューから<b>「AirDrop」</b>や<b>「LINE (Keepメモ等)」</b>を選び、新しいスマホにデータを送ります。</li>
                         </ol>
                     </div>
 
                     <div style="background:var(--surface-light); padding:10px; border-radius:6px; margin-top:10px; border:1px solid var(--secondary);">
                         <p style="font-weight:bold; margin:0 0 5px 0; color:var(--secondary);">【STEP 2: 新しいスマホでの操作】</p>
                         <ol style="padding-left:20px; margin:0;">
-                            <li>AirDropで受け取った場合は自動で「ファイル」アプリに保存されます。<br>
-                            ※LINEで送った場合は、LINEを開き受け取ったデータを<b>「ファイルに保存」</b>してください。</li>
-                            <li>このアプリを開き、「⚙️設定」から<b>「📥 データを受け取る (復元)」</b>を押します。</li>
-                            <li>保存したファイルを選択すれば引き継ぎ完了です！</li>
+                            <li>AirDropで受け取った場合は「ファイル」アプリに保存されます。<br>
+                            ※LINE等の場合は、受け取ったデータを<b>「ファイルに保存」</b>してください。</li>
+                            <li>このアプリを開き、同じく「💾 引き継ぎ」タブから<b>「📥 データを受け取る」</b>を押します。</li>
+                            <li>保存したファイルを選択すれば完了です！</li>
                         </ol>
                     </div>
                     
-                    <p style="color:var(--error); font-size:12px; margin-top:15px; font-weight:bold; text-align:center;">※復元を実行すると、現在のデータはすべて上書きされます。</p>
+                    <p style="color:var(--error); font-size:12px; margin-top:15px; font-weight:bold; text-align:center;">※復元を実行すると、現在のデータは上書きされます。</p>
                 </div>
                 <button class="modal-btn" style="background:var(--surface-light); color:var(--text-main); margin-top:10px;" @click="showTransferGuide = false">閉じる</button>
             </div>
@@ -575,18 +644,79 @@
             setup() {
                 const currentTab = ref('home');
                 
-                // 💡 プロフィール設定
+                // --- 💡 汎用画像リサイズ圧縮ツール (容量超過防止) ---
+                const resizeImage = (file, maxSize, callback) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            const canvas = document.createElement('canvas');
+                            let w = img.width; let h = img.height;
+                            if (w > maxSize || h > maxSize) {
+                                if (w > h) { h = Math.round((h * maxSize) / w); w = maxSize; }
+                                else { w = Math.round((w * maxSize) / h); h = maxSize; }
+                            }
+                            canvas.width = w; canvas.height = h;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0, w, h);
+                            callback(canvas.toDataURL('image/jpeg', 0.8)); // 圧縮率80%
+                        };
+                        img.src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                };
+
+                // --- 👤 プロフィール & テーマ設定 ---
                 const userProfile = ref(localStorage.getItem('gachi_user_profile') ? JSON.parse(localStorage.getItem('gachi_user_profile')) : { name: 'ガチ勢', icon: '' });
-                watch(userProfile, (newVal) => {
-                    localStorage.setItem('gachi_user_profile', JSON.stringify(newVal));
-                }, { deep: true });
+                watch(userProfile, (newVal) => { localStorage.setItem('gachi_user_profile', JSON.stringify(newVal)); }, { deep: true });
 
                 const handleUserIconUpload = (e) => {
                     const file = e.target.files[0];
                     if(!file) return;
-                    const reader = new FileReader();
-                    reader.onload = (ev) => { userProfile.value.icon = ev.target.result; };
-                    reader.readAsDataURL(file);
+                    // プロフィールアイコンは200pxに自動圧縮
+                    resizeImage(file, 200, (compressedDataUrl) => {
+                        userProfile.value.icon = compressedDataUrl;
+                    });
+                };
+
+                // Originalテーマ設定
+                const defaultOriginal = { bgImage: '', opacity: 0.5, baseTheme: 'black' };
+                const originalSettings = ref(localStorage.getItem('gachi_original_theme') ? JSON.parse(localStorage.getItem('gachi_original_theme')) : defaultOriginal);
+                watch(originalSettings, (newVal) => { localStorage.setItem('gachi_original_theme', JSON.stringify(newVal)); }, { deep: true });
+
+                const handleOriginalBgUpload = (e) => {
+                    const file = e.target.files[0];
+                    if(!file) return;
+                    // 背景画像は800pxに自動圧縮（ローカルストレージ容量対策）
+                    resizeImage(file, 800, (compressedDataUrl) => {
+                        originalSettings.value.bgImage = compressedDataUrl;
+                    });
+                };
+
+                // テーマ制御
+                const themes = [{id:'black', name:'Dark'}, {id:'white', name:'Light'}, {id:'cyber', name:'Cyber'}, {id:'original', name:'Original'}];
+                const themeIndex = ref(parseInt(localStorage.getItem('gachi_theme_index')) || 0);
+                
+                const isOriginalTheme = computed(() => themes[themeIndex.value].id === 'original');
+
+                const applyThemeCSS = () => {
+                    const activeTheme = themes[themeIndex.value].id;
+                    if(activeTheme === 'original') {
+                        document.documentElement.setAttribute('data-theme', originalSettings.value.baseTheme);
+                    } else {
+                        document.documentElement.setAttribute('data-theme', activeTheme);
+                    }
+                    localStorage.setItem('gachi_theme_index', themeIndex.value);
+                };
+                
+                watch(() => originalSettings.value.baseTheme, () => {
+                    if (isOriginalTheme.value) applyThemeCSS();
+                });
+
+                const toggleTheme = () => {
+                    themeIndex.value = (themeIndex.value + 1) % themes.length;
+                    applyThemeCSS();
+                    if(currentTab.value === 'analysis' && analysisSubTab.value !== 'store') renderChart();
                 };
 
                 const currentTime = ref('');
@@ -611,16 +741,7 @@
                     return 'Gachi-Slot';
                 });
 
-                const themes = [{id:'black', name:'Dark'}, {id:'white', name:'Light'}, {id:'cyber', name:'Cyber'}];
-                const themeIndex = ref(0);
-                const toggleTheme = () => {
-                    themeIndex.value = (themeIndex.value + 1) % themes.length;
-                    document.documentElement.setAttribute('data-theme', themes[themeIndex.value].id);
-                    if(currentTab.value === 'analysis' && analysisSubTab.value !== 'store') renderChart();
-                };
-                document.documentElement.setAttribute('data-theme', themes[0].id);
-
-                // --- 💾 データ保存 (localStorage のみ) ---
+                // --- 💾 データ保存 ---
                 const appData = ref({});
                 const loadData = () => {
                     const saved = localStorage.getItem('gachi_slot_data');
@@ -636,7 +757,7 @@
                 const machineList = ref(localStorage.getItem('gachi_machine_list') ? JSON.parse(localStorage.getItem('gachi_machine_list')) : defaultMachines);
                 watch(machineList, (newVal) => { localStorage.setItem('gachi_machine_list', JSON.stringify(newVal)); }, { deep: true });
 
-                // 💡 変更：共有（Web Share API）によるバックアップ出力
+                // --- 📦 バックアップ・リストア ---
                 const exportDataShare = async () => {
                     const exportObj = {
                         appData: appData.value,
@@ -644,6 +765,7 @@
                         machineList: machineList.value,
                         counterData: counterData.value,
                         userProfile: userProfile.value,
+                        originalSettings: originalSettings.value,
                         exportDate: new Date().toISOString()
                     };
                     const dataStr = JSON.stringify(exportObj);
@@ -653,41 +775,24 @@
 
                     if (navigator.canShare && navigator.canShare({ files: [file] })) {
                         try {
-                            await navigator.share({
-                                files: [file],
-                                title: 'Gachi-Slot 引き継ぎデータ',
-                                text: '新しいスマホでこのファイルを読み込んでください。'
-                            });
-                        } catch (error) {
-                            console.log('Share canceled or failed:', error);
-                            // 共有に失敗（またはキャンセル）した場合は従来のダウンロードを試行（フォールバック）
-                            fallbackDownload(blob, fileName);
-                        }
+                            await navigator.share({ files: [file], title: 'Gachi-Slot 引き継ぎデータ' });
+                        } catch (error) { fallbackDownload(blob, fileName); }
                     } else {
-                        // ブラウザが共有機能に対応していない場合のフォールバック
                         fallbackDownload(blob, fileName);
                     }
                 };
 
-                // 安全装置：ファイルアプリへ直接保存する処理
                 const fallbackDownload = (blob, fileName) => {
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
-                    a.href = url;
-                    a.download = fileName;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
+                    a.href = url; a.download = fileName;
+                    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
                 };
 
                 const importData = (e) => {
                     const file = e.target.files[0];
                     if(!file) return;
-                    if(!confirm("現在のデータはすべて上書きされます。よろしいですか？")) {
-                        e.target.value = ''; 
-                        return;
-                    }
+                    if(!confirm("現在のデータはすべて上書きされます。よろしいですか？")) { e.target.value = ''; return; }
                     const reader = new FileReader();
                     reader.onload = (ev) => {
                         try {
@@ -697,24 +802,23 @@
                             if(imported.machineList) machineList.value = imported.machineList;
                             if(imported.counterData) counterData.value = imported.counterData;
                             if(imported.userProfile) userProfile.value = imported.userProfile;
+                            if(imported.originalSettings) originalSettings.value = imported.originalSettings;
                             
                             alert("✅ データの復元が完了しました！");
                             showSettingsModal.value = false;
-                            
                             generateCalendar();
                             const td = calDays.value.find(day => day.fullDate === todayStr);
                             if(td) selectDay(td);
                         } catch(error) {
-                            alert("⚠️ ファイルの読み込みに失敗しました。正しいバックアップファイルを選択してください。");
-                            console.error(error);
+                            alert("⚠️ 読み込みに失敗しました。");
                         }
                     };
                     reader.readAsText(file);
                 };
 
+                // --- 📅 カレンダー ---
                 const today = new Date();
                 const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
-                
                 const currentYear = ref(today.getFullYear());
                 const currentMonth = ref(today.getMonth() + 1);
                 const calDays = ref([]);
@@ -762,6 +866,7 @@
                     return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
                 };
 
+                // --- 📊 分析タブ ---
                 const analysisSubTab = ref('month');
                 let chartInstance = null;
                 const changeMainTab = (tabName) => {
@@ -772,8 +877,7 @@
                 const changeAnalysisTab = async (subTab) => {
                     analysisSubTab.value = subTab;
                     if (subTab === 'month' || subTab === 'year') {
-                        await nextTick();
-                        renderChart();
+                        await nextTick(); renderChart();
                     }
                 };
 
@@ -782,7 +886,8 @@
                     if(!ctx) return;
                     if(chartInstance) chartInstance.destroy();
 
-                    const isWhite = themes[themeIndex.value].id === 'white';
+                    // Originalテーマ時はbaseThemeの色を参照する
+                    const isWhite = (themes[themeIndex.value].id === 'white') || (isOriginalTheme.value && originalSettings.value.baseTheme === 'white');
                     const lineColor = isWhite ? '#6200ea' : '#bb86fc';
                     const gridColor = isWhite ? '#e0e0e0' : '#333333';
                     const textColor = isWhite ? '#666666' : '#b3b3b3';
@@ -794,8 +899,7 @@
                         for (let i = 1; i <= lastDate; i++) {
                             labels.push(`${i}日`);
                             const dStr = `${currentYear.value}-${String(currentMonth.value).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
-                            cumulativeNet += getDayTotal(dStr);
-                            dataPoints.push(cumulativeNet);
+                            cumulativeNet += getDayTotal(dStr); dataPoints.push(cumulativeNet);
                         }
                     } else if (analysisSubTab.value === 'year') {
                         for (let m = 1; m <= 12; m++) {
@@ -806,8 +910,7 @@
                                 const dStr = `${currentYear.value}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
                                 monthNet += getDayTotal(dStr);
                             }
-                            cumulativeNet += monthNet;
-                            dataPoints.push(cumulativeNet);
+                            cumulativeNet += monthNet; dataPoints.push(cumulativeNet);
                         }
                     }
 
@@ -832,8 +935,7 @@
                             dayData.machines.forEach(m => {
                                 const sName = m.location && m.location.trim() !== '' ? m.location.trim() : '店舗未設定';
                                 if(!storeMap[sName]) storeMap[sName] = { name: sName, count: 0, winCount: 0, totalNet: 0 };
-                                storeMap[sName].count++;
-                                storeMap[sName].totalNet += m.netBalance;
+                                storeMap[sName].count++; storeMap[sName].totalNet += m.netBalance;
                                 if(m.netBalance > 0) storeMap[sName].winCount++;
                             });
                         }
@@ -843,9 +945,11 @@
                     return list.sort((a, b) => b.totalNet - a.totalNet);
                 });
 
+                // --- ⚙️ 総合設定モーダル ---
                 const showSettingsModal = ref(false);
                 const showTransferGuide = ref(false);
-                const settingTab = ref('store');
+                const mainSettingTab = ref('profile'); // profile, backup, edit
+                const settingTab = ref('store'); // editサブタブ
 
                 const renameStore = (oldName, index) => {
                     const newName = prompt(`「${oldName}」の新しい店舗名を入力してください：`, oldName);
@@ -881,15 +985,13 @@
                     }
                 };
 
+                // --- 🎰 遊技履歴 編集・削除制御用 ---
                 const isEditing = ref(false);
                 const editingIndex = ref(null);
                 const showActionModal = ref(false);
                 const activeMachineIndex = ref(null);
 
-                const openActionModal = (index) => {
-                    activeMachineIndex.value = index;
-                    showActionModal.value = true;
-                };
+                const openActionModal = (index) => { activeMachineIndex.value = index; showActionModal.value = true; };
 
                 const form = ref({ date: todayStr, machineNumber: 1, locationSelect: '', locationNew: '', nameSelect: '', nameNew: '', isSameStore: false, rate: 46, broughtIn: 0, cashInvest: 0, savedSign: -1, savedVal: 0, leftMedals: 0, memo: '', photo: '' });
                 
@@ -898,15 +1000,9 @@
                     const machines = appData.value[d]?.machines || [];
                     const prevIdx = form.value.machineNumber - 2;
                     const prev = prevIdx >= 0 ? machines[prevIdx] : null;
-                    
                     if (form.value.isSameStore && prev) {
-                        form.value.locationSelect = prev.location;
-                        form.value.locationNew = '';
-                        form.value.broughtIn = prev.leftMedals;
-                    } else {
-                        form.value.locationSelect = '';
-                        form.value.broughtIn = 0;
-                    }
+                        form.value.locationSelect = prev.location; form.value.locationNew = ''; form.value.broughtIn = prev.leftMedals;
+                    } else { form.value.locationSelect = ''; form.value.broughtIn = 0; }
                 };
 
                 const updateBroughtInAndNumber = (dateStr, targetIdx = null) => {
@@ -914,35 +1010,24 @@
                     if (targetIdx !== null) {
                         form.value.machineNumber = targetIdx + 1;
                         if (targetIdx === 0) {
-                            form.value.isSameStore = false;
-                            form.value.broughtIn = 0;
+                            form.value.isSameStore = false; form.value.broughtIn = 0;
                         } else {
                             if(form.value.isSameStore) {
-                                form.value.locationSelect = machines[targetIdx - 1].location;
-                                form.value.locationNew = '';
-                                form.value.broughtIn = machines[targetIdx - 1].leftMedals || 0;
+                                form.value.locationSelect = machines[targetIdx - 1].location; form.value.locationNew = ''; form.value.broughtIn = machines[targetIdx - 1].leftMedals || 0;
                             }
                         }
                     } else {
                         const nextNum = machines.length + 1;
                         form.value.machineNumber = nextNum;
                         if (nextNum === 1) {
-                            form.value.isSameStore = false;
-                            form.value.locationSelect = '';
-                            form.value.locationNew = '';
-                            form.value.broughtIn = 0;
+                            form.value.isSameStore = false; form.value.locationSelect = ''; form.value.locationNew = ''; form.value.broughtIn = 0;
                         } else {
-                            form.value.isSameStore = true; 
-                            form.value.locationSelect = machines[machines.length - 1].location;
-                            form.value.locationNew = '';
-                            form.value.broughtIn = machines[machines.length - 1].leftMedals || 0;
+                            form.value.isSameStore = true; form.value.locationSelect = machines[machines.length - 1].location; form.value.locationNew = ''; form.value.broughtIn = machines[machines.length - 1].leftMedals || 0;
                         }
                     }
                 };
 
-                watch(() => form.value.date, (newDate) => {
-                    if (!isEditing.value) updateBroughtInAndNumber(newDate);
-                });
+                watch(() => form.value.date, (newDate) => { if (!isEditing.value) updateBroughtInAndNumber(newDate); });
 
                 const netBalance = computed(() => {
                     let cashToMedals = Math.floor((form.value.cashInvest / 1000) * form.value.rate);
@@ -954,57 +1039,38 @@
                 const handlePhotoUpload = (e) => {
                     const file = e.target.files[0];
                     if(!file) return;
-                    const reader = new FileReader();
-                    reader.onload = (ev) => { form.value.photo = ev.target.result; };
-                    reader.readAsDataURL(file);
+                    // 遊技履歴の画像もリサイズ (1000px)
+                    resizeImage(file, 1000, (compressed) => { form.value.photo = compressed; });
                 };
 
                 const prepareMachineInput = () => {
-                    isEditing.value = false;
-                    editingIndex.value = null;
+                    isEditing.value = false; editingIndex.value = null;
                     let targetDate = todayStr;
                     if (selectedDay.value && !selectedDay.value.empty) targetDate = selectedDay.value.fullDate;
                     
-                    form.value.date = targetDate;
-                    form.value.nameSelect = '';
-                    form.value.nameNew = '';
-                    form.value.rate = 46;
-                    form.value.cashInvest = 0;
-                    form.value.savedSign = -1;
-                    form.value.savedVal = 0;
-                    form.value.leftMedals = 0;
-                    form.value.memo = '';
-                    form.value.photo = '';
+                    form.value.date = targetDate; form.value.nameSelect = ''; form.value.nameNew = ''; form.value.rate = 46;
+                    form.value.cashInvest = 0; form.value.savedSign = -1; form.value.savedVal = 0; form.value.leftMedals = 0;
+                    form.value.memo = ''; form.value.photo = '';
                     
                     updateBroughtInAndNumber(targetDate);
                     currentTab.value = 'input_machine';
                 };
 
                 const editMachine = () => {
-                    showActionModal.value = false;
-                    isEditing.value = true;
-                    editingIndex.value = activeMachineIndex.value;
+                    showActionModal.value = false; isEditing.value = true; editingIndex.value = activeMachineIndex.value;
                     const target = appData.value[selectedDay.value.fullDate].machines[editingIndex.value];
                     
                     if (target.location && !storeList.value.includes(target.location)) storeList.value.push(target.location);
                     if (target.name && !machineList.value.includes(target.name)) machineList.value.push(target.name);
 
                     form.value = {
-                        date: selectedDay.value.fullDate,
-                        machineNumber: target.machineNumber,
-                        locationSelect: target.location || '',
-                        locationNew: '',
+                        date: selectedDay.value.fullDate, machineNumber: target.machineNumber,
+                        locationSelect: target.location || '', locationNew: '',
                         isSameStore: target.isSameStore !== undefined ? target.isSameStore : (target.machineNumber > 1),
-                        nameSelect: target.name || '',
-                        nameNew: '',
-                        rate: target.rate,
-                        broughtIn: target.broughtIn,
-                        cashInvest: target.cashInvest,
-                        savedSign: target.savedSign,
-                        savedVal: target.savedVal,
-                        leftMedals: target.leftMedals,
-                        memo: target.memo || '',
-                        photo: target.photo || ''
+                        nameSelect: target.name || '', nameNew: '',
+                        rate: target.rate, broughtIn: target.broughtIn, cashInvest: target.cashInvest,
+                        savedSign: target.savedSign, savedVal: target.savedVal, leftMedals: target.leftMedals,
+                        memo: target.memo || '', photo: target.photo || ''
                     };
                     updateBroughtInAndNumber(selectedDay.value.fullDate, editingIndex.value);
                     currentTab.value = 'input_machine';
@@ -1021,14 +1087,10 @@
                     let prevLeft = 0;
                     machines.forEach((m, idx) => {
                         m.machineNumber = idx + 1;
-                        if (idx === 0) {
-                            m.broughtIn = 0; m.isSameStore = false;
-                        } else {
-                            if (m.isSameStore) {
-                                m.broughtIn = prevLeft; m.location = machines[idx-1].location; 
-                            } else {
-                                m.broughtIn = 0;
-                            }
+                        if (idx === 0) { m.broughtIn = 0; m.isSameStore = false; } 
+                        else {
+                            if (m.isSameStore) { m.broughtIn = prevLeft; m.location = machines[idx-1].location; } 
+                            else { m.broughtIn = 0; }
                         }
                         let cashToMedals = Math.floor((m.cashInvest / 1000) * m.rate);
                         let savedDelta = m.savedSign * m.savedVal;
@@ -1036,7 +1098,6 @@
                         m.netBalance = m.leftMedals - totalInvest;
                         prevLeft = m.leftMedals;
                     });
-                    
                     appData.value[d].machines = machines;
                 };
 
@@ -1072,23 +1133,16 @@
                     let machines = appData.value[d].machines;
                     const saveData = { ...form.value, location: finalLocation, name: finalName, netBalance: netBalance.value };
 
-                    if (isEditing.value) {
-                        machines[editingIndex.value] = saveData;
-                    } else {
-                        machines.push(saveData);
-                    }
+                    if (isEditing.value) machines[editingIndex.value] = saveData;
+                    else machines.push(saveData);
 
                     let prevLeft = 0;
                     machines.forEach((m, idx) => {
                         m.machineNumber = idx + 1;
-                        if (idx === 0) {
-                            m.broughtIn = 0; m.isSameStore = false;
-                        } else {
-                            if (m.isSameStore) {
-                                m.broughtIn = prevLeft; m.location = machines[idx-1].location; 
-                            } else {
-                                m.broughtIn = 0; 
-                            }
+                        if (idx === 0) { m.broughtIn = 0; m.isSameStore = false; } 
+                        else {
+                            if (m.isSameStore) { m.broughtIn = prevLeft; m.location = machines[idx-1].location; } 
+                            else { m.broughtIn = 0; }
                         }
                         let cashToMedals = Math.floor((m.cashInvest / 1000) * m.rate);
                         let savedDelta = m.savedSign * m.savedVal;
@@ -1096,17 +1150,11 @@
                         m.netBalance = m.leftMedals - totalInvest;
                         prevLeft = m.leftMedals;
                     });
-
                     appData.value[d].machines = machines;
 
-                    const savedDate = new Date(d);
-                    currentYear.value = savedDate.getFullYear();
-                    currentMonth.value = savedDate.getMonth() + 1;
+                    const savedDate = new Date(d); currentYear.value = savedDate.getFullYear(); currentMonth.value = savedDate.getMonth() + 1;
                     generateCalendar();
-                    
-                    const targetDay = calDays.value.find(day => day.fullDate === d);
-                    if(targetDay) selectDay(targetDay);
-                    
+                    const targetDay = calDays.value.find(day => day.fullDate === d); if(targetDay) selectDay(targetDay);
                     currentTab.value = 'home';
                 };
 
@@ -1117,31 +1165,23 @@
                         dailyForm.value.invest = appData.value[d]?.daily?.invest || 0;
                         dailyForm.value.recover = appData.value[d]?.daily?.recover || 0;
                         let delta = appData.value[d]?.daily?.medalDelta || 0;
-                        dailyForm.value.medalSign = delta >= 0 ? 1 : -1;
-                        dailyForm.value.medalVal = Math.abs(delta);
+                        dailyForm.value.medalSign = delta >= 0 ? 1 : -1; dailyForm.value.medalVal = Math.abs(delta);
                     }
                 });
 
                 const saveDailyTotal = () => {
-                    if (dailyForm.value.invest < 0 || dailyForm.value.recover < 0 || dailyForm.value.medalVal < 0) {
-                        alert("⚠️ マイナスの値は指定できません。"); return;
-                    }
+                    if (dailyForm.value.invest < 0 || dailyForm.value.recover < 0 || dailyForm.value.medalVal < 0) { alert("⚠️ マイナスの値は指定できません。"); return; }
                     const d = selectedDay.value.fullDate;
                     if (!appData.value[d]) appData.value[d] = { machines: [], daily: { invest:0, recover:0, net:0, medalDelta:0 } };
-                    appData.value[d].daily.invest = dailyForm.value.invest;
-                    appData.value[d].daily.recover = dailyForm.value.recover;
+                    appData.value[d].daily.invest = dailyForm.value.invest; appData.value[d].daily.recover = dailyForm.value.recover;
                     appData.value[d].daily.net = dailyForm.value.recover - dailyForm.value.invest;
                     appData.value[d].daily.medalDelta = dailyForm.value.medalSign * dailyForm.value.medalVal;
                     currentTab.value = 'home';
                 };
 
                 // --- 🎲 小役カウンター ---
-                const selectedPageIndex = ref(0);
-                const cPage = ref(0);
-                const counterStep = ref(1);
-
-                const glowR1 = ref([false, false, false, false, false]);
-                const glowR2 = ref([false, false, false, false, false]);
+                const selectedPageIndex = ref(0); const cPage = ref(0); const counterStep = ref(1);
+                const glowR1 = ref([false, false, false, false, false]); const glowR2 = ref([false, false, false, false, false]);
 
                 const defaultCounter = [
                     { pageName: 'シチュエーションA', games: 0, r1: [0,0,0,0,0], r2Names: ['カスタム1','カスタム2','カスタム3','カスタム4','カスタム5'], r2: [0,0,0,0,0] },
@@ -1150,10 +1190,7 @@
                 ];
                 
                 const loadedCounter = localStorage.getItem('gachi_counter') ? JSON.parse(localStorage.getItem('gachi_counter')) : defaultCounter;
-                loadedCounter.forEach((p, i) => { 
-                    if(!p.pageName) p.pageName = (i < 3) ? defaultCounter[i].pageName : `シチュエーション${String.fromCharCode(65 + i)}`; 
-                });
-                
+                loadedCounter.forEach((p, i) => { if(!p.pageName) p.pageName = (i < 3) ? defaultCounter[i].pageName : `シチュエーション${String.fromCharCode(65 + i)}`; });
                 const counterData = ref(loadedCounter);
                 watch(counterData, (newVal) => { localStorage.setItem('gachi_counter', JSON.stringify(newVal)); }, { deep: true });
 
@@ -1163,45 +1200,30 @@
 
                 const onPageSelectChange = () => {
                     if (selectedPageIndex.value === 'NEW') {
-                        if (counterData.value.length >= 10) {
-                            alert("⚠️ ページは最大10個までしか作成できません。");
-                            selectedPageIndex.value = cPage.value;
-                            return;
-                        }
+                        if (counterData.value.length >= 10) { alert("⚠️ ページは最大10個までしか作成できません。"); selectedPageIndex.value = cPage.value; return; }
                         const newName = prompt('新しいページ名を入力してください：', `シチュエーション${String.fromCharCode(65 + counterData.value.length)}`);
                         if (newName && newName.trim() !== '') {
                             counterData.value.push({ pageName: newName.trim(), games: 0, r1: [0,0,0,0,0], r2Names: ['カスタム1','カスタム2','カスタム3','カスタム4','カスタム5'], r2: [0,0,0,0,0] });
-                            cPage.value = counterData.value.length - 1;
-                            selectedPageIndex.value = cPage.value;
-                        } else {
-                            selectedPageIndex.value = cPage.value; 
-                        }
-                    } else {
-                        cPage.value = selectedPageIndex.value;
-                    }
+                            cPage.value = counterData.value.length - 1; selectedPageIndex.value = cPage.value;
+                        } else { selectedPageIndex.value = cPage.value; }
+                    } else { cPage.value = selectedPageIndex.value; }
                 };
                 
                 const updateR1 = (index) => {
-                    let newVal = activePage.value.r1[index] + counterStep.value;
-                    if(newVal < 0) newVal = 0;
+                    let newVal = activePage.value.r1[index] + counterStep.value; if(newVal < 0) newVal = 0;
                     activePage.value.r1[index] = newVal;
-                    glowR1.value[index] = true;
-                    setTimeout(() => { glowR1.value[index] = false; }, 200);
+                    glowR1.value[index] = true; setTimeout(() => { glowR1.value[index] = false; }, 200);
                 };
 
                 const updateR2 = (index) => {
-                    let newVal = activePage.value.r2[index] + counterStep.value;
-                    if(newVal < 0) newVal = 0;
+                    let newVal = activePage.value.r2[index] + counterStep.value; if(newVal < 0) newVal = 0;
                     activePage.value.r2[index] = newVal;
-                    glowR2.value[index] = true;
-                    setTimeout(() => { glowR2.value[index] = false; }, 200);
+                    glowR2.value[index] = true; setTimeout(() => { glowR2.value[index] = false; }, 200);
                 };
 
                 const resetCounter = () => {
                     if(confirm("このページをリセットしますか？")) {
-                        counterData.value[cPage.value].games = 0;
-                        counterData.value[cPage.value].r1 = [0,0,0,0,0];
-                        counterData.value[cPage.value].r2 = [0,0,0,0,0];
+                        counterData.value[cPage.value].games = 0; counterData.value[cPage.value].r1 = [0,0,0,0,0]; counterData.value[cPage.value].r2 = [0,0,0,0,0];
                     }
                 };
                 
@@ -1211,34 +1233,23 @@
                     selectedPageIndex.value = cPage.value; 
                 };
                 
-                const showRoleEditModal = ref(false);
-                const roleEditForm = ref(['', '', '', '', '']);
-
-                const openRoleEditModal = () => {
-                    roleEditForm.value = [...activePage.value.r2Names];
-                    showRoleEditModal.value = true;
-                };
-
+                const showRoleEditModal = ref(false); const roleEditForm = ref(['', '', '', '', '']);
+                const openRoleEditModal = () => { roleEditForm.value = [...activePage.value.r2Names]; showRoleEditModal.value = true; };
                 const saveRoleNames = () => {
-                    for(let i = 0; i < 5; i++) {
-                        activePage.value.r2Names[i] = roleEditForm.value[i].trim() || `カスタム${i+1}`;
-                    }
+                    for(let i = 0; i < 5; i++) { activePage.value.r2Names[i] = roleEditForm.value[i].trim() || `カスタム${i+1}`; }
                     showRoleEditModal.value = false;
                 };
 
                 onMounted(() => {
-                    loadData();
-                    generateCalendar();
-                    updateTime();
+                    loadData(); generateCalendar(); updateTime(); applyThemeCSS();
                     timer = setInterval(updateTime, 1000);
-                    const td = calDays.value.find(day => day.fullDate === todayStr);
-                    if(td) selectDay(td);
+                    const td = calDays.value.find(day => day.fullDate === todayStr); if(td) selectDay(td);
                 });
-                
                 onUnmounted(() => { if(timer) clearInterval(timer); });
 
                 return {
                     userProfile, handleUserIconUpload, exportDataShare, importData, showTransferGuide,
+                    originalSettings, handleOriginalBgUpload, isOriginalTheme, mainSettingTab,
                     currentTab, headerTitle, currentTime, themes, themeIndex, toggleTheme,
                     currentYear, currentMonth, changeMonth,
                     calDays, selectedDay, selectDay, todayStr,
