@@ -4,15 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Gachi-Slot 収支管理</title>
-    <!-- Vue 3 -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Firebase SDK (Compat) -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-
     <style>
         /* 🎨 テーマ設定 */
         :root[data-theme="black"] { --bg: #121212; --surface: #1e1e1e; --surface-light: #2c2c2c; --primary: #bb86fc; --secondary: #03dac6; --error: #cf6679; --success: #4caf50; --text-main: #ffffff; --text-sub: #b3b3b3; --border: #333333; }
@@ -130,11 +123,10 @@
         <header>
             <div style="display:flex; align-items:center; gap: 12px;">
                 <span v-show="currentTab === 'home'" style="cursor:pointer;" @click="showSettingsModal = true">
-                    <img v-if="currentUser" :src="currentUser.photoURL || 'https://via.placeholder.com/30'" style="width:30px; height:30px; border-radius:50%; object-fit:cover; border:2px solid var(--primary);">
-                    <span v-else style="font-size:24px;">⚙️</span>
+                    <img :src="userProfile.icon || 'https://via.placeholder.com/30'" style="width:30px; height:30px; border-radius:50%; object-fit:cover; border:2px solid var(--primary);">
                 </span>
                 <div style="display:flex; flex-direction:column;">
-                    <span style="font-size:16px;">{{ headerTitle }}</span>
+                    <span style="font-size:16px;">{{ currentTab === 'home' ? userProfile.name : headerTitle }}</span>
                     <span style="font-size:11px; color:var(--text-sub); font-weight:normal; margin-top:2px;">{{ currentTime }}</span>
                 </div>
             </div>
@@ -221,6 +213,13 @@
                     </template>
                     
                     <div class="btn-outline" @click="prepareMachineInput">＋ 遊技履歴を追加</div>
+                </div>
+
+                <!-- 💡 変更：機種変更・引き継ぎ案内 -->
+                <div style="text-align:center; padding: 30px 10px 20px 10px;">
+                    <button style="background:var(--surface-light); color:var(--primary); border:1px solid var(--border); padding:12px 20px; border-radius:30px; font-size:13px; font-weight:bold; cursor:pointer;" @click="showTransferGuide = true">
+                        📱 携帯の機種変更をされる方はコチラ
+                    </button>
                 </div>
             </div>
 
@@ -451,33 +450,41 @@
             </div>
         </div>
 
-        <!-- ⚙️ 設定・管理モーダル (アカウント・店舗・機種) -->
+        <!-- ⚙️ 設定・管理モーダル (プロフィール・バックアップ・名称変更) -->
         <div class="modal-overlay" v-if="showSettingsModal" @click.self="showSettingsModal = false">
             <div class="modal-content">
                 <h3 style="margin:0 0 15px 0; font-size:16px; text-align:center;">設定 / データ管理</h3>
                 
+                <!-- 💡 変更：プロフィール設定 -->
                 <div style="background:var(--surface-light); padding:15px; border-radius:8px; margin-bottom:15px; text-align:center; border: 1px solid var(--border);">
-                    <div v-if="currentUser">
-                        <img :src="currentUser.photoURL || 'https://via.placeholder.com/50'" style="width:50px; height:50px; border-radius:50%; margin-bottom:10px; border: 2px solid var(--primary);">
-                        <div style="font-weight:bold; font-size:14px; margin-bottom:5px;">{{ currentUser.displayName || 'ユーザー' }}</div>
-                        <div style="font-size:12px; color:var(--primary); font-weight:bold; margin-bottom:15px;">{{ syncStatus }}</div>
-                        <button class="modal-btn" style="background:var(--surface); color:var(--text-main); border:1px solid var(--border); padding: 8px 15px;" @click="logout">ログアウト</button>
+                    <div style="font-weight:bold; margin-bottom:10px; font-size:13px;">プロフィール設定</div>
+                    <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
+                        <label style="cursor:pointer; position:relative;">
+                            <img :src="userProfile.icon || 'https://via.placeholder.com/50'" style="width:50px; height:50px; border-radius:50%; object-fit:cover; border:2px solid var(--primary);">
+                            <input type="file" accept="image/*" style="display:none;" @change="handleUserIconUpload">
+                            <div style="position:absolute; bottom:-5px; right:-5px; background:var(--surface); border-radius:50%; width:20px; height:20px; display:flex; align-items:center; justify-content:center; font-size:10px; border:1px solid var(--border);">📷</div>
+                        </label>
+                        <input type="text" v-model="userProfile.name" class="form-input" style="width:150px; padding:8px; font-size:14px;" placeholder="ユーザー名">
                     </div>
-                    <div v-else>
-                        <div style="font-size:12px; color:var(--text-sub); margin-bottom:10px; line-height:1.4;">Googleアカウントと連携すると<br>データをクラウドに自動保存・復元できます</div>
-                        <button class="modal-btn" style="background:#4285F4; color:#fff; width:100%; display:flex; align-items:center; justify-content:center; gap:10px;" @click="loginWithGoogle">
-                            <span style="font-size:18px; background:#fff; border-radius:50%; padding:2px;">G</span> Googleでログイン
-                        </button>
-                    </div>
+                </div>
+
+                <!-- 💡 変更：手動バックアップ・復元機能 -->
+                <div style="background:var(--surface-light); padding:15px; border-radius:8px; margin-bottom:15px; border: 1px solid var(--border);">
+                    <div style="font-weight:bold; margin-bottom:10px; text-align:center; font-size:13px;">データ引き継ぎ・手動バックアップ</div>
+                    <button class="modal-btn" style="width:100%; background:var(--primary); color:#fff; margin-bottom:10px;" @click="exportData">📥 バックアップファイルを保存</button>
+                    <label class="modal-btn" style="width:100%; background:var(--surface); color:var(--text-main); border:1px solid var(--border); display:block; text-align:center; cursor:pointer;">
+                        📤 バックアップデータを復元
+                        <input type="file" accept=".json" style="display:none;" @change="importData">
+                    </label>
                 </div>
                 
                 <div style="display:flex; margin-bottom:15px; border-bottom:2px solid var(--surface-light);">
                     <div style="flex:1; text-align:center; padding:10px; cursor:pointer; font-weight:bold;" 
                          :style="settingTab === 'store' ? 'color:var(--primary); border-bottom:2px solid var(--primary); margin-bottom:-2px;' : 'color:var(--text-sub)'" 
-                         @click="settingTab = 'store'">🏪 店舗</div>
+                         @click="settingTab = 'store'">🏪 店舗名</div>
                     <div style="flex:1; text-align:center; padding:10px; cursor:pointer; font-weight:bold;" 
                          :style="settingTab === 'machine' ? 'color:var(--primary); border-bottom:2px solid var(--primary); margin-bottom:-2px;' : 'color:var(--text-sub)'" 
-                         @click="settingTab = 'machine'">🎰 機種</div>
+                         @click="settingTab = 'machine'">🎰 機種名</div>
                 </div>
 
                 <div v-show="settingTab === 'store'">
@@ -509,7 +516,7 @@
             </div>
         </div>
 
-        <!-- 💡 小役名前一括変更モーダル -->
+        <!-- 小役名前一括変更モーダル -->
         <div class="modal-overlay" v-if="showRoleEditModal" @click.self="showRoleEditModal = false">
             <div class="modal-content">
                 <h3 style="margin:0 0 10px 0; font-size:16px; text-align:center;">カスタム小役の名前一括変更</h3>
@@ -524,102 +531,49 @@
                 <button class="modal-btn" style="background:var(--surface-light); color:var(--text-main);" @click="showRoleEditModal = false">キャンセル</button>
             </div>
         </div>
+
+        <!-- 📱 機種変更・引き継ぎガイドモーダル -->
+        <div class="modal-overlay" v-if="showTransferGuide" @click.self="showTransferGuide = false">
+            <div class="modal-content">
+                <h3 style="margin:0 0 15px 0; font-size:16px; text-align:center; color:var(--primary);">📱 機種変更・データ引き継ぎ手順</h3>
+                <div style="font-size:13px; line-height:1.6; color:var(--text-main); overflow-y:auto; max-height:60vh;">
+                    <p>このアプリは個人情報を一切収集しないため、データはすべてお使いのスマホ本体にのみ保存されています。</p>
+                    <p style="font-weight:bold; margin-top:10px; color:var(--primary);">【引き継ぎのステップ】</p>
+                    <ol style="padding-left:20px; margin-top:5px;">
+                        <li style="margin-bottom:10px;">古いスマホで左上の「⚙️設定」を開き、<br><b>「📥 バックアップデータを保存」</b>を押してファイル（.json）を本体に保存します。</li>
+                        <li style="margin-bottom:10px;">保存したファイルを、メールやLINEのファイル送信、AirDropなどで<b>新しいスマホに送信</b>します。</li>
+                        <li style="margin-bottom:10px;">新しいスマホでこのアプリを開き、「⚙️設定」から<br><b>「📤 バックアップデータを復元」</b>を押し、受け取ったファイルを選択します。</li>
+                    </ol>
+                    <p style="color:var(--error); font-size:12px; margin-top:10px; font-weight:bold;">※復元を実行すると、現在のデータはすべて上書きされますのでご注意ください。</p>
+                </div>
+                <button class="modal-btn" style="background:var(--surface-light); color:var(--text-main); margin-top:10px;" @click="showTransferGuide = false">閉じる</button>
+            </div>
+        </div>
+
     </div>
 
     <script>
         const { createApp, ref, computed, watch, onMounted, onUnmounted, nextTick } = Vue;
 
-        // 💡 Firebase初期化設定
-        const firebaseConfig = {
-            apiKey: "AIzaSyBhZ6XDcAaXL5uJPkfHDr-qGpfQPMmGFvs",
-            authDomain: "gachi-slot.firebaseapp.com",
-            projectId: "gachi-slot",
-            storageBucket: "gachi-slot.firebasestorage.app",
-            messagingSenderId: "986303391989",
-            appId: "1:986303391989:web:ccceda9cb480de1e433dbc",
-            measurementId: "G-Z8W4R0FXJG"
-        };
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-        const auth = firebase.auth();
-        const db = firebase.firestore();
-
         createApp({
             setup() {
                 const currentTab = ref('home');
                 
-                // --- ☁️ Firebase アカウント連携 & 同期 ---
-                const currentUser = ref(null);
-                const syncStatus = ref('ローカルに保存');
-                let isCloudLoading = false; 
+                // 💡 プロフィール設定
+                const userProfile = ref(localStorage.getItem('gachi_user_profile') ? JSON.parse(localStorage.getItem('gachi_user_profile')) : { name: 'ガチ勢', icon: '' });
+                watch(userProfile, (newVal) => {
+                    localStorage.setItem('gachi_user_profile', JSON.stringify(newVal));
+                }, { deep: true });
 
-                const loginWithGoogle = () => {
-                    const provider = new firebase.auth.GoogleAuthProvider();
-                    // 💡 変更: iOS PWA対策でPopup方式へ変更、エラー時のアラート追加
-                    auth.signInWithPopup(provider).then((result) => {
-                        console.log("ログイン成功", result.user);
-                    }).catch((error) => {
-                        alert("⚠️ ログインエラー: " + error.message);
-                        console.error(error);
-                    });
+                const handleUserIconUpload = (e) => {
+                    const file = e.target.files[0];
+                    if(!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (ev) => { userProfile.value.icon = ev.target.result; };
+                    reader.readAsDataURL(file);
                 };
 
-                const logout = () => {
-                    if(confirm("ログアウトしますか？（現在のデータは端末に残ります）")) {
-                        auth.signOut();
-                    }
-                };
-
-                let saveTimeout = null;
-                const saveToCloud = () => {
-                    if (!currentUser.value || isCloudLoading) return;
-                    syncStatus.value = '☁️ 保存中...';
-                    if (saveTimeout) clearTimeout(saveTimeout);
-                    
-                    saveTimeout = setTimeout(() => {
-                        db.collection('users').doc(currentUser.value.uid).set({
-                            appData: appData.value,
-                            storeList: storeList.value,
-                            machineList: machineList.value,
-                            counterData: counterData.value,
-                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                        }, { merge: true })
-                        .then(() => { syncStatus.value = '☁️ 同期完了'; })
-                        .catch((e) => { syncStatus.value = '⚠️ 同期エラー'; console.error(e); });
-                    }, 1500);
-                };
-
-                auth.onAuthStateChanged((user) => {
-                    if (user) {
-                        currentUser.value = user;
-                        syncStatus.value = '☁️ クラウドから読込中...';
-                        
-                        db.collection('users').doc(user.uid).get().then(doc => {
-                            if (doc.exists) {
-                                const d = doc.data();
-                                isCloudLoading = true; 
-                                if(d.appData) appData.value = d.appData;
-                                if(d.storeList) storeList.value = d.storeList;
-                                if(d.machineList) machineList.value = d.machineList;
-                                if(d.counterData) counterData.value = d.counterData;
-                                
-                                setTimeout(() => { isCloudLoading = false; }, 500);
-                                syncStatus.value = '☁️ 同期完了';
-                            } else {
-                                saveToCloud();
-                            }
-                        }).catch(e => {
-                            syncStatus.value = '⚠️ 読込エラー';
-                            console.error(e);
-                        });
-                    } else {
-                        currentUser.value = null;
-                        syncStatus.value = 'ローカルに保存';
-                    }
-                });
-
-                // --- ⌚ 時計 ---
+                // ⌚ 時計
                 const currentTime = ref('');
                 let timer = null;
                 const updateTime = () => {
@@ -634,7 +588,7 @@
                 };
 
                 const headerTitle = computed(() => {
-                    if(currentTab.value === 'home') return 'ダッシュボード';
+                    if(currentTab.value === 'home') return `${userProfile.value.name} の稼働記録`;
                     if(currentTab.value === 'counter') return '小役カウンター';
                     if(currentTab.value === 'input_machine') return isEditing.value ? '遊技履歴編集' : '遊技履歴追加';
                     if(currentTab.value === 'input_daily') return '日別収支確定';
@@ -651,7 +605,7 @@
                 };
                 document.documentElement.setAttribute('data-theme', themes[0].id);
 
-                // --- 💾 データ連携と監視 ---
+                // --- 💾 データ保存 (localStorage のみ) ---
                 const appData = ref({});
                 const loadData = () => {
                     const saved = localStorage.getItem('gachi_slot_data');
@@ -659,16 +613,67 @@
                 };
                 watch(appData, (newVal) => {
                     localStorage.setItem('gachi_slot_data', JSON.stringify(newVal));
-                    saveToCloud(); 
                 }, { deep: true });
 
                 const defaultStores = ["スペース666", "ゾーン戸畑", "メガフェイス1500宗像", "ワンダーランド福岡東", "アプロ7", "スーパーハリウッド1120", "EVO3", "D'station中間", "テキサス下関", "ピータイム下関", "まるみつ下関", "デルパラ山口"];
                 const storeList = ref(localStorage.getItem('gachi_store_list') ? JSON.parse(localStorage.getItem('gachi_store_list')) : defaultStores);
-                watch(storeList, (newVal) => { localStorage.setItem('gachi_store_list', JSON.stringify(newVal)); saveToCloud(); }, { deep: true });
+                watch(storeList, (newVal) => { localStorage.setItem('gachi_store_list', JSON.stringify(newVal)); }, { deep: true });
 
                 const defaultMachines = ["スマスロ北斗の拳", "マイジャグラーV", "パチスロ甲鉄城のカバネリ", "スマスロモンキーターンV", "Lからくりサーカス", "Lヴァルヴレイヴ", "スマスロ ゴッドイーター", "アイムジャグラーEX", "沖ドキ！GOLD", "押忍！番長4"];
                 const machineList = ref(localStorage.getItem('gachi_machine_list') ? JSON.parse(localStorage.getItem('gachi_machine_list')) : defaultMachines);
-                watch(machineList, (newVal) => { localStorage.setItem('gachi_machine_list', JSON.stringify(newVal)); saveToCloud(); }, { deep: true });
+                watch(machineList, (newVal) => { localStorage.setItem('gachi_machine_list', JSON.stringify(newVal)); }, { deep: true });
+
+                // 💡 手動バックアップ（エクスポート）
+                const exportData = () => {
+                    const exportObj = {
+                        appData: appData.value,
+                        storeList: storeList.value,
+                        machineList: machineList.value,
+                        counterData: counterData.value,
+                        userProfile: userProfile.value,
+                        exportDate: new Date().toISOString()
+                    };
+                    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj));
+                    const downloadAnchorNode = document.createElement('a');
+                    downloadAnchorNode.setAttribute("href", dataStr);
+                    downloadAnchorNode.setAttribute("download", `gachislot_backup_${todayStr}.json`);
+                    document.body.appendChild(downloadAnchorNode);
+                    downloadAnchorNode.click();
+                    downloadAnchorNode.remove();
+                };
+
+                // 💡 手動リストア（インポート）
+                const importData = (e) => {
+                    const file = e.target.files[0];
+                    if(!file) return;
+                    if(!confirm("現在のデータはすべて上書きされます。よろしいですか？")) {
+                        e.target.value = ''; // キャンセル時はリセット
+                        return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        try {
+                            const imported = JSON.parse(ev.target.result);
+                            if(imported.appData) appData.value = imported.appData;
+                            if(imported.storeList) storeList.value = imported.storeList;
+                            if(imported.machineList) machineList.value = imported.machineList;
+                            if(imported.counterData) counterData.value = imported.counterData;
+                            if(imported.userProfile) userProfile.value = imported.userProfile;
+                            
+                            alert("✅ データの復元が完了しました！");
+                            showSettingsModal.value = false;
+                            
+                            // カレンダー再描画
+                            generateCalendar();
+                            const td = calDays.value.find(day => day.fullDate === todayStr);
+                            if(td) selectDay(td);
+                        } catch(error) {
+                            alert("⚠️ ファイルの読み込みに失敗しました。正しいバックアップファイルを選択してください。");
+                            console.error(error);
+                        }
+                    };
+                    reader.readAsText(file);
+                };
 
                 const today = new Date();
                 const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
@@ -803,6 +808,7 @@
 
                 // --- ⚙️ 設定モーダル ---
                 const showSettingsModal = ref(false);
+                const showTransferGuide = ref(false); // 💡 機種変更ガイド
                 const settingTab = ref('store');
 
                 const renameStore = (oldName, index) => {
@@ -1114,7 +1120,7 @@
                 });
                 
                 const counterData = ref(loadedCounter);
-                watch(counterData, (newVal) => { localStorage.setItem('gachi_counter', JSON.stringify(newVal)); saveToCloud(); }, { deep: true });
+                watch(counterData, (newVal) => { localStorage.setItem('gachi_counter', JSON.stringify(newVal)); }, { deep: true });
 
                 const activePage = computed(() => counterData.value[cPage.value]);
                 const r1Colors = ['#e53935', '#4caf50', '#1e88e5', '#fdd835', '#e0e0e0'];
@@ -1197,7 +1203,7 @@
                 onUnmounted(() => { if(timer) clearInterval(timer); });
 
                 return {
-                    currentUser, syncStatus, loginWithGoogle, logout,
+                    userProfile, handleUserIconUpload, exportData, importData, showTransferGuide,
                     currentTab, headerTitle, currentTime, themes, themeIndex, toggleTheme,
                     currentYear, currentMonth, changeMonth,
                     calDays, selectedDay, selectDay, todayStr,
