@@ -38,19 +38,23 @@
         
         .calendar { position: relative; display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--border); z-index: 1; }
         .cal-header { background: var(--surface); text-align: center; padding: 5px 0; font-size: 12px; color: var(--text-sub); }
-        .cal-cell { background: var(--bg); min-height: 60px; padding: 4px; display: flex; flex-direction: column; cursor: pointer; position: relative; }
+        
+        /* 💡 変更：セルのパディングと文字サイズを調整して6桁改行なしに対応 */
+        .cal-cell { background: var(--bg); min-height: 60px; padding: 2px; display: flex; flex-direction: column; cursor: pointer; position: relative; }
         .cal-cell.selected-day { outline: 2px solid var(--primary); outline-offset: -2px; background: var(--surface-light); z-index: 2; }
         .cal-cell.today-marker .cal-date { color: #fff; background: var(--primary); border-radius: 50%; width: 18px; height: 18px; text-align: center; line-height: 18px; margin: 0 auto 2px auto; display: block; }
         
         .cal-date { font-size: 12px; margin-bottom: 2px; text-align: center; }
-        .cal-val { font-size: 9px; text-align: right; font-weight: bold; word-break: break-all; margin-top: auto; }
+        
+        .cal-val { font-size: 8.5px; text-align: right; font-weight: bold; white-space: nowrap; margin-top: auto; letter-spacing: -0.5px; overflow: hidden; text-overflow: clip; }
+        .cal-medal { font-size: 8.5px; text-align: right; font-weight: bold; white-space: nowrap; margin-top: 1px; letter-spacing: -0.5px; overflow: hidden; text-overflow: clip; }
 
         .original-mode.calendar { background-color: rgba(128,128,128,0.3); }
         .original-mode .cal-header { background: rgba(0, 0, 0, 0.4); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.8); }
         .original-mode .cal-cell { background: rgba(0, 0, 0, 0.2); }
         .original-mode .cal-cell.selected-day { background: rgba(255, 255, 255, 0.1); }
         .original-mode .cal-date { color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.8); font-weight: bold; }
-        .original-mode .cal-val { text-shadow: 0 1px 2px rgba(0,0,0,0.8); }
+        .original-mode .cal-val, .original-mode .cal-medal { text-shadow: 0 1px 2px rgba(0,0,0,0.8); }
         
         /* 詳細・リスト */
         .day-detail { padding: 15px; background: var(--surface); margin-top: 10px; border-top: 1px solid var(--border); }
@@ -158,7 +162,6 @@
             <div v-show="currentTab === 'home'">
                 <div class="month-nav">
                     <button @click="changeMonth(-1)">◀</button>
-                    <!-- 💡 変更：月間削除アイコンの追加 -->
                     <span style="font-weight:bold; font-size: 16px; display: flex; align-items: center; gap: 10px;">
                         {{ currentYear }}年 {{ currentMonth }}月
                         <button style="background:transparent; border:none; color:var(--error); font-size:16px; padding:0; cursor:pointer;" @click="showMonthDeleteModal = true">🗑️</button>
@@ -196,8 +199,16 @@
                              }" 
                              @click="selectDay(day)">
                             <div class="cal-date" :style="{opacity: day.empty ? 0 : 1}">{{ day.date || 1 }}</div>
+                            <!-- 💡 現金収支の表示 -->
                             <div class="cal-val val-plus" v-if="!day.empty && getDayTotal(day.fullDate) > 0">+¥{{ getDayTotal(day.fullDate).toLocaleString() }}</div>
                             <div class="cal-val val-minus" v-if="!day.empty && getDayTotal(day.fullDate) < 0">-¥{{ Math.abs(getDayTotal(day.fullDate)).toLocaleString() }}</div>
+                            <div class="cal-val" v-if="!day.empty && getDayTotal(day.fullDate) === 0 && (getDayInvest(day.fullDate) > 0 || getDayRecover(day.fullDate) > 0)">±¥0</div>
+
+                            <!-- 💡 貯メダル増減の表示（設定でONの時のみ表示） -->
+                            <template v-if="!day.empty && generalSettings.showMedalOnCalendar && getDayMedalDelta(day.fullDate) !== 0">
+                                <div class="cal-medal val-plus" v-if="getDayMedalDelta(day.fullDate) > 0">+{{ getDayMedalDelta(day.fullDate).toLocaleString() }}枚</div>
+                                <div class="cal-medal val-minus" v-else>{{ getDayMedalDelta(day.fullDate).toLocaleString() }}枚</div>
+                            </template>
                         </div>
                     </div>
                 </div>
@@ -245,7 +256,6 @@
                     
                     <div class="btn-outline" @click="prepareMachineInput">＋ 遊技履歴を追加</div>
 
-                    <!-- 💡 変更：この日の遊技履歴を全て削除ボタン -->
                     <div v-if="getMachinesForDate(selectedDay.fullDate).length > 0" class="btn-outline" style="border-color:var(--error); color:var(--error); margin-top:15px; background:rgba(207, 102, 121, 0.1);" @click="deleteAllMachinesForDay">
                         🗑️ この日の遊技履歴を全て削除
                     </div>
@@ -489,30 +499,61 @@
                 <div class="save-btn" @click="saveMachine">💾 この台を保存する</div>
             </div>
 
-            <!-- 💰 日別最終収支入力 -->
+            <!-- 💰 💡 変更：日別最終収支入力 (自動/手動切り替え) -->
             <div v-show="currentTab === 'input_daily'">
                 <div class="form-group">
                     <h3 style="margin-top:0;">{{ selectedDay ? formatDateDisplay(selectedDay.fullDate) : '' }} 最終収支</h3>
                     <p style="font-size:12px; color:var(--text-sub);">本日の「総投資」「回収」「貯メダル増減」を入力して収支を確定させます。</p>
-                </div>
-                <div class="form-group">
-                    <span class="form-label">💴 本日の現金【総投資】(円)</span>
-                    <input type="number" class="form-input" v-model.number="dailyForm.invest" placeholder="0">
-                </div>
-                <div class="form-group">
-                    <span class="form-label">💴 本日の現金【回収】(円)</span>
-                    <input type="number" class="form-input" v-model.number="dailyForm.recover" placeholder="0">
-                </div>
-                <div class="form-group">
-                    <span class="form-label">🪙 本日の貯メダル増減 (枚)</span>
-                    <div style="display:flex; gap:10px;">
-                        <select class="form-input" style="width:80px;" v-model="dailyForm.medalSign">
-                            <option value="1">＋</option>
-                            <option value="-1">－</option>
-                        </select>
-                        <input type="number" class="form-input" v-model.number="dailyForm.medalVal" placeholder="0">
+                    
+                    <div class="radio-group" style="margin-top:15px; background:var(--surface-light); padding:10px 15px; border-radius:6px; flex-direction: column; gap:10px;">
+                        <label class="radio-label"><input type="radio" v-model="dailyForm.mode" value="auto"> 履歴に入力した数値から自動計算</label>
+                        <label class="radio-label"><input type="radio" v-model="dailyForm.mode" value="manual"> 手動で入力する</label>
                     </div>
                 </div>
+
+                <template v-if="dailyForm.mode === 'auto'">
+                    <div class="form-group">
+                        <span class="form-label">💴 本日の現金【総投資】(円) <span style="color:var(--primary); font-weight:bold;">※自動計算</span></span>
+                        <input type="number" class="form-input" :value="autoDailyCalc.invest" readonly>
+                    </div>
+                </template>
+                <template v-else>
+                    <div class="form-group">
+                        <span class="form-label">💴 本日の現金【総投資】(円)</span>
+                        <input type="number" class="form-input" v-model.number="dailyForm.invest" placeholder="0">
+                    </div>
+                </template>
+
+                <div class="form-group">
+                    <span class="form-label">💴 本日の現金【回収】(円) <span style="color:var(--error); font-weight:bold;">※手動入力</span></span>
+                    <input type="number" class="form-input" v-model.number="dailyForm.recover" placeholder="0" style="border: 2px solid var(--error);">
+                </div>
+
+                <template v-if="dailyForm.mode === 'auto'">
+                    <div class="form-group">
+                        <span class="form-label">🪙 本日の貯メダル増減 (枚) <span style="color:var(--primary); font-weight:bold;">※自動計算</span></span>
+                        <div style="display:flex; gap:10px;">
+                            <select class="form-input" style="width:80px;" :value="autoDailyCalc.sign" disabled>
+                                <option :value="1">＋</option>
+                                <option :value="-1">－</option>
+                            </select>
+                            <input type="number" class="form-input" :value="autoDailyCalc.val" readonly>
+                        </div>
+                    </div>
+                </template>
+                <template v-else>
+                    <div class="form-group">
+                        <span class="form-label">🪙 本日の貯メダル増減 (枚)</span>
+                        <div style="display:flex; gap:10px;">
+                            <select class="form-input" style="width:80px;" v-model="dailyForm.medalSign">
+                                <option :value="1">＋</option>
+                                <option :value="-1">－</option>
+                            </select>
+                            <input type="number" class="form-input" v-model.number="dailyForm.medalVal" placeholder="0">
+                        </div>
+                    </div>
+                </template>
+                
                 <div class="save-btn" @click="saveDailyTotal">✅ 収支を確定する</div>
             </div>
         </main>
@@ -552,6 +593,15 @@
                             </label>
                             <input type="text" v-model="userProfile.name" class="form-input" style="width:150px; padding:8px; font-size:14px;" placeholder="ユーザー名">
                         </div>
+                    </div>
+
+                    <!-- 💡 変更：カレンダーUI表示設定 -->
+                    <div style="background:var(--surface-light); padding:15px; border-radius:8px; border: 1px solid var(--border); margin-bottom:15px;">
+                        <div style="font-weight:bold; margin-bottom:10px; text-align:center; font-size:13px;">⚙️ カレンダー表示設定</div>
+                        <label style="display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; font-size:13px; color:var(--text-main);">
+                            <input type="checkbox" v-model="generalSettings.showMedalOnCalendar" style="transform:scale(1.2); accent-color:var(--primary);">
+                            貯メダル増減数をカレンダーに表示する
+                        </label>
                     </div>
 
                     <div style="background:var(--surface-light); padding:15px; border-radius:8px; border: 1px solid var(--border);">
@@ -631,7 +681,7 @@
             </div>
         </div>
 
-        <!-- 💡 変更：月間データ削除モーダル -->
+        <!-- 月間データ削除モーダル -->
         <div class="modal-overlay" v-if="showMonthDeleteModal" @click.self="showMonthDeleteModal = false">
             <div class="modal-content">
                 <h3 style="margin:0 0 10px 0; font-size:16px; text-align:center; color:var(--error);">月間データの削除</h3>
@@ -650,7 +700,6 @@
             <div class="modal-content" style="max-width:300px;">
                 <h3 style="margin:0 0 10px 0; font-size:16px; text-align:center;">遊技履歴の操作</h3>
                 <button class="modal-btn" style="background:var(--primary); color:#fff;" @click="editMachine">✏️ 編集する</button>
-                <!-- 💡 変更：表記の変更 -->
                 <button class="modal-btn" style="background:var(--error); color:#fff;" @click="deleteMachine">🗑️ この遊技履歴を削除</button>
                 <button class="modal-btn" style="background:var(--surface-light); color:var(--text-main);" @click="showActionModal = false">キャンセル</button>
             </div>
@@ -791,6 +840,11 @@
                     resizeImage(file, 200, (compressedDataUrl) => { userProfile.value.icon = compressedDataUrl; });
                 };
 
+                // 💡 変更：設定オブジェクトの追加
+                const defaultGeneral = { showMedalOnCalendar: true };
+                const generalSettings = ref(localStorage.getItem('gachi_general_settings') ? JSON.parse(localStorage.getItem('gachi_general_settings')) : defaultGeneral);
+                watch(generalSettings, (newVal) => { localStorage.setItem('gachi_general_settings', JSON.stringify(newVal)); }, { deep: true });
+
                 const defaultOriginal = { bgImage: '', opacity: 0.5, baseTheme: 'black' };
                 const originalSettings = ref(localStorage.getItem('gachi_original_theme') ? JSON.parse(localStorage.getItem('gachi_original_theme')) : defaultOriginal);
                 watch(originalSettings, (newVal) => { localStorage.setItem('gachi_original_theme', JSON.stringify(newVal)); }, { deep: true });
@@ -871,6 +925,7 @@
                         counterData: counterData.value,
                         userProfile: userProfile.value,
                         originalSettings: originalSettings.value,
+                        generalSettings: generalSettings.value,
                         exportDate: new Date().toISOString()
                     };
                     const dataStr = JSON.stringify(exportObj);
@@ -908,6 +963,7 @@
                             if(imported.counterData) counterData.value = imported.counterData;
                             if(imported.userProfile) userProfile.value = imported.userProfile;
                             if(imported.originalSettings) originalSettings.value = imported.originalSettings;
+                            if(imported.generalSettings) generalSettings.value = imported.generalSettings;
                             
                             alert("✅ データの復元が完了しました！");
                             showSettingsModal.value = false;
@@ -1093,7 +1149,6 @@
 
                 const openActionModal = (index) => { activeMachineIndex.value = index; showActionModal.value = true; };
 
-                // 💡 新規追加：日別全削除、月間削除関連機能
                 const showMonthDeleteModal = ref(false);
 
                 const deleteAllMachinesForDay = () => {
@@ -1122,7 +1177,7 @@
                             if (type === 'machines') {
                                 appData.value[dateStr].machines = [];
                             } else if (type === 'daily') {
-                                appData.value[dateStr].daily = { invest:0, recover:0, net:0, medalDelta:0 };
+                                appData.value[dateStr].daily = { invest:0, recover:0, net:0, medalDelta:0, mode:'manual' };
                             } else if (type === 'all') {
                                 delete appData.value[dateStr];
                             }
@@ -1313,24 +1368,59 @@
                     currentTab.value = 'home';
                 };
 
-                const dailyForm = ref({ invest: 0, recover: 0, medalSign: 1, medalVal: 0 });
+                // 💡 変更：日別収支の自動計算用 computed
+                const autoDailyCalc = computed(() => {
+                    if (!selectedDay.value) return { invest: 0, medalDelta: 0, sign: 1, val: 0 };
+                    const d = selectedDay.value.fullDate;
+                    const machines = appData.value[d]?.machines || [];
+                    let invest = 0;
+                    let medalDelta = 0;
+                    machines.forEach(m => {
+                        invest += m.cashInvest;
+                        medalDelta += (m.savedSign * m.savedVal);
+                    });
+                    return { invest, medalDelta, sign: medalDelta >= 0 ? 1 : -1, val: Math.abs(medalDelta) };
+                });
+
+                // 💡 変更：dailyForm に mode プロパティを追加
+                const dailyForm = ref({ mode: 'auto', invest: 0, recover: 0, medalSign: 1, medalVal: 0 });
                 watch(() => currentTab.value, (newTab) => {
                     if(newTab === 'input_daily' && selectedDay.value) {
                         const d = selectedDay.value.fullDate;
-                        dailyForm.value.invest = appData.value[d]?.daily?.invest || 0;
-                        dailyForm.value.recover = appData.value[d]?.daily?.recover || 0;
-                        let delta = appData.value[d]?.daily?.medalDelta || 0;
-                        dailyForm.value.medalSign = delta >= 0 ? 1 : -1; dailyForm.value.medalVal = Math.abs(delta);
+                        if (appData.value[d]?.daily) {
+                            dailyForm.value.mode = appData.value[d].daily.mode || 'manual';
+                            dailyForm.value.invest = appData.value[d].daily.invest || 0;
+                            dailyForm.value.recover = appData.value[d].daily.recover || 0;
+                            let delta = appData.value[d].daily.medalDelta || 0;
+                            dailyForm.value.medalSign = delta >= 0 ? 1 : -1; 
+                            dailyForm.value.medalVal = Math.abs(delta);
+                        } else {
+                            dailyForm.value.mode = 'auto';
+                            dailyForm.value.invest = 0;
+                            dailyForm.value.recover = 0;
+                            dailyForm.value.medalSign = 1;
+                            dailyForm.value.medalVal = 0;
+                        }
                     }
                 });
 
                 const saveDailyTotal = () => {
-                    if (dailyForm.value.invest < 0 || dailyForm.value.recover < 0 || dailyForm.value.medalVal < 0) { alert("⚠️ マイナスの値は指定できません。"); return; }
+                    const isAuto = dailyForm.value.mode === 'auto';
+                    const finalInvest = isAuto ? autoDailyCalc.value.invest : dailyForm.value.invest;
+                    const finalMedalDelta = isAuto ? autoDailyCalc.value.medalDelta : (dailyForm.value.medalSign * dailyForm.value.medalVal);
+
+                    if (finalInvest < 0 || dailyForm.value.recover < 0 || (!isAuto && dailyForm.value.medalVal < 0)) { 
+                        alert("⚠️ マイナスの値は指定できません。"); return; 
+                    }
+                    
                     const d = selectedDay.value.fullDate;
-                    if (!appData.value[d]) appData.value[d] = { machines: [], daily: { invest:0, recover:0, net:0, medalDelta:0 } };
-                    appData.value[d].daily.invest = dailyForm.value.invest; appData.value[d].daily.recover = dailyForm.value.recover;
-                    appData.value[d].daily.net = dailyForm.value.recover - dailyForm.value.invest;
-                    appData.value[d].daily.medalDelta = dailyForm.value.medalSign * dailyForm.value.medalVal;
+                    if (!appData.value[d]) appData.value[d] = { machines: [], daily: { invest:0, recover:0, net:0, medalDelta:0, mode: 'manual' } };
+                    
+                    appData.value[d].daily.mode = dailyForm.value.mode;
+                    appData.value[d].daily.invest = finalInvest;
+                    appData.value[d].daily.recover = dailyForm.value.recover;
+                    appData.value[d].daily.net = dailyForm.value.recover - finalInvest;
+                    appData.value[d].daily.medalDelta = finalMedalDelta;
                     currentTab.value = 'home';
                 };
 
@@ -1465,13 +1555,13 @@
 
                 return {
                     userProfile, handleUserIconUpload, exportDataShare, importData, showTransferGuide,
-                    originalSettings, handleOriginalBgUpload, isOriginalTheme, mainSettingTab,
+                    originalSettings, handleOriginalBgUpload, isOriginalTheme, mainSettingTab, generalSettings,
                     currentTab, headerTitle, currentTime, themes, themeIndex, toggleTheme,
                     currentYear, currentMonth, changeMonth,
                     calDays, selectedDay, selectDay, todayStr,
                     getMachinesForDate, getDayInvest, getDayRecover, getDayTotal, getDayMedalDelta, monthlySummary, formatDateDisplay,
                     form, netBalance, prepareMachineInput, saveMachine, handlePhotoUpload, onStoreTypeChange,
-                    dailyForm, saveDailyTotal,
+                    dailyForm, saveDailyTotal, autoDailyCalc,
                     selectedPageIndex, cPage, onPageSelectChange, counterStep, counterData, activePage, r1Colors, getProb, 
                     calcDiffGames, glowR1, glowR2, updateR1, updateR2, resetCounter, editPageName, 
                     showRoleEditModal, roleEditForm, openRoleEditModal, saveRoleNames,
