@@ -82,11 +82,9 @@
         .roles-area { padding: 15px; }
         .role-row { display: flex; justify-content: space-around; margin-bottom: 25px; }
         .role-item { display: flex; flex-direction: column; align-items: center; width: 60px; }
-        
-        /* 💡 発光エフェクトのためのベース設定 */
-        .circle-btn { width: 50px; height: 50px; border-radius: 50%; border: 2px solid #555; margin-bottom: 5px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: all 0.2s ease-out; }
-        .square-btn { width: 55px; height: 55px; border-radius: 8px; background: var(--surface-light); border: 2px solid #555; margin-bottom: 5px; cursor: pointer; color: var(--text-main); font-size: 11px; display: flex; align-items: center; justify-content: center; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3); line-height: 1.1; word-break: break-all; padding: 2px; transition: all 0.2s ease-out; }
-        
+        .circle-btn { width: 50px; height: 50px; border-radius: 50%; border: 2px solid #555; margin-bottom: 5px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: transform 0.05s ease, filter 0.05s ease, box-shadow 0.05s ease; }
+        .square-btn { width: 55px; height: 55px; border-radius: 8px; background: var(--surface-light); border: 2px solid #555; margin-bottom: 5px; cursor: pointer; color: var(--text-main); font-size: 11px; display: flex; align-items: center; justify-content: center; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3); line-height: 1.1; word-break: break-all; padding: 2px; transition: transform 0.05s ease, filter 0.05s ease, box-shadow 0.05s ease; }
+        .circle-btn:active, .square-btn:active { transform: scale(0.85); filter: brightness(1.5); box-shadow: 0 1px 2px rgba(0,0,0,0.8); }
         .role-count { font-size: 16px; font-weight: bold; margin-top: 4px; }
         .role-prob { font-size: 10px; color: var(--secondary); }
 
@@ -124,7 +122,8 @@
         <!-- ヘッダー -->
         <header>
             <div style="display:flex; align-items:center; gap: 12px;">
-                <span style="font-size:22px; cursor:pointer;" @click="showSettingsModal = true">⚙️</span>
+                <!-- 💡 変更：ホームタブの時だけ設定マークを表示 -->
+                <span v-show="currentTab === 'home'" style="font-size:22px; cursor:pointer;" @click="showSettingsModal = true">⚙️</span>
                 <div style="display:flex; flex-direction:column;">
                     <span style="font-size:16px;">{{ headerTitle }}</span>
                     <span style="font-size:11px; color:var(--text-sub); font-weight:normal; margin-top:2px;">{{ currentTime }}</span>
@@ -219,8 +218,10 @@
             <!-- 🎲 小役カウンター -->
             <div v-show="currentTab === 'counter'">
                 <div class="counter-header">
-                    <select class="page-select" v-model="cPage">
-                        <option v-for="(p, i) in counterData" :key="i" :value="i">📄 {{ p.pageName || `ページ${i+1}` }}</option>
+                    <!-- 💡 変更：新規ページ作成機能の追加 -->
+                    <select class="page-select" v-model="selectedPageIndex" @change="onPageSelectChange">
+                        <option v-for="(p, i) in counterData" :key="i" :value="i">📄 {{ p.pageName }}</option>
+                        <option value="NEW" v-if="counterData.length < 10" style="color:var(--primary); font-weight:bold;">➕ 新しいページを作成</option>
                     </select>
                     <span class="edit-icon" @click="editPageName">✏️編集</span>
                     <span style="font-size:12px; color:var(--text-sub); cursor:pointer;" @click="resetCounter">↺ リセット</span>
@@ -250,7 +251,6 @@
                     <div style="font-size:12px; color:var(--text-sub); margin-bottom:10px;">【1段目：基本小役】</div>
                     <div class="role-row">
                         <div class="role-item" v-for="(col, i) in r1Colors" :key="'r1'+i">
-                            <!-- 💡 発光エフェクトを動的スタイルで適用 -->
                             <button class="circle-btn" 
                                     :style="[
                                         { background: col },
@@ -264,11 +264,10 @@
                     
                     <div class="form-label" style="margin-bottom:10px;">
                         <span>【2段目：カスタム小役】(タップでカウント)</span>
-                        <span style="color:var(--primary); cursor:pointer;" @click="editRoleNames">✏️名前変更</span>
+                        <span style="color:var(--primary); cursor:pointer;" @click="openRoleEditModal">✏️名前一括変更</span>
                     </div>
                     <div class="role-row">
                         <div class="role-item" v-for="(name, i) in activePage.r2Names" :key="'r2'+i">
-                            <!-- 💡 発光エフェクトを動的スタイルで適用 -->
                             <button class="square-btn" 
                                     :style="glowR2[i] ? { boxShadow: '0 0 25px 5px var(--primary)', borderColor: 'var(--primary)', transform: 'scale(0.85)', filter: 'brightness(1.3)' } : {}"
                                     @click="updateR2(i)">{{name}}</button>
@@ -345,7 +344,6 @@
                     <input v-if="form.locationSelect === 'NEW'" type="text" class="form-input" v-model="form.locationNew" placeholder="新しい店舗名を入力" style="margin-top: 10px; border-color: var(--primary);">
                 </div>
 
-                <!-- 💡 変更：機種名プルダウン -->
                 <div class="form-group">
                     <span class="form-label">🎰 機種名</span>
                     <select class="form-input" v-model="form.nameSelect">
@@ -445,13 +443,12 @@
             </div>
         </div>
 
-        <!-- ⚙️ 設定・管理モーダル (店舗・機種) -->
+        <!-- ⚙️ 設定・管理モーダル -->
         <div class="modal-overlay" v-if="showSettingsModal" @click.self="showSettingsModal = false">
             <div class="modal-content">
                 <h3 style="margin:0 0 5px 0; font-size:16px; text-align:center;">設定 / 名称管理</h3>
                 <div style="font-size:11px; color:var(--text-sub); margin-bottom:10px; text-align:center;">名称を変更すると、過去の全履歴も一括で書き換わります。</div>
                 
-                <!-- タブ切替 -->
                 <div style="display:flex; margin-bottom:15px; border-bottom:2px solid var(--surface-light);">
                     <div style="flex:1; text-align:center; padding:10px; cursor:pointer; font-weight:bold;" 
                          :style="settingTab === 'store' ? 'color:var(--primary); border-bottom:2px solid var(--primary); margin-bottom:-2px;' : 'color:var(--text-sub)'" 
@@ -461,7 +458,6 @@
                          @click="settingTab = 'machine'">🎰 機種</div>
                 </div>
 
-                <!-- 店舗リスト -->
                 <div v-show="settingTab === 'store'">
                     <div v-for="(store, index) in storeList" :key="'s'+index" style="display:flex; justify-content:space-between; align-items:center; background:var(--bg); padding:10px; border-radius:6px; margin-bottom:8px; border: 1px solid var(--border);">
                         <span style="font-weight:bold; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-right:10px;">{{ store }}</span>
@@ -470,7 +466,6 @@
                     <div v-if="storeList.length === 0" style="text-align:center; padding:20px; font-size:12px; color:var(--text-sub);">登録店舗なし</div>
                 </div>
 
-                <!-- 機種リスト -->
                 <div v-show="settingTab === 'machine'">
                     <div v-for="(mac, index) in machineList" :key="'m'+index" style="display:flex; justify-content:space-between; align-items:center; background:var(--bg); padding:10px; border-radius:6px; margin-bottom:8px; border: 1px solid var(--border);">
                         <span style="font-weight:bold; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-right:10px;">{{ mac }}</span>
@@ -478,7 +473,6 @@
                     </div>
                     <div v-if="machineList.length === 0" style="text-align:center; padding:20px; font-size:12px; color:var(--text-sub);">登録機種なし</div>
                 </div>
-
                 <button class="modal-btn" style="background:var(--surface-light); color:var(--text-main); margin-top:10px;" @click="showSettingsModal = false">閉じる</button>
             </div>
         </div>
@@ -490,6 +484,22 @@
                 <button class="modal-btn" style="background:var(--primary); color:#fff;" @click="editMachine">✏️ 編集する</button>
                 <button class="modal-btn" style="background:var(--error); color:#fff;" @click="deleteMachine">🗑️ 削除する</button>
                 <button class="modal-btn" style="background:var(--surface-light); color:var(--text-main);" @click="showActionModal = false">キャンセル</button>
+            </div>
+        </div>
+
+        <!-- 💡 新設：小役名前一括変更モーダル -->
+        <div class="modal-overlay" v-if="showRoleEditModal" @click.self="showRoleEditModal = false">
+            <div class="modal-content">
+                <h3 style="margin:0 0 10px 0; font-size:16px; text-align:center;">カスタム小役の名前一括変更</h3>
+                <div style="font-size:11px; color:var(--text-sub); margin-bottom:15px; text-align:center;">現在のページ「{{ activePage.pageName }}」のボタン名を変更します</div>
+                
+                <div v-for="(name, i) in roleEditForm" :key="i" style="margin-bottom:8px; display:flex; align-items:center;">
+                    <span style="font-size:12px; color:var(--text-sub); width:60px; font-weight:bold;">ボタン {{ i + 1 }}</span>
+                    <input type="text" class="form-input" v-model="roleEditForm[i]" style="padding:8px; font-size:14px; flex:1;" placeholder="小役名を入力">
+                </div>
+                
+                <button class="modal-btn" style="background:var(--primary); color:#fff; margin-top:10px;" @click="saveRoleNames">💾 保存する</button>
+                <button class="modal-btn" style="background:var(--surface-light); color:var(--text-main);" @click="showRoleEditModal = false">キャンセル</button>
             </div>
         </div>
     </div>
@@ -541,12 +551,10 @@
                     localStorage.setItem('gachi_slot_data', JSON.stringify(newVal));
                 }, { deep: true });
 
-                // 店舗リスト
                 const defaultStores = ["スペース666", "ゾーン戸畑", "メガフェイス1500宗像", "ワンダーランド福岡東", "アプロ7", "スーパーハリウッド1120", "EVO3", "D'station中間", "テキサス下関", "ピータイム下関", "まるみつ下関", "デルパラ山口"];
                 const storeList = ref(localStorage.getItem('gachi_store_list') ? JSON.parse(localStorage.getItem('gachi_store_list')) : defaultStores);
                 watch(storeList, (newVal) => { localStorage.setItem('gachi_store_list', JSON.stringify(newVal)); }, { deep: true });
 
-                // 💡 機種リスト（初期データ追加）
                 const defaultMachines = ["スマスロ北斗の拳", "マイジャグラーV", "パチスロ甲鉄城のカバネリ", "スマスロモンキーターンV", "Lからくりサーカス", "Lヴァルヴレイヴ", "スマスロ ゴッドイーター", "アイムジャグラーEX", "沖ドキ！GOLD", "押忍！番長4"];
                 const machineList = ref(localStorage.getItem('gachi_machine_list') ? JSON.parse(localStorage.getItem('gachi_machine_list')) : defaultMachines);
                 watch(machineList, (newVal) => { localStorage.setItem('gachi_machine_list', JSON.stringify(newVal)); }, { deep: true });
@@ -682,7 +690,7 @@
                     return list.sort((a, b) => b.totalNet - a.totalNet);
                 });
 
-                // --- ⚙️ 設定モーダル（店舗・機種名変更機能） ---
+                // --- ⚙️ 設定モーダル ---
                 const showSettingsModal = ref(false);
                 const settingTab = ref('store');
 
@@ -731,7 +739,6 @@
                     showActionModal.value = true;
                 };
 
-                // 機種名も location と同様の選択式に変更
                 const form = ref({ date: todayStr, machineNumber: 1, locationSelect: '', locationNew: '', nameSelect: '', nameNew: '', isSameStore: false, rate: 46, broughtIn: 0, cashInvest: 0, savedSign: -1, savedVal: 0, leftMedals: 0, memo: '', photo: '' });
                 
                 const onStoreTypeChange = () => {
@@ -894,7 +901,6 @@
                         }
                     }
 
-                    // 機種名の決定ロジック
                     let finalName = '';
                     if (form.value.nameSelect === 'NEW') {
                         finalName = form.value.nameNew.trim();
@@ -978,21 +984,25 @@
                 };
 
                 // --- 🎲 小役カウンター ---
+                const selectedPageIndex = ref(0);
                 const cPage = ref(0);
                 const counterStep = ref(1);
 
-                // 💡 発光エフェクト用の状態配列 (JS制御用)
                 const glowR1 = ref([false, false, false, false, false]);
                 const glowR2 = ref([false, false, false, false, false]);
 
+                // 💡 変更：初期ページのセットをシチュエーションA〜Cに変更
                 const defaultCounter = [
-                    { pageName: '通常時', games: 0, r1: [0,0,0,0,0], r2Names: ['チェリー','スイカ','ベル','チャンス目','カスタム5'], r2: [0,0,0,0,0] },
-                    { pageName: 'CZ/高確', games: 0, r1: [0,0,0,0,0], r2Names: ['カスタム1','カスタム2','カスタム3','カスタム4','カスタム5'], r2: [0,0,0,0,0] },
-                    { pageName: 'AT/ボナ', games: 0, r1: [0,0,0,0,0], r2Names: ['カスタム1','カスタム2','カスタム3','カスタム4','カスタム5'], r2: [0,0,0,0,0] }
+                    { pageName: 'シチュエーションA', games: 0, r1: [0,0,0,0,0], r2Names: ['カスタム1','カスタム2','カスタム3','カスタム4','カスタム5'], r2: [0,0,0,0,0] },
+                    { pageName: 'シチュエーションB', games: 0, r1: [0,0,0,0,0], r2Names: ['カスタム1','カスタム2','カスタム3','カスタム4','カスタム5'], r2: [0,0,0,0,0] },
+                    { pageName: 'シチュエーションC', games: 0, r1: [0,0,0,0,0], r2Names: ['カスタム1','カスタム2','カスタム3','カスタム4','カスタム5'], r2: [0,0,0,0,0] }
                 ];
                 
                 const loadedCounter = localStorage.getItem('gachi_counter') ? JSON.parse(localStorage.getItem('gachi_counter')) : defaultCounter;
-                loadedCounter.forEach((p, i) => { if(!p.pageName) p.pageName = defaultCounter[i].pageName; });
+                // 既存のセーブデータに pageName が無ければ補完
+                loadedCounter.forEach((p, i) => { 
+                    if(!p.pageName) p.pageName = (i < 3) ? defaultCounter[i].pageName : `シチュエーション${String.fromCharCode(65 + i)}`; 
+                });
                 
                 const counterData = ref(loadedCounter);
                 watch(counterData, (newVal) => { localStorage.setItem('gachi_counter', JSON.stringify(newVal)); }, { deep: true });
@@ -1000,23 +1010,40 @@
                 const activePage = computed(() => counterData.value[cPage.value]);
                 const r1Colors = ['#e53935', '#4caf50', '#1e88e5', '#fdd835', '#e0e0e0'];
                 const getProb = (count, games) => count === 0 ? '-' : '1/' + (games / count).toFixed(1);
+
+                // 💡 新規ページ作成ロジック
+                const onPageSelectChange = () => {
+                    if (selectedPageIndex.value === 'NEW') {
+                        if (counterData.value.length >= 10) {
+                            alert("⚠️ ページは最大10個までしか作成できません。");
+                            selectedPageIndex.value = cPage.value;
+                            return;
+                        }
+                        const newName = prompt('新しいページ名を入力してください：', `シチュエーション${String.fromCharCode(65 + counterData.value.length)}`);
+                        if (newName && newName.trim() !== '') {
+                            counterData.value.push({ pageName: newName.trim(), games: 0, r1: [0,0,0,0,0], r2Names: ['カスタム1','カスタム2','カスタム3','カスタム4','カスタム5'], r2: [0,0,0,0,0] });
+                            cPage.value = counterData.value.length - 1;
+                            selectedPageIndex.value = cPage.value;
+                        } else {
+                            selectedPageIndex.value = cPage.value; // キャンセル時は元のページに戻す
+                        }
+                    } else {
+                        cPage.value = selectedPageIndex.value;
+                    }
+                };
                 
                 const updateR1 = (index) => {
                     let newVal = activePage.value.r1[index] + counterStep.value;
                     if(newVal < 0) newVal = 0;
                     activePage.value.r1[index] = newVal;
-
-                    // 発光エフェクトのオンオフ
                     glowR1.value[index] = true;
-                    setTimeout(() => { glowR1.value[index] = false; }, 200); // 0.2秒後に消灯
+                    setTimeout(() => { glowR1.value[index] = false; }, 200);
                 };
 
                 const updateR2 = (index) => {
                     let newVal = activePage.value.r2[index] + counterStep.value;
                     if(newVal < 0) newVal = 0;
                     activePage.value.r2[index] = newVal;
-
-                    // 発光エフェクトのオンオフ
                     glowR2.value[index] = true;
                     setTimeout(() => { glowR2.value[index] = false; }, 200);
                 };
@@ -1030,15 +1057,24 @@
                 };
                 
                 const editPageName = () => {
-                    const newName = prompt('ページ名を入力してください', activePage.value.pageName);
+                    const newName = prompt(`現在のページ「${activePage.value.pageName}」の新しい名称を入力してください：`, activePage.value.pageName);
                     if (newName !== null && newName.trim() !== '') activePage.value.pageName = newName.trim();
                 };
                 
-                const editRoleNames = () => {
+                // 💡 新設：小役名の一括変更モーダル機能
+                const showRoleEditModal = ref(false);
+                const roleEditForm = ref(['', '', '', '', '']);
+
+                const openRoleEditModal = () => {
+                    roleEditForm.value = [...activePage.value.r2Names];
+                    showRoleEditModal.value = true;
+                };
+
+                const saveRoleNames = () => {
                     for(let i = 0; i < 5; i++) {
-                        const newName = prompt(`ボタン${i+1}の名前を入力`, activePage.value.r2Names[i]);
-                        if (newName !== null) activePage.value.r2Names[i] = newName.trim() || `カスタム${i+1}`;
+                        activePage.value.r2Names[i] = roleEditForm.value[i].trim() || `カスタム${i+1}`;
                     }
+                    showRoleEditModal.value = false;
                 };
 
                 onMounted(() => {
@@ -1059,8 +1095,9 @@
                     getMachinesForDate, getDayInvest, getDayRecover, getDayTotal, getDayMedalDelta, monthlySummary, formatDateDisplay,
                     form, netBalance, prepareMachineInput, saveMachine, handlePhotoUpload, onStoreTypeChange,
                     dailyForm, saveDailyTotal,
-                    cPage, counterStep, counterData, activePage, r1Colors, getProb, 
-                    glowR1, glowR2, updateR1, updateR2, resetCounter, editPageName, editRoleNames,
+                    selectedPageIndex, cPage, onPageSelectChange, counterStep, counterData, activePage, r1Colors, getProb, 
+                    glowR1, glowR2, updateR1, updateR2, resetCounter, editPageName, 
+                    showRoleEditModal, roleEditForm, openRoleEditModal, saveRoleNames,
                     showActionModal, openActionModal, editMachine, deleteMachine,
                     analysisSubTab, changeMainTab, changeAnalysisTab, storeRanking,
                     storeList, machineList, showSettingsModal, settingTab, renameStore, renameMachine
