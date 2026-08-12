@@ -1009,6 +1009,7 @@
                 // 📊 分析・設定・その他モーダル
                 // ==========================================
                 const analysisSubTab = ref('month');
+                let chartInstance = null; //
                 const changeMainTab = (t) => { currentTab.value = t; if(t === 'analysis') changeAnalysisTab('month'); };
                 const changeAnalysisTab = async (t) => { analysisSubTab.value = t; if (['month', 'year'].includes(t)) { await nextTick(); renderChart(); } };
                 
