@@ -75,7 +75,6 @@
         .g-btn { background: var(--surface-light); color: var(--text-main); border: 1px solid var(--border); padding: 10px 15px; border-radius: 8px; font-weight: bold; font-size: 16px; flex: 1; transition: all 0.1s; }
         .g-btn:active { transform: scale(0.9); opacity: 0.7; }
         
-        /* 💡 新設：小役入力単位切り替えボタングループ */
         .step-toggle-group { display: flex; justify-content: center; gap: 8px; margin-bottom: 15px; }
         .step-toggle-btn { background: var(--surface-light); color: var(--text-sub); border: 1px solid var(--border); padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; transition: all 0.2s; }
         .step-toggle-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
@@ -83,20 +82,29 @@
         .roles-area { padding: 15px; }
         .role-row { display: flex; justify-content: space-around; margin-bottom: 25px; }
         .role-item { display: flex; flex-direction: column; align-items: center; width: 60px; }
-        
-        /* 💡 修正：視覚的フィードバックの強化 */
         .circle-btn { width: 50px; height: 50px; border-radius: 50%; border: 2px solid #555; margin-bottom: 5px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: transform 0.05s ease, filter 0.05s ease, box-shadow 0.05s ease; }
         .square-btn { width: 55px; height: 55px; border-radius: 8px; background: var(--surface-light); border: 2px solid #555; margin-bottom: 5px; cursor: pointer; color: var(--text-main); font-size: 11px; display: flex; align-items: center; justify-content: center; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3); line-height: 1.1; word-break: break-all; padding: 2px; transition: transform 0.05s ease, filter 0.05s ease, box-shadow 0.05s ease; }
-        
-        /* 押した瞬間に沈み込み＋明るくなる効果 */
-        .circle-btn:active, .square-btn:active { 
-            transform: scale(0.85); 
-            filter: brightness(1.5); /* 押した時に光る */
-            box-shadow: 0 1px 2px rgba(0,0,0,0.8); 
-        }
-        
+        .circle-btn:active, .square-btn:active { transform: scale(0.85); filter: brightness(1.5); box-shadow: 0 1px 2px rgba(0,0,0,0.8); }
         .role-count { font-size: 16px; font-weight: bold; margin-top: 4px; }
         .role-prob { font-size: 10px; color: var(--secondary); }
+
+        /* 分析タブ専用スタイル */
+        .analysis-nav { display: flex; border-bottom: 1px solid var(--border); background: var(--surface); }
+        .analysis-tab { flex: 1; text-align: center; padding: 15px 0; font-size: 13px; color: var(--text-sub); cursor: pointer; font-weight: bold; }
+        .analysis-tab.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
+        
+        .chart-container { padding: 15px; background: var(--surface); margin: 15px; border-radius: 8px; border: 1px solid var(--border); height: 300px; }
+        
+        .store-ranking-list { padding: 15px; }
+        .store-rank-item { display: flex; align-items: center; background: var(--surface-light); padding: 12px; border-radius: 8px; margin-bottom: 10px; border: 1px solid var(--border); }
+        .rank-badge { width: 30px; height: 30px; border-radius: 50%; background: var(--bg); color: var(--text-sub); display: flex; justify-content: center; align-items: center; font-weight: bold; margin-right: 15px; border: 1px solid var(--border); }
+        .rank-badge.rank-1 { background: linear-gradient(135deg, #ffd700, #daa520); color: #000; border: none; }
+        .rank-badge.rank-2 { background: linear-gradient(135deg, #e0e0e0, #9e9e9e); color: #000; border: none; }
+        .rank-badge.rank-3 { background: linear-gradient(135deg, #cd7f32, #8b4513); color: #fff; border: none; }
+        .store-info { flex: 1; }
+        .store-name { font-weight: bold; font-size: 15px; margin-bottom: 4px; }
+        .store-stats { font-size: 11px; color: var(--text-sub); display: flex; gap: 10px; }
+        .store-net { font-size: 16px; font-weight: bold; text-align: right; }
 
         /* ナビゲーション */
         .nav-bar { position: absolute; bottom: 0; width: 100%; height: 75px; background: var(--surface); display: flex; justify-content: space-between; border-top: 1px solid var(--border); align-items: center; z-index: 20; padding-bottom: 15px; }
@@ -179,7 +187,6 @@
                         </div>
                     </div>
 
-                    <!-- 遊技履歴リスト -->
                     <template v-for="(m, index) in getMachinesForDate(selectedDay.fullDate)" :key="index">
                         <div v-if="index === 0 || !m.isSameStore" class="store-divider">
                             🏪 {{ m.location || '店舗未設定' }}
@@ -226,7 +233,6 @@
                 </div>
                 
                 <div class="roles-area">
-                    <!-- 💡 新設：入力単位切り替え -->
                     <div style="text-align: center; margin-bottom: 10px;">
                         <span style="font-size: 11px; color: var(--text-sub); margin-bottom: 5px; display: block;">▼ 小役カウント入力単位 ▼</span>
                         <div class="step-toggle-group">
@@ -255,6 +261,49 @@
                             <button class="square-btn" @click="updateR2(i)">{{name}}</button>
                             <span class="role-count">{{ activePage.r2[i] }}</span>
                             <span class="role-prob">{{ getProb(activePage.r2[i], activePage.games) }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 📊 分析タブ -->
+            <div v-show="currentTab === 'analysis'">
+                <!-- 分析サブナビゲーション -->
+                <div class="analysis-nav">
+                    <div class="analysis-tab" :class="{active: analysisSubTab === 'month'}" @click="changeAnalysisTab('month')">月間推移</div>
+                    <div class="analysis-tab" :class="{active: analysisSubTab === 'year'}" @click="changeAnalysisTab('year')">年間推移</div>
+                    <div class="analysis-tab" :class="{active: analysisSubTab === 'store'}" @click="changeAnalysisTab('store')">店舗別成績</div>
+                </div>
+
+                <!-- グラフエリア (月間/年間) -->
+                <div v-show="analysisSubTab === 'month' || analysisSubTab === 'year'">
+                    <div style="text-align:center; padding: 15px 0 0 0; font-weight:bold;">
+                        {{ analysisSubTab === 'month' ? `${currentYear}年${currentMonth}月 収支推移` : `${currentYear}年 月別収支推移` }}
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="analysisChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 店舗別ランキングエリア -->
+                <div v-show="analysisSubTab === 'store'" class="store-ranking-list">
+                    <div style="font-size:12px; color:var(--text-sub); margin-bottom:15px; text-align:center;">全期間の店舗別 純差枚数ランキング</div>
+                    
+                    <div v-if="storeRanking.length === 0" style="text-align:center; padding: 20px; color:var(--text-sub);">
+                        データがありません。
+                    </div>
+                    
+                    <div class="store-rank-item" v-for="(store, index) in storeRanking" :key="index">
+                        <div class="rank-badge" :class="`rank-${index + 1}`">{{ index + 1 }}</div>
+                        <div class="store-info">
+                            <div class="store-name">{{ store.name }}</div>
+                            <div class="store-stats">
+                                <span>稼働: {{ store.count }}台</span>
+                                <span>勝率: {{ store.winRate }}%</span>
+                            </div>
+                        </div>
+                        <div class="store-net" :class="store.totalNet >= 0 ? 'val-plus' : 'val-minus'">
+                            {{ store.totalNet >= 0 ? '+' : '' }}{{ store.totalNet.toLocaleString() }} 枚
                         </div>
                     </div>
                 </div>
@@ -375,22 +424,17 @@
                 </div>
                 <div class="save-btn" @click="saveDailyTotal">✅ 収支を確定する</div>
             </div>
-
-            <!-- 📊 分析 -->
-            <div v-show="currentTab === 'analysis'">
-                <div style="padding: 15px; text-align:center;">グラフ表示エリア (開発中)</div>
-            </div>
         </main>
         
         <!-- ナビゲーション -->
         <div class="nav-bar">
-            <div class="nav-item" :class="{active: currentTab==='home'}" @click="currentTab='home'">
+            <div class="nav-item" :class="{active: currentTab==='home'}" @click="changeMainTab('home')">
                 <span class="nav-icon">🏠</span><span>ホーム</span>
             </div>
-            <div class="nav-item" :class="{active: currentTab==='counter'}" @click="currentTab='counter'">
+            <div class="nav-item" :class="{active: currentTab==='counter'}" @click="changeMainTab('counter')">
                 <span class="nav-icon">🎲</span><span>小役</span>
             </div>
-            <div class="nav-item" :class="{active: currentTab==='analysis'}" @click="currentTab='analysis'">
+            <div class="nav-item" :class="{active: currentTab==='analysis'}" @click="changeMainTab('analysis')">
                 <span class="nav-icon">📊</span><span>分析</span>
             </div>
         </div>
@@ -407,7 +451,7 @@
     </div>
 
     <script>
-        const { createApp, ref, computed, watch, onMounted, onUnmounted } = Vue;
+        const { createApp, ref, computed, watch, onMounted, onUnmounted, nextTick } = Vue;
 
         createApp({
             setup() {
@@ -440,6 +484,9 @@
                 const toggleTheme = () => {
                     themeIndex.value = (themeIndex.value + 1) % themes.length;
                     document.documentElement.setAttribute('data-theme', themes[themeIndex.value].id);
+                    if(currentTab.value === 'analysis' && analysisSubTab.value !== 'store') {
+                        renderChart(); // テーマ切り替え時にグラフの色も更新
+                    }
                 };
                 document.documentElement.setAttribute('data-theme', themes[0].id);
 
@@ -479,16 +526,18 @@
                     currentYear.value = newDate.getFullYear();
                     currentMonth.value = newDate.getMonth() + 1;
                     generateCalendar();
+                    
+                    // 分析タブ表示中に月を変えたらグラフも更新
+                    if(currentTab.value === 'analysis' && analysisSubTab.value !== 'store') {
+                        renderChart();
+                    }
                 };
 
                 const selectDay = (day) => {
                     if(!day.empty) selectedDay.value = day;
                 };
 
-                const getMachinesForDate = (dateStr) => {
-                    return appData.value[dateStr]?.machines || [];
-                };
-                
+                const getMachinesForDate = (dateStr) => { return appData.value[dateStr]?.machines || []; };
                 const getDayInvest = (dateStr) => appData.value[dateStr]?.daily?.invest || 0;
                 const getDayRecover = (dateStr) => appData.value[dateStr]?.daily?.recover || 0;
                 const getDayTotal = (dateStr) => appData.value[dateStr]?.daily?.net || 0;
@@ -511,6 +560,118 @@
                     return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
                 };
 
+                // --- 📊 分析タブ制御ロジック ---
+                const analysisSubTab = ref('month'); // 'month', 'year', 'store'
+                let chartInstance = null;
+
+                const changeMainTab = (tabName) => {
+                    currentTab.value = tabName;
+                    if(tabName === 'analysis') {
+                        changeAnalysisTab('month'); // 分析タブを開いたら最初は月間グラフ
+                    }
+                };
+
+                const changeAnalysisTab = async (subTab) => {
+                    analysisSubTab.value = subTab;
+                    if (subTab === 'month' || subTab === 'year') {
+                        await nextTick();
+                        renderChart();
+                    }
+                };
+
+                // 📈 グラフ描画処理
+                const renderChart = () => {
+                    const ctx = document.getElementById('analysisChart');
+                    if(!ctx) return;
+                    if(chartInstance) chartInstance.destroy();
+
+                    const isWhite = themes[themeIndex.value].id === 'white';
+                    const lineColor = isWhite ? '#6200ea' : '#bb86fc';
+                    const gridColor = isWhite ? '#e0e0e0' : '#333333';
+                    const textColor = isWhite ? '#666666' : '#b3b3b3';
+
+                    let labels = [];
+                    let dataPoints = [];
+                    let cumulativeNet = 0;
+
+                    if (analysisSubTab.value === 'month') {
+                        // 月間グラフ（1日〜末日）
+                        const lastDate = new Date(currentYear.value, currentMonth.value, 0).getDate();
+                        for (let i = 1; i <= lastDate; i++) {
+                            labels.push(`${i}日`);
+                            const dStr = `${currentYear.value}-${String(currentMonth.value).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+                            const dailyNet = getDayTotal(dStr);
+                            cumulativeNet += dailyNet;
+                            dataPoints.push(cumulativeNet);
+                        }
+                    } else if (analysisSubTab.value === 'year') {
+                        // 年間グラフ（1月〜12月）
+                        for (let m = 1; m <= 12; m++) {
+                            labels.push(`${m}月`);
+                            // その月の収支合計を算出
+                            let monthNet = 0;
+                            const lastD = new Date(currentYear.value, m, 0).getDate();
+                            for(let d = 1; d <= lastD; d++) {
+                                const dStr = `${currentYear.value}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                                monthNet += getDayTotal(dStr);
+                            }
+                            cumulativeNet += monthNet;
+                            dataPoints.push(cumulativeNet);
+                        }
+                    }
+
+                    chartInstance = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: '累計現金収支 (円)',
+                                data: dataPoints,
+                                borderColor: lineColor,
+                                backgroundColor: lineColor + '33',
+                                fill: true, tension: 0.2, pointRadius: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true, maintainAspectRatio: false,
+                            scales: {
+                                y: { grid: { color: gridColor }, ticks: { color: textColor } },
+                                x: { grid: { color: gridColor }, ticks: { color: textColor, maxTicksLimit: 10 } }
+                            },
+                            plugins: { legend: { labels: { color: textColor } } }
+                        }
+                    });
+                };
+
+                // 🏬 店舗別ランキング算出
+                const storeRanking = computed(() => {
+                    const storeMap = {};
+                    
+                    // appData全体を走査して店舗ごとの成績を集計
+                    Object.values(appData.value).forEach(dayData => {
+                        if(dayData.machines) {
+                            dayData.machines.forEach(m => {
+                                const sName = m.location && m.location.trim() !== '' ? m.location.trim() : '店舗未設定';
+                                if(!storeMap[sName]) {
+                                    storeMap[sName] = { name: sName, count: 0, winCount: 0, totalNet: 0 };
+                                }
+                                storeMap[sName].count++;
+                                storeMap[sName].totalNet += m.netBalance;
+                                if(m.netBalance > 0) storeMap[sName].winCount++;
+                            });
+                        }
+                    });
+
+                    // 配列に変換してソート（純差枚数が多い順）
+                    const list = Object.values(storeMap);
+                    list.forEach(s => {
+                        s.winRate = s.count > 0 ? Math.round((s.winCount / s.count) * 100) : 0;
+                    });
+                    
+                    return list.sort((a, b) => b.totalNet - a.totalNet);
+                });
+
+                // --- 🎰 遊技履歴 編集・削除制御用 ---
                 const isEditing = ref(false);
                 const editingIndex = ref(null);
                 const showActionModal = ref(false);
@@ -746,8 +907,6 @@
 
                 // --- 🎲 小役カウンター ---
                 const cPage = ref(0);
-                
-                // 💡 新設：入力単位用の変数 (初期値は +1)
                 const counterStep = ref(1);
 
                 const defaultCounter = [
@@ -767,10 +926,9 @@
                 
                 const getProb = (count, games) => count === 0 ? '-' : '1/' + (games / count).toFixed(1);
                 
-                // 💡 修正：入力単位（counterStep）に応じた加減算ロジック
                 const updateR1 = (index) => {
                     let newVal = activePage.value.r1[index] + counterStep.value;
-                    if(newVal < 0) newVal = 0; // マイナスにはならないようにガード
+                    if(newVal < 0) newVal = 0;
                     activePage.value.r1[index] = newVal;
                 };
 
@@ -826,7 +984,8 @@
                     form, netBalance, prepareMachineInput, saveMachine, handlePhotoUpload, onStoreTypeChange,
                     dailyForm, saveDailyTotal,
                     cPage, counterStep, counterData, activePage, r1Colors, getProb, updateR1, updateR2, resetCounter, editPageName, editRoleNames,
-                    showActionModal, openActionModal, editMachine, deleteMachine
+                    showActionModal, openActionModal, editMachine, deleteMachine,
+                    analysisSubTab, changeMainTab, changeAnalysisTab, storeRanking
                 }
             }
         }).mount('#app');
