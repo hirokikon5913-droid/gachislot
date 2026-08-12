@@ -45,7 +45,6 @@
         .day-detail { padding: 15px; background: var(--surface); margin-top: 10px; border-top: 1px solid var(--border); }
         .day-summary-box { font-size: 13px; margin-bottom: 15px; background: var(--surface-light); padding: 12px; border-radius: 8px; display: flex; flex-direction: column; gap: 8px; border: 2px solid var(--primary); box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
 
-        /* 店舗区切りバッジ */
         .store-divider { background: var(--surface-light); border-left: 4px solid var(--secondary); color: var(--secondary); padding: 8px 12px; margin: 20px 0 10px 0; font-weight: bold; font-size: 14px; display: flex; align-items: center; border-radius: 4px; }
         
         .machine-card { background: var(--surface-light); padding: 12px; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid var(--primary); cursor: pointer; }
@@ -61,7 +60,6 @@
         .save-btn { background: var(--primary); color: #fff; font-weight: bold; padding: 15px; text-align: center; border-radius: 8px; margin: 20px 15px; cursor: pointer; font-size: 16px; }
         .save-btn:active { opacity: 0.8; }
         
-        /* ラジオボタン */
         .radio-group { display: flex; gap: 20px; padding: 10px 0; }
         .radio-label { display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; color: var(--text-main); font-weight: bold; }
         .radio-label input[type="radio"] { transform: scale(1.3); accent-color: var(--primary); }
@@ -74,14 +72,29 @@
         .games-area { text-align: center; padding: 20px 10px; border-bottom: 1px solid var(--border); background: var(--surface); }
         .games-input { background: transparent; border: none; color: var(--text-main); font-size: 32px; font-weight: bold; width: 120px; text-align: center; border-bottom: 2px solid var(--primary); margin-bottom: 15px; outline: none; }
         .games-btn-group { display: flex; justify-content: center; gap: 10px; }
-        .g-btn { background: var(--surface-light); color: var(--text-main); border: 1px solid var(--border); padding: 10px 15px; border-radius: 8px; font-weight: bold; font-size: 16px; flex: 1; }
+        .g-btn { background: var(--surface-light); color: var(--text-main); border: 1px solid var(--border); padding: 10px 15px; border-radius: 8px; font-weight: bold; font-size: 16px; flex: 1; transition: all 0.1s; }
+        .g-btn:active { transform: scale(0.9); opacity: 0.7; }
+        
+        /* 💡 新設：小役入力単位切り替えボタングループ */
+        .step-toggle-group { display: flex; justify-content: center; gap: 8px; margin-bottom: 15px; }
+        .step-toggle-btn { background: var(--surface-light); color: var(--text-sub); border: 1px solid var(--border); padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; transition: all 0.2s; }
+        .step-toggle-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
         
         .roles-area { padding: 15px; }
         .role-row { display: flex; justify-content: space-around; margin-bottom: 25px; }
         .role-item { display: flex; flex-direction: column; align-items: center; width: 60px; }
-        .circle-btn { width: 50px; height: 50px; border-radius: 50%; border: 2px solid #555; margin-bottom: 5px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        .square-btn { width: 55px; height: 55px; border-radius: 8px; background: var(--surface-light); border: 2px solid #555; margin-bottom: 5px; cursor: pointer; color: var(--text-main); font-size: 11px; display: flex; align-items: center; justify-content: center; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3); line-height: 1.1; word-break: break-all; padding: 2px; }
-        .circle-btn:active, .square-btn:active { transform: scale(0.95); }
+        
+        /* 💡 修正：視覚的フィードバックの強化 */
+        .circle-btn { width: 50px; height: 50px; border-radius: 50%; border: 2px solid #555; margin-bottom: 5px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: transform 0.05s ease, filter 0.05s ease, box-shadow 0.05s ease; }
+        .square-btn { width: 55px; height: 55px; border-radius: 8px; background: var(--surface-light); border: 2px solid #555; margin-bottom: 5px; cursor: pointer; color: var(--text-main); font-size: 11px; display: flex; align-items: center; justify-content: center; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3); line-height: 1.1; word-break: break-all; padding: 2px; transition: transform 0.05s ease, filter 0.05s ease, box-shadow 0.05s ease; }
+        
+        /* 押した瞬間に沈み込み＋明るくなる効果 */
+        .circle-btn:active, .square-btn:active { 
+            transform: scale(0.85); 
+            filter: brightness(1.5); /* 押した時に光る */
+            box-shadow: 0 1px 2px rgba(0,0,0,0.8); 
+        }
+        
         .role-count { font-size: 16px; font-weight: bold; margin-top: 4px; }
         .role-prob { font-size: 10px; color: var(--secondary); }
 
@@ -168,12 +181,9 @@
 
                     <!-- 遊技履歴リスト -->
                     <template v-for="(m, index) in getMachinesForDate(selectedDay.fullDate)" :key="index">
-                        
-                        <!-- 店舗移動バッジ (1台目 または 前台から店舗移動した場合) -->
                         <div v-if="index === 0 || !m.isSameStore" class="store-divider">
                             🏪 {{ m.location || '店舗未設定' }}
                         </div>
-
                         <div class="machine-card" @click="openActionModal(index)">
                             <div style="font-weight:bold; font-size:14px; margin-bottom:5px;">{{ m.machineNumber }}台目: {{ m.name || '機種不明' }} (貸出: {{m.rate}}枚)</div>
                             <div style="display:flex; justify-content:space-between; font-size:13px; margin-top:5px;">
@@ -216,10 +226,21 @@
                 </div>
                 
                 <div class="roles-area">
+                    <!-- 💡 新設：入力単位切り替え -->
+                    <div style="text-align: center; margin-bottom: 10px;">
+                        <span style="font-size: 11px; color: var(--text-sub); margin-bottom: 5px; display: block;">▼ 小役カウント入力単位 ▼</span>
+                        <div class="step-toggle-group">
+                            <button class="step-toggle-btn" :class="{active: counterStep === -10}" @click="counterStep = -10">- 10</button>
+                            <button class="step-toggle-btn" :class="{active: counterStep === -1}" @click="counterStep = -1">- 1</button>
+                            <button class="step-toggle-btn" :class="{active: counterStep === 1}" @click="counterStep = 1">+ 1</button>
+                            <button class="step-toggle-btn" :class="{active: counterStep === 10}" @click="counterStep = 10">+ 10</button>
+                        </div>
+                    </div>
+
                     <div style="font-size:12px; color:var(--text-sub); margin-bottom:10px;">【1段目：基本小役】</div>
                     <div class="role-row">
                         <div class="role-item" v-for="(col, i) in r1Colors" :key="'r1'+i">
-                            <button class="circle-btn" :style="{background: col}" @click="activePage.r1[i]++"></button>
+                            <button class="circle-btn" :style="{background: col}" @click="updateR1(i)"></button>
                             <span class="role-count">{{ activePage.r1[i] }}</span>
                             <span class="role-prob">{{ getProb(activePage.r1[i], activePage.games) }}</span>
                         </div>
@@ -231,7 +252,7 @@
                     </div>
                     <div class="role-row">
                         <div class="role-item" v-for="(name, i) in activePage.r2Names" :key="'r2'+i">
-                            <button class="square-btn" @click="activePage.r2[i]++">{{name}}</button>
+                            <button class="square-btn" @click="updateR2(i)">{{name}}</button>
                             <span class="role-count">{{ activePage.r2[i] }}</span>
                             <span class="role-prob">{{ getProb(activePage.r2[i], activePage.games) }}</span>
                         </div>
@@ -249,7 +270,6 @@
                     <span style="font-size: 14px; font-weight: bold; color: var(--primary);">📍 今回の稼働: 【 {{ form.machineNumber }}台目 】</span>
                 </div>
 
-                <!-- 🏢 同店舗・別店舗の切り替え (2台目以降のみ表示) -->
                 <div class="form-group" v-if="form.machineNumber > 1">
                     <span class="form-label">🏢 店舗移動</span>
                     <div class="radio-group">
@@ -258,12 +278,10 @@
                     </div>
                 </div>
 
-                <!-- 🏪 実践店舗入力 (1台目 または 別店舗移動時のみ表示) -->
                 <div class="form-group" v-if="form.machineNumber === 1 || !form.isSameStore">
                     <span class="form-label">🏪 実践店舗</span>
                     <input type="text" class="form-input" v-model="form.location" list="store-list" placeholder="店舗名を入力または選択">
                     <datalist id="store-list">
-                        <!-- 九州・山口西部の主要店舗サジェスト -->
                         <option value="スペース666"></option>
                         <option value="ゾーン戸畑"></option>
                         <option value="メガフェイス1500宗像"></option>
@@ -493,7 +511,6 @@
                     return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
                 };
 
-                // --- 🎰 遊技履歴 編集・削除制御用 ---
                 const isEditing = ref(false);
                 const editingIndex = ref(null);
                 const showActionModal = ref(false);
@@ -504,10 +521,8 @@
                     showActionModal.value = true;
                 };
 
-                // 店舗関連のプロパティ (location, isSameStore) を追加
                 const form = ref({ date: todayStr, machineNumber: 1, location: '', isSameStore: false, name: '', rate: 46, broughtIn: 0, cashInvest: 0, savedSign: -1, savedVal: 0, leftMedals: 0, memo: '', photo: '' });
                 
-                // ラジオボタン切り替え時の処理（持ち込み・店舗名の連動）
                 const onStoreTypeChange = () => {
                     const d = form.value.date;
                     const machines = appData.value[d]?.machines || [];
@@ -526,20 +541,17 @@
                 const updateBroughtInAndNumber = (dateStr, targetIdx = null) => {
                     const machines = appData.value[dateStr]?.machines || [];
                     if (targetIdx !== null) {
-                        // 編集時
                         form.value.machineNumber = targetIdx + 1;
                         if (targetIdx === 0) {
                             form.value.isSameStore = false;
                             form.value.broughtIn = 0;
                         } else {
-                            // 編集時は元の isSameStore を維持しつつ、もし同店舗なら前台の leftMedals を反映
                             if(form.value.isSameStore) {
                                 form.value.location = machines[targetIdx - 1].location;
                                 form.value.broughtIn = machines[targetIdx - 1].leftMedals || 0;
                             }
                         }
                     } else {
-                        // 新規追加時
                         const nextNum = machines.length + 1;
                         form.value.machineNumber = nextNum;
                         if (nextNum === 1) {
@@ -547,7 +559,7 @@
                             form.value.location = '';
                             form.value.broughtIn = 0;
                         } else {
-                            form.value.isSameStore = true; // デフォルトは同店舗継続
+                            form.value.isSameStore = true; 
                             form.value.location = machines[machines.length - 1].location;
                             form.value.broughtIn = machines[machines.length - 1].leftMedals || 0;
                         }
@@ -638,7 +650,7 @@
                         } else {
                             if (m.isSameStore) {
                                 m.broughtIn = prevLeft;
-                                m.location = machines[idx-1].location; // 前の店舗名を引き継ぐ
+                                m.location = machines[idx-1].location; 
                             } else {
                                 m.broughtIn = 0;
                             }
@@ -672,7 +684,6 @@
                         machines.push({ ...form.value, netBalance: netBalance.value });
                     }
 
-                    // 💡 後続の台（2台目以降）の連動を再計算 (店舗一致判定も含む)
                     let prevLeft = 0;
                     machines.forEach((m, idx) => {
                         m.machineNumber = idx + 1;
@@ -682,9 +693,9 @@
                         } else {
                             if (m.isSameStore) {
                                 m.broughtIn = prevLeft;
-                                m.location = machines[idx-1].location; // 前の店舗名を引き継ぐ
+                                m.location = machines[idx-1].location; 
                             } else {
-                                m.broughtIn = 0; // 別店舗移動なら持ち込み0
+                                m.broughtIn = 0; 
                             }
                         }
                         let cashToMedals = Math.floor((m.cashInvest / 1000) * m.rate);
@@ -708,7 +719,6 @@
                     currentTab.value = 'home';
                 };
 
-                // --- 💰 日別トータル入力 ---
                 const dailyForm = ref({ invest: 0, recover: 0, medalSign: 1, medalVal: 0 });
                 watch(() => currentTab.value, (newTab) => {
                     if(newTab === 'input_daily' && selectedDay.value) {
@@ -736,6 +746,10 @@
 
                 // --- 🎲 小役カウンター ---
                 const cPage = ref(0);
+                
+                // 💡 新設：入力単位用の変数 (初期値は +1)
+                const counterStep = ref(1);
+
                 const defaultCounter = [
                     { pageName: '通常時', games: 0, r1: [0,0,0,0,0], r2Names: ['チェリー','スイカ','ベル','チャンス目','カスタム5'], r2: [0,0,0,0,0] },
                     { pageName: 'CZ/高確', games: 0, r1: [0,0,0,0,0], r2Names: ['カスタム1','カスタム2','カスタム3','カスタム4','カスタム5'], r2: [0,0,0,0,0] },
@@ -753,6 +767,19 @@
                 
                 const getProb = (count, games) => count === 0 ? '-' : '1/' + (games / count).toFixed(1);
                 
+                // 💡 修正：入力単位（counterStep）に応じた加減算ロジック
+                const updateR1 = (index) => {
+                    let newVal = activePage.value.r1[index] + counterStep.value;
+                    if(newVal < 0) newVal = 0; // マイナスにはならないようにガード
+                    activePage.value.r1[index] = newVal;
+                };
+
+                const updateR2 = (index) => {
+                    let newVal = activePage.value.r2[index] + counterStep.value;
+                    if(newVal < 0) newVal = 0;
+                    activePage.value.r2[index] = newVal;
+                };
+
                 const resetCounter = () => {
                     if(confirm("このページをリセットしますか？")) {
                         counterData.value[cPage.value].games = 0;
@@ -798,7 +825,7 @@
                     getMachinesForDate, getDayInvest, getDayRecover, getDayTotal, getDayMedalDelta, monthlySummary, formatDateDisplay,
                     form, netBalance, prepareMachineInput, saveMachine, handlePhotoUpload, onStoreTypeChange,
                     dailyForm, saveDailyTotal,
-                    cPage, counterData, activePage, r1Colors, getProb, resetCounter, editPageName, editRoleNames,
+                    cPage, counterStep, counterData, activePage, r1Colors, getProb, updateR1, updateR2, resetCounter, editPageName, editRoleNames,
                     showActionModal, openActionModal, editMachine, deleteMachine
                 }
             }
