@@ -678,9 +678,16 @@
                 </div>
 
                 <div style="border-top: 1px dashed var(--border); margin-top: 10px; padding-top: 15px;">
-                    <div class="text-sm text-sub text-center font-bold mb-2">📂 テンプレート機能</div>
-                    <button class="modal-btn btn-outline mb-2" @click="saveTemplate">現在の構成をテンプレに保存</button>
-                    <button class="modal-btn btn-outline" @click="loadTemplate">過去のテンプレから読み込む</button>
+                    <div class="text-sm text-sub text-center font-bold mb-2">📂 テンプレート・共有機能</div>
+                    <div class="text-sm text-sub text-center mb-2" style="font-size: 10px;">現在の【基本・カスタム・ボーナスの全列】を一括処理します</div>
+                    <div class="flex gap-2 mb-2">
+                        <button class="modal-btn btn-outline" style="flex:1;" @click="saveTemplate">💾 テンプレ保存</button>
+                        <button class="modal-btn btn-outline" style="flex:1;" @click="loadTemplate">📂 テンプレ読込</button>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="modal-btn btn-primary" style="flex:1; background: var(--secondary); color: #000;" @click="exportTemplate">📤 コードを発行</button>
+                        <button class="modal-btn btn-primary" style="flex:1; background: var(--secondary); color: #000;" @click="importTemplate">📥 コードを読込</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1128,13 +1135,102 @@
                 const showConfigModal = ref(false);
                 const configForm = ref({ row: 'r1', names: [], colors: [] });
                 const colorPalette = ['#e53935', '#4caf50', '#1e88e5', '#fdd835', '#ff9800', '#9c27b0', '#ff4081', '#00bcd4', '#212121', '#e0e0e0'];
+                
+                // 💡 テンプレートのデータ構造をアップグレード（全列を保存できるように修正）
                 const templates = ref(getStore('gachi_counter_templates', []));
                 watch(templates, v => setStore('gachi_counter_templates', v), { deep: true });
 
                 const openConfigModal = (row) => { configForm.value.row = row; configForm.value.names = [...activePage.value[row + 'Names']]; configForm.value.colors = [...activePage.value[row + 'Colors']]; showConfigModal.value = true; };
                 const saveConfig = () => { const r = configForm.value.row; for(let i=0; i<5; i++) { activePage.value[r + 'Names'][i] = configForm.value.names[i].trim() || `項目${i+1}`; activePage.value[r + 'Colors'][i] = configForm.value.colors[i]; } showConfigModal.value = false; };
-                const saveTemplate = () => { const n = prompt('この構成（名前と色）を保存するテンプレート名を入力：'); if(n?.trim()) { templates.value.push({ name: n.trim(), names: [...configForm.value.names], colors: [...configForm.value.colors] }); alert('テンプレートを保存しました！'); } };
-                const loadTemplate = () => { if(templates.value.length === 0) return alert('保存されたテンプレートがありません。'); const msg = templates.value.map((t, i) => `${i+1}: ${t.name}`).join('\n'); const num = prompt(`読み込むテンプレートの番号を入力してください：\n\n${msg}`); const idx = parseInt(num) - 1; if(templates.value[idx]) { configForm.value.names = [...templates.value[idx].names]; configForm.value.colors = [...templates.value[idx].colors]; alert('読み込みました。「適用する」を押して保存してください。'); } };
+                
+                // 📂 全列のテンプレート保存・読込処理
+                const saveTemplate = () => { 
+                    const n = prompt('現在の【全列】の構成（基本・カスタム・ボーナス）を保存するテンプレート名を入力：'); 
+                    if(n?.trim()) { 
+                        templates.value.push({ 
+                            name: n.trim(), 
+                            r1Names: [...activePage.value.r1Names], r1Colors: [...activePage.value.r1Colors],
+                            r2Names: [...activePage.value.r2Names], r2Colors: [...activePage.value.r2Colors],
+                            r3Names: [...activePage.value.r3Names], r3Colors: [...activePage.value.r3Colors]
+                        }); 
+                        alert('テンプレートを保存しました！'); 
+                    } 
+                };
+                
+                const loadTemplate = () => { 
+                    if(templates.value.length === 0) return alert('保存されたテンプレートがありません。'); 
+                    const msg = templates.value.map((t, i) => `${i+1}: ${t.name}`).join('\n'); 
+                    const num = prompt(`読み込むテンプレートの番号を入力してください：\n\n${msg}`); 
+                    const idx = parseInt(num) - 1; 
+                    if(templates.value[idx]) { 
+                        const t = templates.value[idx];
+                        if (t.r1Names) { // 新しい全列テンプレートの場合
+                            activePage.value.r1Names = [...t.r1Names]; activePage.value.r1Colors = [...t.r1Colors];
+                            activePage.value.r2Names = [...t.r2Names]; activePage.value.r2Colors = [...t.r2Colors];
+                            activePage.value.r3Names = [...t.r3Names]; activePage.value.r3Colors = [...t.r3Colors];
+                        } else if (t.names) { // 過去の単独列テンプレートの場合の互換処理
+                            const r = configForm.value.row;
+                            activePage.value[r+'Names'] = [...t.names]; activePage.value[r+'Colors'] = [...t.colors];
+                        }
+                        // 編集中のフォームも更新
+                        const cr = configForm.value.row;
+                        configForm.value.names = [...activePage.value[cr+'Names']]; configForm.value.colors = [...activePage.value[cr+'Colors']];
+                        alert('テンプレートを読み込みました！'); 
+                    } 
+                };
+
+                // 📤 共有コード発行機能
+                const exportTemplate = () => {
+                    try {
+                        const data = {
+                            r1N: activePage.value.r1Names, r1C: activePage.value.r1Colors,
+                            r2N: activePage.value.r2Names, r2C: activePage.value.r2Colors,
+                            r3N: activePage.value.r3Names, r3C: activePage.value.r3Colors
+                        };
+                        const str = 'GachiSlot-' + btoa(encodeURIComponent(JSON.stringify(data)));
+                        
+                        if (navigator.clipboard) {
+                            navigator.clipboard.writeText(str).then(() => {
+                                alert("✅ 共有コードをコピーしました！\nSNSやLINEなどにそのまま貼り付けて共有できます。");
+                            }).catch(() => {
+                                prompt("以下の共有コードをコピーしてください:", str);
+                            });
+                        } else {
+                            prompt("以下の共有コードをコピーしてください:", str);
+                        }
+                    } catch (e) {
+                        alert("⚠️ 共有コードの生成に失敗しました。");
+                    }
+                };
+
+                // 📥 共有コード読込機能
+                const importTemplate = () => {
+                    const str = prompt("SNSなどでコピーした共有コード（GachiSlot-...）を入力してください：");
+                    if (!str) return;
+                    if (!str.startsWith("GachiSlot-")) return alert("⚠️ 無効なコードです。「GachiSlot-」から始まるコードを入力してください。");
+                    
+                    try {
+                        const encoded = str.replace("GachiSlot-", "");
+                        const data = JSON.parse(decodeURIComponent(atob(encoded)));
+                        
+                        if (data.r1N && data.r1C && data.r2N && data.r2C && data.r3N && data.r3C) {
+                            const tName = prompt("読み込んだ設定を保存するテンプレート名を入力してください：", "共有された設定");
+                            if (tName?.trim()) {
+                                templates.value.push({
+                                    name: tName.trim(),
+                                    r1Names: data.r1N, r1Colors: data.r1C,
+                                    r2Names: data.r2N, r2Colors: data.r2C,
+                                    r3Names: data.r3N, r3Colors: data.r3C
+                                });
+                                alert(`✅ テンプレート「${tName.trim()}」として保存しました！\n「📂 テンプレ読込」ボタンから適用してください。`);
+                            }
+                        } else {
+                            alert("⚠️ データが壊れているため読み込めません。");
+                        }
+                    } catch(e) {
+                        alert("⚠️ コードの読み込みに失敗しました。全てコピーできているか確認してください。");
+                    }
+                };
 
                 const showCalcModal = ref(false);
                 const calcForm = ref({ games: 0, selected: { r1: [false,false,false,false,false], r2: [false,false,false,false,false], r3: [false,false,false,false,false] } });
@@ -1223,7 +1319,7 @@
                     selectedPageIndex, cPage, onPageSelectChange, counterStep, counterData, activePage, getProb, 
                     calcDiffGames, updateCount, glowState, resetCounter, editPageName, vibrationEnabled,
                     bonusTotalCount, bonusTotalProb,
-                    showConfigModal, configForm, colorPalette, openConfigModal, saveConfig, saveTemplate, loadTemplate,
+                    showConfigModal, configForm, colorPalette, openConfigModal, saveConfig, saveTemplate, loadTemplate, exportTemplate, importTemplate,
                     showCalcModal, calcForm, openCalcModal, customCalcResult,
                     showActionModal, openActionModal, editMachine, deleteMachineAction,
                     analysisSubTab, changeMainTab, changeAnalysisTab, storeRanking,
