@@ -11,8 +11,12 @@
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%231e1e1e%22/><text x=%2250%22 y=%2250%22 font-size=%2265%22 text-anchor=%22middle%22 dominant-baseline=%22central%22>🎰</text></svg>">
     
     <title>Gachi-Slot 収支管理</title>
+    <!-- 必須ライブラリ -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- 💡 追加：共有コードを超短縮化するための圧縮ツール -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
+    
     <style>
         /* 🎨 テーマ設定 */
         :root[data-theme="black"] { --bg: #121212; --surface: #1e1e1e; --surface-light: #2c2c2c; --primary: #bb86fc; --secondary: #03dac6; --error: #cf6679; --success: #4caf50; --text-main: #ffffff; --text-sub: #b3b3b3; --border: #333333; }
@@ -298,6 +302,19 @@
                 </div>
                 
                 <div class="p-3">
+                    <!-- 💡 追加：テンプレート・共有機能ブロック -->
+                    <div class="card mb-2" style="padding: 10px; border: 1px dashed var(--primary);">
+                        <div class="text-sm text-sub text-center font-bold mb-2" style="color: var(--primary);">📂 テンプレート・設定共有</div>
+                        <div class="flex gap-2 mb-2">
+                            <button class="btn-outline" style="flex:1; padding:8px; border-radius:6px; font-size:12px;" @click="saveTemplate">💾 テンプレ保存</button>
+                            <button class="btn-outline" style="flex:1; padding:8px; border-radius:6px; font-size:12px;" @click="loadTemplate">📂 テンプレ読込</button>
+                        </div>
+                        <div class="flex gap-2">
+                            <button class="btn-primary" style="flex:1; padding:8px; border-radius:6px; font-size:12px; font-weight:bold; background: var(--secondary); color: #000;" @click="exportTemplate">📤 コードを発行</button>
+                            <button class="btn-primary" style="flex:1; padding:8px; border-radius:6px; font-size:12px; font-weight:bold; background: var(--secondary); color: #000;" @click="importTemplate">📥 コードを読込</button>
+                        </div>
+                    </div>
+
                     <div class="text-center mb-2">
                         <span style="font-size: 11px; color: var(--text-sub); display: block; margin-bottom:5px;">▼ カウント入力単位 ▼</span>
                         <div class="flex-center gap-2">
@@ -654,7 +671,7 @@
             </div>
         </div>
 
-        <!-- 名称・色・テンプレ設定モーダル -->
+        <!-- 名称・色変更モーダル -->
         <div class="modal-overlay" v-if="showConfigModal" @click.self="showConfigModal = false">
             <div class="modal-content">
                 <h3 class="modal-title">名称と色の変更</h3>
@@ -675,19 +692,6 @@
                 <div class="flex gap-2 mt-2">
                     <button class="modal-btn btn-primary" style="flex:1;" @click="saveConfig">💾 適用する</button>
                     <button class="modal-btn btn-outline" style="flex:1;" @click="showConfigModal = false">キャンセル</button>
-                </div>
-
-                <div style="border-top: 1px dashed var(--border); margin-top: 10px; padding-top: 15px;">
-                    <div class="text-sm text-sub text-center font-bold mb-2">📂 テンプレート・共有機能</div>
-                    <div class="text-sm text-sub text-center mb-2" style="font-size: 10px;">現在の【基本・カスタム・ボーナスの全列】を一括処理します</div>
-                    <div class="flex gap-2 mb-2">
-                        <button class="modal-btn btn-outline" style="flex:1;" @click="saveTemplate">💾 テンプレ保存</button>
-                        <button class="modal-btn btn-outline" style="flex:1;" @click="loadTemplate">📂 テンプレ読込</button>
-                    </div>
-                    <div class="flex gap-2">
-                        <button class="modal-btn btn-primary" style="flex:1; background: var(--secondary); color: #000;" @click="exportTemplate">📤 コードを発行</button>
-                        <button class="modal-btn btn-primary" style="flex:1; background: var(--secondary); color: #000;" @click="importTemplate">📥 コードを読込</button>
-                    </div>
                 </div>
             </div>
         </div>
@@ -1087,6 +1091,7 @@
                 const defaultR1Colors = ['#e53935', '#4caf50', '#1e88e5', '#fdd835', '#e0e0e0'];
                 const defaultR2Colors = ['#e0e0e0', '#e0e0e0', '#e0e0e0', '#e0e0e0', '#e0e0e0'];
                 const defaultR3Colors = ['#ff4081', '#9c27b0', '#ff9800', '#00bcd4', '#e0e0e0'];
+                const colorPalette = ['#e53935', '#4caf50', '#1e88e5', '#fdd835', '#ff9800', '#9c27b0', '#ff4081', '#00bcd4', '#212121', '#e0e0e0'];
                 
                 const defaultCounter = [1,2,3].map(i => ({ 
                     pageName: `シチュエーション${String.fromCharCode(64 + i)}`, games: 0, isDiffMode: false, startGames: 0, currentGames: 0, 
@@ -1134,16 +1139,13 @@
 
                 const showConfigModal = ref(false);
                 const configForm = ref({ row: 'r1', names: [], colors: [] });
-                const colorPalette = ['#e53935', '#4caf50', '#1e88e5', '#fdd835', '#ff9800', '#9c27b0', '#ff4081', '#00bcd4', '#212121', '#e0e0e0'];
-                
-                // 💡 テンプレートのデータ構造をアップグレード（全列を保存できるように修正）
                 const templates = ref(getStore('gachi_counter_templates', []));
                 watch(templates, v => setStore('gachi_counter_templates', v), { deep: true });
 
                 const openConfigModal = (row) => { configForm.value.row = row; configForm.value.names = [...activePage.value[row + 'Names']]; configForm.value.colors = [...activePage.value[row + 'Colors']]; showConfigModal.value = true; };
                 const saveConfig = () => { const r = configForm.value.row; for(let i=0; i<5; i++) { activePage.value[r + 'Names'][i] = configForm.value.names[i].trim() || `項目${i+1}`; activePage.value[r + 'Colors'][i] = configForm.value.colors[i]; } showConfigModal.value = false; };
                 
-                // 📂 全列のテンプレート保存・読込処理
+                // 📂 テンプレ・共有機能
                 const saveTemplate = () => { 
                     const n = prompt('現在の【全列】の構成（基本・カスタム・ボーナス）を保存するテンプレート名を入力：'); 
                     if(n?.trim()) { 
@@ -1164,71 +1166,71 @@
                     const idx = parseInt(num) - 1; 
                     if(templates.value[idx]) { 
                         const t = templates.value[idx];
-                        if (t.r1Names) { // 新しい全列テンプレートの場合
+                        if (t.r1Names) {
                             activePage.value.r1Names = [...t.r1Names]; activePage.value.r1Colors = [...t.r1Colors];
                             activePage.value.r2Names = [...t.r2Names]; activePage.value.r2Colors = [...t.r2Colors];
                             activePage.value.r3Names = [...t.r3Names]; activePage.value.r3Colors = [...t.r3Colors];
-                        } else if (t.names) { // 過去の単独列テンプレートの場合の互換処理
-                            const r = configForm.value.row;
+                        } else if (t.names) {
+                            const r = configForm.value.row || 'r1';
                             activePage.value[r+'Names'] = [...t.names]; activePage.value[r+'Colors'] = [...t.colors];
                         }
-                        // 編集中のフォームも更新
-                        const cr = configForm.value.row;
-                        configForm.value.names = [...activePage.value[cr+'Names']]; configForm.value.colors = [...activePage.value[cr+'Colors']];
                         alert('テンプレートを読み込みました！'); 
                     } 
                 };
 
-                // 📤 共有コード発行機能
+                // 📤 共有コード発行機能（超短縮版）
                 const exportTemplate = () => {
                     try {
-                        const data = {
-                            r1N: activePage.value.r1Names, r1C: activePage.value.r1Colors,
-                            r2N: activePage.value.r2Names, r2C: activePage.value.r2Colors,
-                            r3N: activePage.value.r3Names, r3C: activePage.value.r3Colors
-                        };
-                        const str = 'GachiSlot-' + btoa(encodeURIComponent(JSON.stringify(data)));
+                        const colorToIdx = (colors) => colors.map(c => Math.max(0, colorPalette.indexOf(c))).join('');
+                        const str = [
+                            activePage.value.r1Names.join(','), colorToIdx(activePage.value.r1Colors),
+                            activePage.value.r2Names.join(','), colorToIdx(activePage.value.r2Colors),
+                            activePage.value.r3Names.join(','), colorToIdx(activePage.value.r3Colors)
+                        ].join('|');
+                        
+                        const encoded = LZString.compressToEncodedURIComponent(str);
+                        const finalCode = 'Gachi-' + encoded;
                         
                         if (navigator.clipboard) {
-                            navigator.clipboard.writeText(str).then(() => {
+                            navigator.clipboard.writeText(finalCode).then(() => {
                                 alert("✅ 共有コードをコピーしました！\nSNSやLINEなどにそのまま貼り付けて共有できます。");
-                            }).catch(() => {
-                                prompt("以下の共有コードをコピーしてください:", str);
-                            });
+                            }).catch(() => { prompt("以下の共有コードをコピーしてください:", finalCode); });
                         } else {
-                            prompt("以下の共有コードをコピーしてください:", str);
+                            prompt("以下の共有コードをコピーしてください:", finalCode);
                         }
                     } catch (e) {
                         alert("⚠️ 共有コードの生成に失敗しました。");
                     }
                 };
 
-                // 📥 共有コード読込機能
+                // 📥 共有コード読込機能（超短縮版）
                 const importTemplate = () => {
-                    const str = prompt("SNSなどでコピーした共有コード（GachiSlot-...）を入力してください：");
-                    if (!str) return;
-                    if (!str.startsWith("GachiSlot-")) return alert("⚠️ 無効なコードです。「GachiSlot-」から始まるコードを入力してください。");
+                    const code = prompt("SNSなどでコピーした共有コード（Gachi-...）を入力してください：");
+                    if (!code) return;
+                    if (!code.startsWith("Gachi-")) return alert("⚠️ 無効なコードです。「Gachi-」から始まるコードを入力してください。");
                     
                     try {
-                        const encoded = str.replace("GachiSlot-", "");
-                        const data = JSON.parse(decodeURIComponent(atob(encoded)));
+                        const encoded = code.replace("Gachi-", "");
+                        const decoded = LZString.decompressFromEncodedURIComponent(encoded);
+                        if (!decoded) throw new Error("Decode failed");
                         
-                        if (data.r1N && data.r1C && data.r2N && data.r2C && data.r3N && data.r3C) {
-                            const tName = prompt("読み込んだ設定を保存するテンプレート名を入力してください：", "共有された設定");
-                            if (tName?.trim()) {
-                                templates.value.push({
-                                    name: tName.trim(),
-                                    r1Names: data.r1N, r1Colors: data.r1C,
-                                    r2Names: data.r2N, r2Colors: data.r2C,
-                                    r3Names: data.r3N, r3Colors: data.r3C
-                                });
-                                alert(`✅ テンプレート「${tName.trim()}」として保存しました！\n「📂 テンプレ読込」ボタンから適用してください。`);
-                            }
-                        } else {
-                            alert("⚠️ データが壊れているため読み込めません。");
+                        const parts = decoded.split('|');
+                        if (parts.length !== 6) throw new Error("Invalid format");
+                        
+                        const idxToColor = (idxStr) => idxStr.split('').map(i => colorPalette[parseInt(i)] || colorPalette[0]);
+                        
+                        const tName = prompt("読み込んだ設定を保存するテンプレート名を入力してください：", "共有された設定");
+                        if (tName?.trim()) {
+                            templates.value.push({
+                                name: tName.trim(),
+                                r1Names: parts[0].split(','), r1Colors: idxToColor(parts[1]),
+                                r2Names: parts[2].split(','), r2Colors: idxToColor(parts[3]),
+                                r3Names: parts[4].split(','), r3Colors: idxToColor(parts[5])
+                            });
+                            alert(`✅ テンプレート「${tName.trim()}」として保存しました！\n「📂 テンプレ読込」ボタンから適用してください。`);
                         }
                     } catch(e) {
-                        alert("⚠️ コードの読み込みに失敗しました。全てコピーできているか確認してください。");
+                        alert("⚠️ コードの読み込みに失敗しました。全て正しくコピーできているか確認してください。");
                     }
                 };
 
