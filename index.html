@@ -236,7 +236,7 @@
                 </div>
             </div>
 
-            <!-- 🎲 小役カウンター -->
+                        <!-- 🎲 小役カウンター -->
             <div v-show="currentTab === 'counter'">
                 <div class="counter-header">
                     <select class="form-input" style="flex:1; margin-right:10px; font-size:14px; padding:5px 10px;" v-model="selectedPageIndex" @change="onPageSelectChange">
@@ -248,10 +248,17 @@
                 </div>
                 
                 <div class="games-area">
-                    <label class="flex-center gap-2 mb-2 text-sm text-sub" style="cursor:pointer;">
-                        <input type="checkbox" v-model="activePage.isDiffMode" style="transform:scale(1.2); accent-color:var(--primary);">
-                        打ち始め / 現在G数から差引計算する
-                    </label>
+                    <div class="flex-center gap-3 mb-2">
+                        <label class="flex-center gap-2 text-sm text-sub" style="cursor:pointer;">
+                            <input type="checkbox" v-model="activePage.isDiffMode" style="transform:scale(1.2); accent-color:var(--primary);">
+                            差引計算
+                        </label>
+                        <label class="flex-center gap-2 text-sm text-sub" style="cursor:pointer;">
+                            <!-- 💡 追加：バイブレーションON/OFF -->
+                            <input type="checkbox" v-model="vibrationEnabled" style="transform:scale(1.2); accent-color:var(--primary);">
+                            📳 バイブ
+                        </label>
+                    </div>
 
                     <template v-if="!activePage.isDiffMode">
                         <div class="text-sm text-sub mb-2">🎯 回転数 (ゲーム数)</div>
@@ -282,7 +289,7 @@
                 
                 <div class="p-3">
                     <div class="text-center mb-2">
-                        <span style="font-size: 11px; color: var(--text-sub); display: block; margin-bottom:5px;">▼ 小役カウント入力単位 ▼</span>
+                        <span style="font-size: 11px; color: var(--text-sub); display: block; margin-bottom:5px;">▼ カウント入力単位 ▼</span>
                         <div class="flex-center gap-2">
                             <button class="step-toggle-btn" :class="{active: counterStep === -10}" @click="counterStep = -10">- 10</button>
                             <button class="step-toggle-btn" :class="{active: counterStep === -1}" @click="counterStep = -1">- 1</button>
@@ -291,26 +298,55 @@
                         </div>
                     </div>
 
-                    <div class="text-sm text-sub mb-2">【1段目：基本小役】</div>
+                    <!-- 1列目：基本小役 -->
+                    <div class="flex-between mb-2 mt-2">
+                        <span class="text-sm text-sub font-bold">【基本小役】</span>
+                        <span style="color:var(--primary); cursor:pointer; font-size:12px;" @click="openConfigModal('r1')">✏️名称・色変更</span>
+                    </div>
                     <div class="role-row">
-                        <div class="flex-col items-center" style="width:60px;" v-for="(col, i) in r1Colors" :key="'r1'+i">
-                            <button class="circle-btn" :style="[{ background: col }, glowR1[i] ? { boxShadow: '0 0 25px 5px ' + col, transform: 'scale(0.85)', filter: 'brightness(1.5)' } : {}]" @click="updateR1(i)"></button>
+                        <div class="flex-col items-center" style="width:60px;" v-for="(name, i) in activePage.r1Names" :key="'r1'+i">
+                            <button class="square-btn" :style="[{ borderColor: activePage.r1Colors[i] }, glowState.r1[i] ? { boxShadow: '0 0 20px 3px ' + activePage.r1Colors[i], background: activePage.r1Colors[i], color: '#fff', transform: 'scale(0.85)' } : {}]" @click="updateCount('r1', i)">{{name}}</button>
                             <span class="font-bold mt-2" style="font-size:16px;">{{ activePage.r1[i] }}</span>
                             <span style="font-size:10px; color:var(--secondary);">{{ getProb(activePage.r1[i], activePage.games) }}</span>
                         </div>
                     </div>
                     
-                    <div class="form-label mb-2">
-                        <span>【2段目：カスタム小役】(タップでカウント)</span>
-                        <span style="color:var(--primary); cursor:pointer;" @click="openRoleEditModal">✏️名前一括変更</span>
+                    <!-- 2列目：カスタム小役 -->
+                    <div class="flex-between mb-2 mt-2">
+                        <span class="text-sm text-sub font-bold">【カスタム小役】</span>
+                        <span style="color:var(--primary); cursor:pointer; font-size:12px;" @click="openConfigModal('r2')">✏️名称・色変更</span>
                     </div>
                     <div class="role-row">
                         <div class="flex-col items-center" style="width:60px;" v-for="(name, i) in activePage.r2Names" :key="'r2'+i">
-                            <button class="square-btn" :style="glowR2[i] ? { boxShadow: '0 0 25px 5px var(--primary)', borderColor: 'var(--primary)', transform: 'scale(0.85)', filter: 'brightness(1.3)' } : {}" @click="updateR2(i)">{{name}}</button>
+                            <button class="square-btn" :style="[{ borderColor: activePage.r2Colors[i] }, glowState.r2[i] ? { boxShadow: '0 0 20px 3px ' + activePage.r2Colors[i], background: activePage.r2Colors[i], color: '#fff', transform: 'scale(0.85)' } : {}]" @click="updateCount('r2', i)">{{name}}</button>
                             <span class="font-bold mt-2" style="font-size:16px;">{{ activePage.r2[i] }}</span>
                             <span style="font-size:10px; color:var(--secondary);">{{ getProb(activePage.r2[i], activePage.games) }}</span>
                         </div>
                     </div>
+
+                    <!-- 3列目：ボーナス -->
+                    <div class="flex-between mb-2 mt-2">
+                        <span class="text-sm text-sub font-bold">【ボーナス】</span>
+                        <span style="color:var(--primary); cursor:pointer; font-size:12px;" @click="openConfigModal('r3')">✏️名称・色変更</span>
+                    </div>
+                    <div class="role-row">
+                        <div class="flex-col items-center" style="width:60px;" v-for="(name, i) in activePage.r3Names" :key="'r3'+i">
+                            <button class="square-btn" :style="[{ borderColor: activePage.r3Colors[i] }, glowState.r3[i] ? { boxShadow: '0 0 20px 3px ' + activePage.r3Colors[i], background: activePage.r3Colors[i], color: '#fff', transform: 'scale(0.85)' } : {}]" @click="updateCount('r3', i)">{{name}}</button>
+                            <span class="font-bold mt-2" style="font-size:16px;">{{ activePage.r3[i] }}</span>
+                            <span style="font-size:10px; color:var(--secondary);">{{ getProb(activePage.r3[i], activePage.games) }}</span>
+                        </div>
+                    </div>
+
+                    <!-- 💡 追加：ボーナス総合算 常時表示エリア -->
+                    <div class="card flex-col items-center mt-2" style="border: 2px solid var(--primary);">
+                        <div class="text-sm font-bold" style="color: var(--primary);">🏆 ボーナス総合算</div>
+                        <div style="font-size: 22px; font-weight: bold; margin-top: 5px;">{{ bonusTotalProb }} <span class="text-sm text-sub font-normal">(計 {{ bonusTotalCount }} 回)</span></div>
+                    </div>
+
+                    <!-- 💡 追加：任意の合算確率ポップアップボタン -->
+                    <button class="btn-outline" style="width:100%; padding:12px; border-radius:8px; font-weight:bold; margin-top:10px;" @click="openCalcModal">
+                        🧮 任意の合算確率を確認する
+                    </button>
                 </div>
             </div>
 
@@ -610,19 +646,73 @@
             </div>
         </div>
 
-        <!-- 小役一括変更 -->
-        <div class="modal-overlay" v-if="showRoleEditModal" @click.self="showRoleEditModal = false">
+                <!-- 💡 変更：名称・色・テンプレ設定モーダル -->
+        <div class="modal-overlay" v-if="showConfigModal" @click.self="showConfigModal = false">
             <div class="modal-content">
-                <h3 class="modal-title">カスタム小役の名前一括変更</h3>
-                <div class="text-sm text-sub text-center mb-2">現在のページ「{{ activePage.pageName }}」のボタン名を変更します</div>
-                <div v-for="(name, i) in roleEditForm" :key="i" class="flex items-center mb-2">
-                    <span class="text-sm text-sub font-bold" style="width:60px;">ボタン {{ i + 1 }}</span>
-                    <input type="text" class="form-input" v-model="roleEditForm[i]" style="padding:8px; font-size:14px; flex:1;" placeholder="小役名を入力">
+                <h3 class="modal-title">名称と色の変更</h3>
+                <div class="text-sm text-sub text-center mb-2">ボタンの名前と、タップ時の発光色を選べます</div>
+                
+                <div v-for="(name, i) in configForm.names" :key="i" class="flex-col mb-2 card" style="padding:10px; margin-bottom:5px;">
+                    <div class="flex items-center mb-2">
+                        <span class="text-sm text-sub font-bold" style="width:60px;">ボタン{{ i + 1 }}</span>
+                        <input type="text" class="form-input" v-model="configForm.names[i]" style="padding:8px; font-size:14px; flex:1;" placeholder="名称を入力">
+                    </div>
+                    <!-- 色選択パレット -->
+                    <div class="flex justify-around">
+                        <div v-for="color in colorPalette" :key="color" 
+                             :style="{ background: color, width: '24px', height: '24px', borderRadius: '50%', border: configForm.colors[i] === color ? '3px solid var(--text-main)' : '2px solid transparent', cursor: 'pointer' }" 
+                             @click="configForm.colors[i] = color"></div>
+                    </div>
                 </div>
-                <button class="modal-btn btn-primary mt-2" @click="saveRoleNames">💾 保存する</button>
-                <button class="modal-btn btn-outline mt-2" @click="showRoleEditModal = false">キャンセル</button>
+
+                <div class="flex gap-2 mt-2">
+                    <button class="modal-btn btn-primary" style="flex:1;" @click="saveConfig">💾 適用する</button>
+                    <button class="modal-btn btn-outline" style="flex:1;" @click="showConfigModal = false">キャンセル</button>
+                </div>
+
+                <!-- テンプレート保存・読込機能 -->
+                <div style="border-top: 1px dashed var(--border); margin-top: 10px; padding-top: 15px;">
+                    <div class="text-sm text-sub text-center font-bold mb-2">📂 テンプレート機能</div>
+                    <button class="modal-btn btn-outline mb-2" @click="saveTemplate">現在の構成をテンプレに保存</button>
+                    <button class="modal-btn btn-outline" @click="loadTemplate">過去のテンプレから読み込む</button>
+                </div>
             </div>
         </div>
+
+        <!-- 💡 追加：任意の合算確率モーダル -->
+        <div class="modal-overlay" v-if="showCalcModal" @click.self="showCalcModal = false">
+            <div class="modal-content">
+                <h3 class="modal-title">🧮 任意の合算確率</h3>
+                
+                <div class="flex-center gap-2 mb-2">
+                    <span class="text-sm font-bold">分母(G数):</span>
+                    <input type="number" class="form-input" v-model.number="calcForm.games" style="width:100px; text-align:center; padding:8px;">
+                </div>
+                
+                <div class="text-sm text-sub text-center mb-2">合算したい項目にチェックを入れてください</div>
+
+                <div style="max-height: 40vh; overflow-y: auto; background: var(--bg); padding: 10px; border-radius: 6px; border: 1px solid var(--border);">
+                    <div v-for="(row, rIdx) in ['r1', 'r2', 'r3']" :key="row">
+                        <div class="text-sm font-bold mt-2 mb-2" style="color:var(--primary);">{{ ['基本小役', 'カスタム', 'ボーナス'][rIdx] }}</div>
+                        <div class="flex-col gap-2">
+                            <label v-for="(name, i) in activePage[row + 'Names']" :key="row+i" class="flex items-center gap-2 text-sm" style="background:var(--surface-light); padding:8px; border-radius:4px; cursor:pointer;">
+                                <input type="checkbox" v-model="calcForm.selected[row][i]" style="transform:scale(1.2); accent-color:var(--primary);">
+                                <span style="flex:1;">{{ name }}</span>
+                                <span class="font-bold">{{ activePage[row][i] }} 回</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card flex-col items-center mt-2" style="border-color: var(--secondary); margin-bottom: 0;">
+                    <div class="text-sm font-bold" style="color: var(--secondary);">選択項目の合算確率</div>
+                    <div style="font-size: 22px; font-weight: bold; margin-top: 5px;">{{ customCalcResult.prob }} <span class="text-sm text-sub font-normal">(計 {{ customCalcResult.count }} 回)</span></div>
+                </div>
+
+                <button class="modal-btn btn-outline mt-2" @click="showCalcModal = false">閉じる</button>
+            </div>
+        </div>
+
 
         <!-- スナップショット選択 -->
         <div class="modal-overlay" v-if="showSnapshotSelectModal" @click.self="showSnapshotSelectModal = false">
@@ -965,41 +1055,82 @@
                 // ==========================================
                 // 🎲 小役カウンター処理
                 // ==========================================
-                const defaultCounter = [ { pageName: 'シチュエーションA', games: 0, isDiffMode: false, startGames: 0, currentGames: 0, r1: [0,0,0,0,0], r2Names: ['カスタム1','カスタム2','カスタム3','カスタム4','カスタム5'], r2: [0,0,0,0,0] }, { pageName: 'シチュエーションB', games: 0, isDiffMode: false, startGames: 0, currentGames: 0, r1: [0,0,0,0,0], r2Names: ['カスタム1','カスタム2','カスタム3','カスタム4','カスタム5'], r2: [0,0,0,0,0] }, { pageName: 'シチュエーションC', games: 0, isDiffMode: false, startGames: 0, currentGames: 0, r1: [0,0,0,0,0], r2Names: ['カスタム1','カスタム2','カスタム3','カスタム4','カスタム5'], r2: [0,0,0,0,0] } ];
-                const counterData = ref(getStore('gachi_counter', defaultCounter));
-                counterData.value.forEach((p, i) => { if(p.isDiffMode === undefined) p.isDiffMode = false; if(p.startGames === undefined) p.startGames = 0; if(p.currentGames === undefined) p.currentGames = 0; });
+                const vibrationEnabled = ref(getStore('gachi_vibration', true));
+                watch(vibrationEnabled, v => setStore('gachi_vibration', v));
+
+                const defaultR1Colors = ['#e53935', '#4caf50', '#1e88e5', '#fdd835', '#e0e0e0'];
+                const defaultR2Colors = ['#e0e0e0', '#e0e0e0', '#e0e0e0', '#e0e0e0', '#e0e0e0'];
+                const defaultR3Colors = ['#ff4081', '#9c27b0', '#ff9800', '#00bcd4', '#e0e0e0'];
+                
+                const defaultCounter = [1,2,3].map(i => ({ 
+                    pageName: `シチュエーション${String.fromCharCode(64 + i)}`, games: 0, isDiffMode: false, startGames: 0, currentGames: 0, 
+                    r1Names: ['ベル','スイカ','チェリー','チャンス目','その他'], r1: [0,0,0,0,0], r1Colors: [...defaultR1Colors],
+                    r2Names: ['カスタム1','カスタム2','カスタム3','カスタム4','カスタム5'], r2: [0,0,0,0,0], r2Colors: [...defaultR2Colors],
+                    r3Names: ['BIG','REG','ボーナス3','ボーナス4','ボーナス5'], r3: [0,0,0,0,0], r3Colors: [...defaultR3Colors]
+                }));
+                
+                const loadedCounter = getStore('gachi_counter', defaultCounter);
+                loadedCounter.forEach(p => { 
+                    if(p.isDiffMode === undefined) p.isDiffMode = false; if(p.startGames === undefined) p.startGames = 0; if(p.currentGames === undefined) p.currentGames = 0;
+                    if(!p.r1Names) p.r1Names = ['ベル','スイカ','チェリー','チャンス目','その他']; if(!p.r1Colors) p.r1Colors = [...defaultR1Colors];
+                    if(!p.r2Colors) p.r2Colors = [...defaultR2Colors];
+                    if(!p.r3) { p.r3Names = ['BIG','REG','ボーナス3','ボーナス4','ボーナス5']; p.r3 = [0,0,0,0,0]; p.r3Colors = [...defaultR3Colors]; }
+                });
+                
+                const counterData = ref(loadedCounter);
                 watch(counterData, v => setStore('gachi_counter', v), { deep: true });
 
                 const selectedPageIndex = ref(0); const cPage = ref(0); const counterStep = ref(1);
-                const glowR1 = ref([false, false, false, false, false]); const glowR2 = ref([false, false, false, false, false]);
                 const activePage = computed(() => counterData.value[cPage.value]);
-                const r1Colors = ['#e53935', '#4caf50', '#1e88e5', '#fdd835', '#e0e0e0'];
                 const getProb = (count, games) => count === 0 ? '-' : '1/' + (games / count).toFixed(1);
-
                 const calcDiffGames = () => { if (activePage.value.isDiffMode) activePage.value.games = Math.max(0, (Number(activePage.value.currentGames) || 0) - (Number(activePage.value.startGames) || 0)); };
+
                 const onPageSelectChange = () => {
                     if (selectedPageIndex.value === 'NEW') {
                         if (counterData.value.length >= 10) return alert("⚠️ ページは最大10個まで。"), selectedPageIndex.value = cPage.value;
                         const n = prompt('新しいページ名：', `シチュエーション${String.fromCharCode(65 + counterData.value.length)}`);
-                        if (n?.trim()) { counterData.value.push({ pageName: n.trim(), games: 0, isDiffMode: false, startGames: 0, currentGames: 0, r1: [0,0,0,0,0], r2Names: ['カスタム1','カスタム2','カスタム3','カスタム4','カスタム5'], r2: [0,0,0,0,0] }); cPage.value = counterData.value.length - 1; }
+                        if (n?.trim()) { counterData.value.push({ pageName: n.trim(), games: 0, isDiffMode: false, startGames: 0, currentGames: 0, r1Names: ['ベル','スイカ','チェリー','チャンス目','その他'], r1: [0,0,0,0,0], r1Colors: [...defaultR1Colors], r2Names: ['カスタム1','カスタム2','カスタム3','カスタム4','カスタム5'], r2: [0,0,0,0,0], r2Colors: [...defaultR2Colors], r3Names: ['BIG','REG','ボーナス3','ボーナス4','ボーナス5'], r3: [0,0,0,0,0], r3Colors: [...defaultR3Colors] }); cPage.value = counterData.value.length - 1; }
                     } else cPage.value = selectedPageIndex.value;
                     selectedPageIndex.value = cPage.value;
                 };
-                
-                const updateR1 = (i) => { activePage.value.r1[i] = Math.max(0, activePage.value.r1[i] + counterStep.value); glowR1.value[i] = true; setTimeout(() => glowR1.value[i] = false, 200); };
-                const updateR2 = (i) => { activePage.value.r2[i] = Math.max(0, activePage.value.r2[i] + counterStep.value); glowR2.value[i] = true; setTimeout(() => glowR2.value[i] = false, 200); };
-                const resetCounter = () => { if(confirm("リセットしますか？")) Object.assign(counterData.value[cPage.value], { games: 0, startGames: 0, currentGames: 0, r1: [0,0,0,0,0], r2: [0,0,0,0,0] }); };
                 const editPageName = () => { const n = prompt('新しい名称：', activePage.value.pageName); if (n?.trim()) activePage.value.pageName = n.trim(); };
-                
-                const showRoleEditModal = ref(false); const roleEditForm = ref([]);
-                const openRoleEditModal = () => { roleEditForm.value = [...activePage.value.r2Names]; showRoleEditModal.value = true; };
-                const saveRoleNames = () => { for(let i=0; i<5; i++) activePage.value.r2Names[i] = roleEditForm.value[i].trim() || `カスタム${i+1}`; showRoleEditModal.value = false; };
+                const resetCounter = () => { if(confirm("カウントをリセットしますか？")) Object.assign(counterData.value[cPage.value], { games: 0, startGames: 0, currentGames: 0, r1: [0,0,0,0,0], r2: [0,0,0,0,0], r3: [0,0,0,0,0] }); };
 
+                // 💡 追加：カウントアップとバイブレーション
+                const glowState = ref({ r1: [false,false,false,false,false], r2: [false,false,false,false,false], r3: [false,false,false,false,false] });
+                const updateCount = (row, i) => { 
+                    activePage.value[row][i] = Math.max(0, activePage.value[row][i] + counterStep.value); 
+                    glowState.value[row][i] = true; setTimeout(() => glowState.value[row][i] = false, 200); 
+                    if (vibrationEnabled.value && navigator.vibrate) navigator.vibrate(50);
+                };
+
+                // 💡 追加：ボーナス総合算
+                const bonusTotalCount = computed(() => activePage.value.r3.reduce((a, b) => a + b, 0));
+                const bonusTotalProb = computed(() => getProb(bonusTotalCount.value, activePage.value.games));
+
+                // 💡 追加：名称・色・テンプレ設定
+                const showConfigModal = ref(false);
+                const configForm = ref({ row: 'r1', names: [], colors: [] });
+                const colorPalette = ['#e53935', '#4caf50', '#1e88e5', '#fdd835', '#ff9800', '#9c27b0', '#ff4081', '#00bcd4', '#212121', '#e0e0e0']; // カラーパレット候補
+                const templates = ref(getStore('gachi_counter_templates', []));
+                watch(templates, v => setStore('gachi_counter_templates', v), { deep: true });
+
+                const openConfigModal = (row) => { configForm.value.row = row; configForm.value.names = [...activePage.value[row + 'Names']]; configForm.value.colors = [...activePage.value[row + 'Colors']]; showConfigModal.value = true; };
+                const saveConfig = () => { const r = configForm.value.row; for(let i=0; i<5; i++) { activePage.value[r + 'Names'][i] = configForm.value.names[i].trim() || `項目${i+1}`; activePage.value[r + 'Colors'][i] = configForm.value.colors[i]; } showConfigModal.value = false; };
+                const saveTemplate = () => { const n = prompt('この構成（名前と色）を保存するテンプレート名を入力：'); if(n?.trim()) { templates.value.push({ name: n.trim(), names: [...configForm.value.names], colors: [...configForm.value.colors] }); alert('テンプレートを保存しました！'); } };
+                const loadTemplate = () => { if(templates.value.length === 0) return alert('保存されたテンプレートがありません。'); const msg = templates.value.map((t, i) => `${i+1}: ${t.name}`).join('\n'); const num = prompt(`読み込むテンプレートの番号を入力してください：\n\n${msg}`); const idx = parseInt(num) - 1; if(templates.value[idx]) { configForm.value.names = [...templates.value[idx].names]; configForm.value.colors = [...templates.value[idx].colors]; alert('読み込みました。「適用する」を押して保存してください。'); } };
+
+                // 💡 追加：任意の合算確率計算
+                const showCalcModal = ref(false);
+                const calcForm = ref({ games: 0, selected: { r1: [false,false,false,false,false], r2: [false,false,false,false,false], r3: [false,false,false,false,false] } });
+                const openCalcModal = () => { calcForm.value.games = activePage.value.games; calcForm.value.selected = { r1: [false,false,false,false,false], r2: [false,false,false,false,false], r3: [false,false,false,false,false] }; showCalcModal.value = true; };
+                const customCalcResult = computed(() => { let count = 0; ['r1','r2','r3'].forEach(row => { for(let i=0; i<5; i++) { if(calcForm.value.selected[row][i]) count += activePage.value[row][i]; } }); return { count, prob: getProb(count, calcForm.value.games) }; });
+
+                // 履歴スナップショット
                 const formAttachedPageIndex = ref(-1);
                 const attachCounterData = () => { if (formAttachedPageIndex.value !== -1 && form.value.counterSnapshots.length < 3) { form.value.counterSnapshots.push(JSON.parse(JSON.stringify(counterData.value[formAttachedPageIndex.value]))); formAttachedPageIndex.value = -1; } };
                 const removeCounterData = (idx) => form.value.counterSnapshots.splice(idx, 1);
                 const getSnapshots = (m) => m.counterSnapshots || (m.counterSnapshot ? [m.counterSnapshot] : []);
-
                 const showSnapshotSelectModal = ref(false); const snapshotListToSelect = ref([]);
                 const showSnapshotModal = ref(false); const snapshotData = ref(null);
                 const handleSnapshotClick = (snaps) => { snaps.length === 1 ? openSnapshotModal(snaps[0]) : (snapshotListToSelect.value = snaps, showSnapshotSelectModal.value = true); };
@@ -1009,7 +1140,7 @@
                 // 📊 分析・設定・その他モーダル
                 // ==========================================
                 const analysisSubTab = ref('month');
-                let chartInstance = null; //
+                let chartInstance = null;
                 const changeMainTab = (t) => { currentTab.value = t; if(t === 'analysis') changeAnalysisTab('month'); };
                 const changeAnalysisTab = async (t) => { analysisSubTab.value = t; if (['month', 'year'].includes(t)) { await nextTick(); renderChart(); } };
                 
@@ -1075,9 +1206,11 @@
                     showMonthPickerModal, pickerYear, openMonthPicker, selectMonth,
                     form, netBalance, prepareMachineInput, saveMachine, handlePhotoUpload, onStoreTypeChange,
                     dailyForm, saveDailyTotal, autoDailyCalc,
-                    selectedPageIndex, cPage, onPageSelectChange, counterStep, counterData, activePage, r1Colors, getProb, 
-                    calcDiffGames, glowR1, glowR2, updateR1, updateR2, resetCounter, editPageName, 
-                    showRoleEditModal, roleEditForm, openRoleEditModal, saveRoleNames,
+                    selectedPageIndex, cPage, onPageSelectChange, counterStep, counterData, activePage, getProb, 
+                    calcDiffGames, updateCount, glowState, resetCounter, editPageName, vibrationEnabled,
+                    bonusTotalCount, bonusTotalProb,
+                    showConfigModal, configForm, colorPalette, openConfigModal, saveConfig, saveTemplate, loadTemplate,
+                    showCalcModal, calcForm, openCalcModal, customCalcResult,
                     showActionModal, openActionModal, editMachine, deleteMachineAction,
                     analysisSubTab, changeMainTab, changeAnalysisTab, storeRanking,
                     storeList, machineList, showSettingsModal, settingTab, renameStore, renameMachine, deleteStore, deleteMachine,
