@@ -169,7 +169,7 @@
                     </div>
                 </div>
 
-                <!-- カレンダー -->
+                                <!-- カレンダー -->
                 <div class="calendar-wrapper">
                     <div v-if="isOriginalTheme && originalSettings.bgImage" class="cal-bg-layer" :style="{ backgroundImage: `url(${originalSettings.bgImage})`, opacity: originalSettings.opacity }"></div>
                     <div class="calendar" :class="{ 'original-mode': isOriginalTheme }">
@@ -177,6 +177,10 @@
                         <div class="cal-cell" v-for="(day, i) in calDays" :key="i" 
                              :class="{'selected-day': selectedDay && !day.empty && selectedDay.fullDate === day.fullDate, 'today-marker': day.fullDate === todayStr}" 
                              @click="selectDay(day)">
+                            
+                            <!-- 💡 追加：データが存在する日の右上ドットマーカー -->
+                            <div v-if="!day.empty && hasData(day.fullDate)" style="position: absolute; top: 4px; right: 4px; width: 6px; height: 6px; background: var(--primary); border-radius: 50%;"></div>
+                            
                             <div class="cal-date" :style="{opacity: day.empty ? 0 : 1}">{{ day.date || 1 }}</div>
                             <div class="cal-val val-plus" v-if="!day.empty && getDayTotal(day.fullDate) > 0">+¥{{ getDayTotal(day.fullDate).toLocaleString() }}</div>
                             <div class="cal-val val-minus" v-if="!day.empty && getDayTotal(day.fullDate) < 0">-¥{{ Math.abs(getDayTotal(day.fullDate)).toLocaleString() }}</div>
@@ -188,6 +192,7 @@
                         </div>
                     </div>
                 </div>
+
                 
                 <div class="day-detail" v-if="selectedDay && !selectedDay.empty">
                     <div class="flex-between mb-2">
@@ -928,6 +933,15 @@
                     return { invest, recover, net: recover - invest, medalDelta };
                 });
                 const formatDateDisplay = (d) => { const dt = new Date(d); return `${dt.getFullYear()}年${dt.getMonth()+1}月${dt.getDate()}日`; };
+              // 💡 追加：その日に遊技履歴か収支データがあるか判定
+                const hasData = (d) => {
+                    const data = appData.value[d];
+                    if (!data) return false;
+                    // 遊技履歴が1台でも入力されている、または収支が入力されていれば true
+                    if (data.machines && data.machines.length > 0) return true;
+                    if (data.daily && (data.daily.invest > 0 || data.daily.recover > 0 || data.daily.medalDelta !== 0)) return true;
+                    return false;
+                };
 
                 // ==========================================
                 // 🎰 遊技履歴・日別入力関連
@@ -1205,7 +1219,7 @@
                     originalSettings, handleOriginalBgUpload, isOriginalTheme, mainSettingTab, generalSettings,
                     currentTab, headerTitle, currentTime, themes, themeIndex, toggleTheme,
                     currentYear, currentMonth, changeMonth, calDays, selectedDay, selectDay, todayStr,
-                    getMachinesForDate, getDayInvest, getDayRecover, getDayTotal, getDayMedalDelta, monthlySummary, formatDateDisplay,
+                    getMachinesForDate, getDayInvest, getDayRecover, getDayTotal, getDayMedalDelta, monthlySummary, formatDateDisplay, hasData,
                     showMonthPickerModal, pickerYear, openMonthPicker, selectMonth,
                     form, netBalance, prepareMachineInput, saveMachine, handlePhotoUpload, onStoreTypeChange,
                     dailyForm, saveDailyTotal, autoDailyCalc,
