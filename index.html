@@ -3,9 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- iPhoneを全画面アプリ化する設定 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Gachi-Slot">
+    <!-- アプリアイコンの設定（黒背景にスロット絵文字） -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%231e1e1e%22/><text x=%2250%22 y=%2250%22 font-size=%2265%22 text-anchor=%22middle%22 dominant-baseline=%22central%22>🎰</text></svg>">
+    
     <title>Gachi-Slot 収支管理</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -42,8 +46,8 @@
         main { flex: 1; overflow-y: auto; padding-bottom: 90px; }
         
         /* カレンダー・ダッシュボード */
-        .month-nav { padding: 10px 15px; background: var(--surface); }
-        .month-nav button { background: transparent; border: none; font-size: 18px; cursor: pointer; padding: 5px; font-weight: bold; }
+        .month-nav { display: flex; align-items: center; padding: 10px 15px; background: var(--surface); }
+        .month-nav button { background: transparent; border: none; font-size: 18px; cursor: pointer; padding: 5px; font-weight: bold; color: var(--primary); }
         .month-summary-box { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; background: var(--surface-light); padding: 10px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); text-align: center; font-size: 11px; font-weight: bold; }
         .summary-label { font-size: 10px; color: var(--text-sub); margin-bottom: 2px; display: block; }
         .calendar-wrapper { position: relative; border-bottom: 1px solid var(--border); }
@@ -133,15 +137,15 @@
         <main>
             <!-- 🏠 ホーム -->
             <div v-show="currentTab === 'home'">
-                <div class="month-nav flex-between">
+                <div class="month-nav">
                     <div style="flex: 1; text-align: left;">
-                        <button style="color:var(--primary);" @click="changeMonth(-1)">◀</button>
+                        <button @click="changeMonth(-1)">◀</button>
                     </div>
                     <div style="flex: 2; text-align: center; cursor: pointer; color: var(--primary);" @click="openMonthPicker">
                         <span style="font-weight:bold; font-size: 16px; text-decoration: underline; text-underline-offset: 4px;">{{ currentYear }}年 {{ currentMonth }}月 🔻</span>
                     </div>
                     <div class="flex gap-2" style="flex: 1; justify-content: flex-end; align-items: center;">
-                        <button style="color:var(--primary);" @click="changeMonth(1)">▶</button>
+                        <button @click="changeMonth(1)">▶</button>
                         <button style="color:var(--error);" @click="showMonthDeleteModal = true">🗑️</button>
                     </div>
                 </div>
@@ -169,7 +173,7 @@
                     </div>
                 </div>
 
-                                <!-- カレンダー -->
+                <!-- カレンダー -->
                 <div class="calendar-wrapper">
                     <div v-if="isOriginalTheme && originalSettings.bgImage" class="cal-bg-layer" :style="{ backgroundImage: `url(${originalSettings.bgImage})`, opacity: originalSettings.opacity }"></div>
                     <div class="calendar" :class="{ 'original-mode': isOriginalTheme }">
@@ -178,7 +182,7 @@
                              :class="{'selected-day': selectedDay && !day.empty && selectedDay.fullDate === day.fullDate, 'today-marker': day.fullDate === todayStr}" 
                              @click="selectDay(day)">
                             
-                            <!-- 💡 追加：データが存在する日の右上ドットマーカー -->
+                            <!-- データが存在する日の右上ドットマーカー -->
                             <div v-if="!day.empty && hasData(day.fullDate)" style="position: absolute; top: 4px; right: 4px; width: 6px; height: 6px; background: var(--primary); border-radius: 50%;"></div>
                             
                             <div class="cal-date" :style="{opacity: day.empty ? 0 : 1}">{{ day.date || 1 }}</div>
@@ -192,7 +196,6 @@
                         </div>
                     </div>
                 </div>
-
                 
                 <div class="day-detail" v-if="selectedDay && !selectedDay.empty">
                     <div class="flex-between mb-2">
@@ -244,7 +247,7 @@
                 </div>
             </div>
 
-                        <!-- 🎲 小役カウンター -->
+            <!-- 🎲 小役カウンター -->
             <div v-show="currentTab === 'counter'">
                 <div class="counter-header">
                     <select class="form-input" style="flex:1; margin-right:10px; font-size:14px; padding:5px 10px;" v-model="selectedPageIndex" @change="onPageSelectChange">
@@ -262,7 +265,6 @@
                             差引計算
                         </label>
                         <label class="flex-center gap-2 text-sm text-sub" style="cursor:pointer;">
-                            <!-- 💡 追加：バイブレーションON/OFF -->
                             <input type="checkbox" v-model="vibrationEnabled" style="transform:scale(1.2); accent-color:var(--primary);">
                             📳 バイブ
                         </label>
@@ -345,13 +347,13 @@
                         </div>
                     </div>
 
-                    <!-- 💡 追加：ボーナス総合算 常時表示エリア -->
+                    <!-- ボーナス総合算 常時表示エリア -->
                     <div class="card flex-col items-center mt-2" style="border: 2px solid var(--primary);">
                         <div class="text-sm font-bold" style="color: var(--primary);">🏆 ボーナス総合算</div>
                         <div style="font-size: 22px; font-weight: bold; margin-top: 5px;">{{ bonusTotalProb }} <span class="text-sm text-sub font-normal">(計 {{ bonusTotalCount }} 回)</span></div>
                     </div>
 
-                    <!-- 💡 追加：任意の合算確率ポップアップボタン -->
+                    <!-- 任意の合算確率ポップアップボタン -->
                     <button class="btn-outline" style="width:100%; padding:12px; border-radius:8px; font-weight:bold; margin-top:10px;" @click="openCalcModal">
                         🧮 任意の合算確率を確認する
                     </button>
@@ -588,7 +590,6 @@
                         <div class="settings-tab" style="border-bottom:none;" :style="settingTab === 'store' ? 'color:var(--primary); border-bottom:2px solid var(--primary); margin-bottom:-2px;' : ''" @click="settingTab = 'store'">🏪 店舗名</div>
                         <div class="settings-tab" style="border-bottom:none;" :style="settingTab === 'machine' ? 'color:var(--primary); border-bottom:2px solid var(--primary); margin-bottom:-2px;' : ''" @click="settingTab = 'machine'">🎰 機種名</div>
                     </div>
-                    <!-- 店舗リスト -->
                     <div v-show="settingTab === 'store'" style="max-height:300px; overflow-y:auto; padding-right:5px;">
                         <div v-for="(store, index) in storeList" :key="'s'+index" class="flex-between card" style="padding:10px; margin-bottom:8px;">
                             <span class="font-bold text-sm" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-right:10px;">{{ store }}</span>
@@ -599,7 +600,6 @@
                         </div>
                         <div v-if="storeList.length === 0" class="text-center p-3 text-sm text-sub">登録店舗なし</div>
                     </div>
-                    <!-- 機種リスト -->
                     <div v-show="settingTab === 'machine'" style="max-height:300px; overflow-y:auto; padding-right:5px;">
                         <div v-for="(mac, index) in machineList" :key="'m'+index" class="flex-between card" style="padding:10px; margin-bottom:8px;">
                             <span class="font-bold text-sm" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-right:10px;">{{ mac }}</span>
@@ -654,7 +654,7 @@
             </div>
         </div>
 
-                <!-- 💡 変更：名称・色・テンプレ設定モーダル -->
+        <!-- 名称・色・テンプレ設定モーダル -->
         <div class="modal-overlay" v-if="showConfigModal" @click.self="showConfigModal = false">
             <div class="modal-content">
                 <h3 class="modal-title">名称と色の変更</h3>
@@ -665,7 +665,6 @@
                         <span class="text-sm text-sub font-bold" style="width:60px;">ボタン{{ i + 1 }}</span>
                         <input type="text" class="form-input" v-model="configForm.names[i]" style="padding:8px; font-size:14px; flex:1;" placeholder="名称を入力">
                     </div>
-                    <!-- 色選択パレット -->
                     <div class="flex justify-around">
                         <div v-for="color in colorPalette" :key="color" 
                              :style="{ background: color, width: '24px', height: '24px', borderRadius: '50%', border: configForm.colors[i] === color ? '3px solid var(--text-main)' : '2px solid transparent', cursor: 'pointer' }" 
@@ -678,7 +677,6 @@
                     <button class="modal-btn btn-outline" style="flex:1;" @click="showConfigModal = false">キャンセル</button>
                 </div>
 
-                <!-- テンプレート保存・読込機能 -->
                 <div style="border-top: 1px dashed var(--border); margin-top: 10px; padding-top: 15px;">
                     <div class="text-sm text-sub text-center font-bold mb-2">📂 テンプレート機能</div>
                     <button class="modal-btn btn-outline mb-2" @click="saveTemplate">現在の構成をテンプレに保存</button>
@@ -687,18 +685,15 @@
             </div>
         </div>
 
-        <!-- 💡 追加：任意の合算確率モーダル -->
+        <!-- 任意の合算確率モーダル -->
         <div class="modal-overlay" v-if="showCalcModal" @click.self="showCalcModal = false">
             <div class="modal-content">
                 <h3 class="modal-title">🧮 任意の合算確率</h3>
-                
                 <div class="flex-center gap-2 mb-2">
                     <span class="text-sm font-bold">分母(G数):</span>
                     <input type="number" class="form-input" v-model.number="calcForm.games" style="width:100px; text-align:center; padding:8px;">
                 </div>
-                
                 <div class="text-sm text-sub text-center mb-2">合算したい項目にチェックを入れてください</div>
-
                 <div style="max-height: 40vh; overflow-y: auto; background: var(--bg); padding: 10px; border-radius: 6px; border: 1px solid var(--border);">
                     <div v-for="(row, rIdx) in ['r1', 'r2', 'r3']" :key="row">
                         <div class="text-sm font-bold mt-2 mb-2" style="color:var(--primary);">{{ ['基本小役', 'カスタム', 'ボーナス'][rIdx] }}</div>
@@ -711,16 +706,13 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="card flex-col items-center mt-2" style="border-color: var(--secondary); margin-bottom: 0;">
                     <div class="text-sm font-bold" style="color: var(--secondary);">選択項目の合算確率</div>
                     <div style="font-size: 22px; font-weight: bold; margin-top: 5px;">{{ customCalcResult.prob }} <span class="text-sm text-sub font-normal">(計 {{ customCalcResult.count }} 回)</span></div>
                 </div>
-
                 <button class="modal-btn btn-outline mt-2" @click="showCalcModal = false">閉じる</button>
             </div>
         </div>
-
 
         <!-- スナップショット選択 -->
         <div class="modal-overlay" v-if="showSnapshotSelectModal" @click.self="showSnapshotSelectModal = false">
@@ -739,22 +731,34 @@
                 <h3 class="modal-title">🎰 小役データサマリ</h3>
                 <div class="font-bold text-center mb-2" style="color:var(--primary);">{{ snapshotData.pageName }}</div>
                 <div class="font-bold text-center mb-2" style="font-size:18px;">🎯 回転数: {{ snapshotData.games }} G</div>
+                
                 <div class="text-sm text-sub mb-2">【基本小役】</div>
                 <div class="flex justify-around mb-2 card" style="padding:10px;">
-                    <div v-for="(count, i) in snapshotData.r1" :key="'sr1'+i" class="text-center">
-                        <div :style="{width:'16px', height:'16px', borderRadius:'50%', background: r1Colors[i], margin:'0 auto 4px auto'}"></div>
+                    <div v-for="(count, i) in snapshotData.r1" :key="'sr1'+i" class="text-center" style="width:45px;">
+                        <div :style="{width:'16px', height:'16px', borderRadius:'50%', background: snapshotData.r1Colors ? snapshotData.r1Colors[i] : ['#e53935', '#4caf50', '#1e88e5', '#fdd835', '#e0e0e0'][i], margin:'0 auto 4px auto'}"></div>
                         <div class="font-bold" style="font-size:14px;">{{ count }}</div>
                         <div style="font-size:10px; color:var(--text-sub);">{{ getProb(count, snapshotData.games) }}</div>
                     </div>
                 </div>
+                
                 <div class="text-sm text-sub mb-2">【カスタム小役】</div>
-                <div class="flex justify-around card" style="padding:10px;">
-                    <div v-for="(name, i) in snapshotData.r2Names" :key="'sr2'+i" class="text-center" style="width:45px;">
-                        <div style="font-size:9px; color:var(--text-sub); margin-bottom:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ name }}</div>
-                        <div class="font-bold" style="font-size:14px;">{{ snapshotData.r2[i] }}</div>
-                        <div style="font-size:10px; color:var(--text-sub);">{{ getProb(snapshotData.r2[i], snapshotData.games) }}</div>
+                <div class="flex justify-around mb-2 card" style="padding:10px;">
+                    <div v-for="(count, i) in snapshotData.r2" :key="'sr2'+i" class="text-center" style="width:45px;">
+                        <div style="font-size:9px; color:var(--text-sub); margin-bottom:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ snapshotData.r2Names ? snapshotData.r2Names[i] : 'カスタム'+(i+1) }}</div>
+                        <div class="font-bold" style="font-size:14px;">{{ count }}</div>
+                        <div style="font-size:10px; color:var(--text-sub);">{{ getProb(count, snapshotData.games) }}</div>
                     </div>
                 </div>
+
+                <div class="text-sm text-sub mb-2">【ボーナス】</div>
+                <div class="flex justify-around card" style="padding:10px;">
+                    <div v-for="(count, i) in (snapshotData.r3 || [0,0,0,0,0])" :key="'sr3'+i" class="text-center" style="width:45px;">
+                        <div style="font-size:9px; color:var(--text-sub); margin-bottom:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ snapshotData.r3Names ? snapshotData.r3Names[i] : ['BIG','REG','ボーナス3','ボーナス4','ボーナス5'][i] }}</div>
+                        <div class="font-bold" style="font-size:14px;">{{ count }}</div>
+                        <div style="font-size:10px; color:var(--text-sub);">{{ getProb(count, snapshotData.games) }}</div>
+                    </div>
+                </div>
+                
                 <button class="modal-btn btn-outline mt-2" @click="showSnapshotModal = false">閉じる</button>
             </div>
         </div>
@@ -799,6 +803,7 @@
 
     <script>
         const { createApp, ref, computed, watch, onMounted, onUnmounted, nextTick } = Vue;
+
         createApp({
             setup() {
                 // ==========================================
@@ -808,7 +813,6 @@
                 const today = new Date();
                 const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
                 
-                // 画像圧縮
                 const resizeImage = (file, maxSize, callback) => {
                     const reader = new FileReader();
                     reader.onload = (e) => {
@@ -829,7 +833,6 @@
                     reader.readAsDataURL(file);
                 };
 
-                // localStorege 読み書き用のヘルパー
                 const getStore = (key, defaultVal) => localStorage.getItem(key) ? JSON.parse(localStorage.getItem(key)) : defaultVal;
                 const setStore = (key, val) => localStorage.setItem(key, JSON.stringify(val));
 
@@ -933,11 +936,10 @@
                     return { invest, recover, net: recover - invest, medalDelta };
                 });
                 const formatDateDisplay = (d) => { const dt = new Date(d); return `${dt.getFullYear()}年${dt.getMonth()+1}月${dt.getDate()}日`; };
-              // 💡 追加：その日に遊技履歴か収支データがあるか判定
+                
                 const hasData = (d) => {
                     const data = appData.value[d];
                     if (!data) return false;
-                    // 遊技履歴が1台でも入力されている、または収支が入力されていれば true
                     if (data.machines && data.machines.length > 0) return true;
                     if (data.daily && (data.daily.invest > 0 || data.daily.recover > 0 || data.daily.medalDelta !== 0)) return true;
                     return false;
@@ -1113,7 +1115,6 @@
                 const editPageName = () => { const n = prompt('新しい名称：', activePage.value.pageName); if (n?.trim()) activePage.value.pageName = n.trim(); };
                 const resetCounter = () => { if(confirm("カウントをリセットしますか？")) Object.assign(counterData.value[cPage.value], { games: 0, startGames: 0, currentGames: 0, r1: [0,0,0,0,0], r2: [0,0,0,0,0], r3: [0,0,0,0,0] }); };
 
-                // 💡 追加：カウントアップとバイブレーション
                 const glowState = ref({ r1: [false,false,false,false,false], r2: [false,false,false,false,false], r3: [false,false,false,false,false] });
                 const updateCount = (row, i) => { 
                     activePage.value[row][i] = Math.max(0, activePage.value[row][i] + counterStep.value); 
@@ -1121,14 +1122,12 @@
                     if (vibrationEnabled.value && navigator.vibrate) navigator.vibrate(50);
                 };
 
-                // 💡 追加：ボーナス総合算
                 const bonusTotalCount = computed(() => activePage.value.r3.reduce((a, b) => a + b, 0));
                 const bonusTotalProb = computed(() => getProb(bonusTotalCount.value, activePage.value.games));
 
-                // 💡 追加：名称・色・テンプレ設定
                 const showConfigModal = ref(false);
                 const configForm = ref({ row: 'r1', names: [], colors: [] });
-                const colorPalette = ['#e53935', '#4caf50', '#1e88e5', '#fdd835', '#ff9800', '#9c27b0', '#ff4081', '#00bcd4', '#212121', '#e0e0e0']; // カラーパレット候補
+                const colorPalette = ['#e53935', '#4caf50', '#1e88e5', '#fdd835', '#ff9800', '#9c27b0', '#ff4081', '#00bcd4', '#212121', '#e0e0e0'];
                 const templates = ref(getStore('gachi_counter_templates', []));
                 watch(templates, v => setStore('gachi_counter_templates', v), { deep: true });
 
@@ -1137,13 +1136,11 @@
                 const saveTemplate = () => { const n = prompt('この構成（名前と色）を保存するテンプレート名を入力：'); if(n?.trim()) { templates.value.push({ name: n.trim(), names: [...configForm.value.names], colors: [...configForm.value.colors] }); alert('テンプレートを保存しました！'); } };
                 const loadTemplate = () => { if(templates.value.length === 0) return alert('保存されたテンプレートがありません。'); const msg = templates.value.map((t, i) => `${i+1}: ${t.name}`).join('\n'); const num = prompt(`読み込むテンプレートの番号を入力してください：\n\n${msg}`); const idx = parseInt(num) - 1; if(templates.value[idx]) { configForm.value.names = [...templates.value[idx].names]; configForm.value.colors = [...templates.value[idx].colors]; alert('読み込みました。「適用する」を押して保存してください。'); } };
 
-                // 💡 追加：任意の合算確率計算
                 const showCalcModal = ref(false);
                 const calcForm = ref({ games: 0, selected: { r1: [false,false,false,false,false], r2: [false,false,false,false,false], r3: [false,false,false,false,false] } });
                 const openCalcModal = () => { calcForm.value.games = activePage.value.games; calcForm.value.selected = { r1: [false,false,false,false,false], r2: [false,false,false,false,false], r3: [false,false,false,false,false] }; showCalcModal.value = true; };
                 const customCalcResult = computed(() => { let count = 0; ['r1','r2','r3'].forEach(row => { for(let i=0; i<5; i++) { if(calcForm.value.selected[row][i]) count += activePage.value[row][i]; } }); return { count, prob: getProb(count, calcForm.value.games) }; });
 
-                // 履歴スナップショット
                 const formAttachedPageIndex = ref(-1);
                 const attachCounterData = () => { if (formAttachedPageIndex.value !== -1 && form.value.counterSnapshots.length < 3) { form.value.counterSnapshots.push(JSON.parse(JSON.stringify(counterData.value[formAttachedPageIndex.value]))); formAttachedPageIndex.value = -1; } };
                 const removeCounterData = (idx) => form.value.counterSnapshots.splice(idx, 1);
